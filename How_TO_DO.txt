@@ -1,0 +1,60 @@
+GalleryFi/                   # Raíz del monorepo
+├── .github/                 # CI/CD (GitHub Actions)
+│   └── workflows/ci.yml
+├── packages/
+│   ├── contracts/           # Smart contracts + deploy & tests
+│   │   ├── contracts/       # .sol
+│   │   ├── deploy/          # hardhat‑deploy scripts
+│   │   ├── scripts/         # seed, helper scripts
+│   │   ├── test/            # tests Hardhat + Chai/Waffle
+│   │   ├── typechain/       # artefactos generados
+│   │   ├── hardhat.config.ts
+│   │   └── package.json
+│   ├── frontend/            # Next.js + Wagmi + RainbowKit
+│   │   ├── pages/           # rutas (/, /explore, /create, /dashboard)
+│   │   ├── components/      # UI (Chakra/Tailwind)
+│   │   ├── hooks/           # useMint, useList, useBid…
+│   │   ├── utils/           # ABI, helpers de formato
+│   │   ├── public/          # assets estáticos
+│   │   ├── next.config.js
+│   │   └── package.json
+│   └── subgraph/            # (opcional) TheGraph subgraph
+│       ├── schema.graphql
+│       ├── mappings/        # handlers de eventos
+│       ├── subgraph.yaml
+│       └── package.json
+├── docs/                    # Documentación adicional (arquitectura, esquemas)
+├── scripts/                 # Scripts globales (lint, format)
+├── .env.example             # Variables de entorno
+├── LICENSE
+└── README.md
+
+npx hardhat deploy --network sepolia
+
+--------------------------------------------------------------------------------------------------------------
+
+Logs:
+
+enric@EnricRobert MINGW64 ~/Desktop/formacion/blockchain/GalleryFi/packages/contracts (main)
+$ npx hardhat deploy --network hardhat
+[dotenv@17.2.1] injecting env (6) from .env -- tip: 📡 version env with Radar: https://dotenvx.com/radar
+Nothing to compile
+No need to generate any newer typings.
+deploying "MyNFT" (tx: 0x9231505f864e0cf9d67e1d8d44d67ac1869d818f6458310e36742aef1a7dec68)...: deployed at 0x5FbDB2315678afecb367f032d93F642f64180aa3 with 1568282 gas
+deploying "NftMarketplace" (tx: 0x31a0507f47d9179c3e4e85c6e90045fc8c274d1c1eee1bd83b80053808786a9f)...: deployed at 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 with 1765532 gas
+
+--------------------------------------------------------------------------------------------------------------
+
+enric@EnricRobert MINGW64 ~/Desktop/formacion/blockchain/GalleryFi/packages/contracts (main)
+$ npx hardhat deploy --network sepolia
+[dotenv@17.2.1] injecting env (6) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+Nothing to compile
+No need to generate any newer typings.
+deploying "MyNFT" (tx: 0x7ae8993b103369ce6682a088c7bf6db5cc4c385313402d18dbad4662fa286ada)...: deployed at 0xFaF492368eDF6BC4780BF0d12D583E12196c04ed with 1568282 gas
+deploying "NftMarketplace" (tx: 0x8fb83e8e27c69d9fd9e6d7e2dcc91ef192943c2ddb1dd73c199b0c9690080aba)...: deployed at 0xa3b41a734305F47401e28Dc573E63c72A489a8c5 with 1765532 gas
+
+enric@EnricRobert MINGW64 ~/Desktop/formacion/blockchain/GalleryFi/packages/contracts (main)
+$ 
+
+--------------------------------------------------------------------------------------------------------------
+

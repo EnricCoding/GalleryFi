@@ -8,7 +8,7 @@
     "compile": "hardhat compile",
     "typechain": "hardhat typechain",
     "build": "npm run compile && npm run typechain",
-    "test": "hardhat test",
+    "test": "npx hardhat test",
     "coverage": "hardhat coverage",
     "gas": "REPORT_GAS=true hardhat test",
     "deploy:sepolia": "hardhat deploy --network sepolia --tags all",
