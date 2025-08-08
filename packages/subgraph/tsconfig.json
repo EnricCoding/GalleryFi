@@ -1,0 +1,8 @@
+{
+  "extends": "@graphprotocol/graph-ts/tsconfig.json",
+  "include": [
+    "./mappings/**/*.ts",
+    "./generated/**/*.ts"
+
+]
+}

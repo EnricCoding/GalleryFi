@@ -1,0 +1,54 @@
+specVersion: 0.0.4
+schema:
+  file: schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: MyNFT
+    network: sepolia
+    source:
+      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      abi: MyNFT
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Mint
+      abis:
+        - name: MyNFT
+          file: MyNFT\MyNFT.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+      file: MyNFT\MyNFT.wasm
+  - kind: ethereum/contract
+    name: NftMarketplace
+    network: sepolia
+    source:
+      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+      abi: NftMarketplace
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Listing
+        - Sale
+        - Bid
+        - AuctionCreated
+        - AuctionEnded
+      abis:
+        - name: NftMarketplace
+          file: NftMarketplace\NftMarketplace.json
+      eventHandlers:
+        - event: ItemListed(indexed address,uint256,address,uint256)
+          handler: handleItemListed
+        - event: ItemSold(indexed address,uint256,uint256,address)
+          handler: handleItemSold
+        - event: BidPlaced(indexed address,uint256,address,uint256)
+          handler: handleBidPlaced
+        - event: AuctionCreated(indexed address,uint256,uint256)
+          handler: handleAuctionCreated
+        - event: AuctionEnded(indexed address,uint256,address,uint256)
+          handler: handleAuctionEnded
+      file: NftMarketplace\NftMarketplace.wasm

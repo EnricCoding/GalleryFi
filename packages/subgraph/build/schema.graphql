@@ -1,0 +1,59 @@
+# mint nunca se actualiza
+type Mint @entity(immutable: true) {
+  id: ID!
+  nft: Bytes!
+  tokenId: BigInt!
+  to: Bytes!
+  tokenURI: String!
+  timestamp: BigInt!
+}
+
+# listing puede cambiar (precio) o eliminarse
+type Listing @entity(immutable: false) {
+  id: ID!
+  nft: Bytes!
+  tokenId: BigInt!
+  seller: Bytes!
+  price: BigInt!
+  timestamp: BigInt!
+}
+
+# venta es definitiva
+type Sale @entity(immutable: true) {
+  id: ID!
+  nft: Bytes!
+  tokenId: BigInt!
+  buyer: Bytes!
+  price: BigInt!
+  timestamp: BigInt!
+}
+
+# cada puja es inmutable
+type Bid @entity(immutable: true) {
+  id: ID!
+  nft: Bytes!
+  tokenId: BigInt!
+  bidder: Bytes!
+  amount: BigInt!
+  timestamp: BigInt!
+}
+
+# creación de subasta no cambia
+type AuctionCreated @entity(immutable: true) {
+  id: ID!
+  nft: Bytes!
+  tokenId: BigInt!
+  seller: Bytes!
+  end: BigInt!
+  timestamp: BigInt!
+}
+
+# fin de subasta es un evento único
+type AuctionEnded @entity(immutable: true) {
+  id: ID!
+  nft: Bytes!
+  tokenId: BigInt!
+  winner: Bytes
+  amount: BigInt
+  timestamp: BigInt!
+}

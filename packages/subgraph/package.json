@@ -1,0 +1,22 @@
+{
+  "name": "subgraph",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "graph codegen",
+    "codegen": "graph codegen",
+    "build":   "graph build",
+     "deploy":  "graph deploy --studio gallery-fi"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@graphprotocol/graph-cli": "^0.97.1",
+    "@graphprotocol/graph-ts": "^0.38.1",
+    "assemblyscript": "^0.28.3",
+    "typescript": "^5.9.2"
+  }
+}
