@@ -29,6 +29,31 @@ GalleryFi/                   # Raíz del monorepo
 ├── LICENSE
 └── README.md
 
+
+
+
+--------------------------------------------------------------------------------------------------------------
+
+
+enric@EnricRobert MINGW64 ~/Desktop/formacion/blockchain/GalleryFi/packages/contracts (main)
+$ npx hardhat deploy --network sepolia
+[dotenv@17.2.1] injecting env (6) from .env -- tip: 📡 auto-backup env with Radar: https://dotenvx.com/radar
+Nothing to compile
+No need to generate any newer typings.
+deploying "MyNFT" (tx: 0x89f70664648b38bf05fcbdba336978942ff0ed62da1dd17e09942fb81498139e)...: deployed at 0xfd6580707778bE0d6Fc1447Ff42237e29a7cb047 with 1678667 gas
+[WARNING] Network and explorer-specific api keys are deprecated in favour of the new Etherscan v2 api. Support for v1 is expected to end by May 31st, 2025. To migrate, please specify a single Etherscan.io api key the apiKey config value.
+Successfully submitted source code for contract
+contracts/MyNFT.sol:MyNFT at 0xfd6580707778bE0d6Fc1447Ff42237e29a7cb047
+for verification on the block explorer. Waiting for verification result...
+
+Successfully verified contract MyNFT on the block explorer.
+https://sepolia.etherscan.io/address/0xfd6580707778bE0d6Fc1447Ff42237e29a7cb047#code
+
+Verified MyNFT at 0xfd6580707778bE0d6Fc1447Ff42237e29a7cb047
+reusing "NftMarketplace" at 0x5e3ef51F0a662dF65dea3e115C689E0cDE2A0F37
+
+
+
 npx hardhat deploy --network sepolia
 
 --------------------------------------------------------------------------------------------------------------

@@ -1,0 +1,99 @@
+// app/api/listings/route.ts
+export const runtime = 'edge';
+
+import { NextRequest, NextResponse } from 'next/server';
+
+const SUBGRAPH_URL = process.env.SUBGRAPH_URL ?? process.env.NEXT_PUBLIC_SUBGRAPH_URL;
+
+if (!SUBGRAPH_URL) {
+  console.warn('[api/listings] Missing SUBGRAPH_URL / NEXT_PUBLIC_SUBGRAPH_URL');
+}
+
+const LISTINGS_GQL = `
+  query Listings($first: Int!, $skip: Int!, $orderBy: String!, $orderDirection: String!) {
+    listings(first: $first, skip: $skip, orderBy: $orderBy, orderDirection: $orderDirection) {
+      id
+      nft
+      tokenId
+      price
+      seller
+      timestamp
+    }
+  }
+`;
+
+const ORDER_BY_WHITELIST = new Set(['timestamp', 'price', 'tokenId']);
+const ORDER_DIR_WHITELIST = new Set(['asc', 'desc']);
+
+function parseIntSafe(v: string | null, def: number): number {
+  const n = Number.parseInt(v ?? '', 10);
+  return Number.isFinite(n) ? n : def;
+}
+function pickOrderBy(v: string | null): string {
+  const val = (v ?? 'timestamp').trim();
+  return ORDER_BY_WHITELIST.has(val) ? val : 'timestamp';
+}
+function pickOrderDirection(v: string | null): 'asc' | 'desc' {
+  const val = (v ?? 'desc').toLowerCase().trim();
+  return (ORDER_DIR_WHITELIST.has(val) ? val : 'desc') as 'asc' | 'desc';
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    if (!SUBGRAPH_URL) {
+      return NextResponse.json({ error: 'Subgraph URL not configured' }, { status: 500 });
+    }
+
+    const { searchParams } = new URL(req.url);
+
+    const firstRaw = parseIntSafe(searchParams.get('first'), 24);
+    const skipRaw = parseIntSafe(searchParams.get('skip'), 0);
+    const first = Math.min(Math.max(firstRaw, 1), 50); // 1..50
+    const skip = Math.max(skipRaw, 0);
+    const orderBy = pickOrderBy(searchParams.get('orderBy'));
+    const orderDirection = pickOrderDirection(searchParams.get('orderDirection'));
+
+    const body = JSON.stringify({
+      query: LISTINGS_GQL,
+      variables: { first, skip, orderBy, orderDirection },
+    });
+
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 12_000);
+    const res = await fetch(SUBGRAPH_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body,
+      next: { revalidate: 10 },
+      signal: controller.signal,
+    }).finally(() => clearTimeout(id));
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      return NextResponse.json(
+        { error: 'Subgraph fetch failed', status: res.status, detail: text?.slice(0, 500) },
+        { status: 502 },
+      );
+    }
+
+    const json = await res.json().catch(() => null);
+    if (!json || typeof json !== 'object') {
+      return NextResponse.json({ error: 'Invalid JSON from subgraph' }, { status: 502 });
+    }
+    if (json.errors) {
+      return NextResponse.json({ error: 'Subgraph error', detail: json.errors }, { status: 502 });
+    }
+
+    const response = NextResponse.json(json.data, { status: 200 });
+    response.headers.set('Cache-Control', 's-maxage=10, stale-while-revalidate=60');
+    return response;
+  } catch (err) {
+    const msg =
+      err instanceof Error
+        ? err.name === 'AbortError'
+          ? 'Upstream timeout'
+          : err.message
+        : 'Unexpected error';
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}

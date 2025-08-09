@@ -1,0 +1,57 @@
+# 1) Autenticar el CLI con TU Deploy Key (la que te muestra Studio)
+npx graph auth --studio 729b67f8b3c23046a9f77ebd3e271d5f
+
+# 2) (si no lo hiciste ya) generar y compilar
+npm run codegen
+npm run build
+
+# 3) Desplegar al subgraph con slug 'gallery-fi'
+npx graph deploy gallery-fi
+# (o, si tienes el script en package.json: npm run deploy)
+
+npx graph deploy gallery-fi
+√ Which version label to use? (e.g. "v0.0.1") · 0.0.1
+  Skip migration: Bump mapping apiVersion from 0.0.1 to 0.0.2
+  Skip migration: Bump mapping apiVersion from 0.0.2 to 0.0.3
+  Skip migration: Bump mapping apiVersion from 0.0.3 to 0.0.4
+  Skip migration: Bump mapping apiVersion from 0.0.4 to 0.0.5
+  Skip migration: Bump mapping apiVersion from 0.0.5 to 0.0.6
+  Skip migration: Bump manifest specVersion from 0.0.1 to 0.0.2
+  Skip migration: Bump manifest specVersion from 0.0.2 to 0.0.4
+✔ Apply migrations
+✔ Load subgraph from subgraph.yaml
+  Compile data source: MyNFT => build\MyNFT\MyNFT.wasm
+  Compile data source: NftMarketplace => build\NftMarketplace\NftMarketplace.wasm
+✔ Compile subgraph
+  Copy schema file build\schema.graphql
+  Write subgraph file build\MyNFT\MyNFT.json
+  Write subgraph file build\NftMarketplace\NftMarketplace.json
+  Write subgraph manifest build\subgraph.yaml
+✔ Write compiled subgraph to build\
+  Add file to IPFS build\schema.graphql
+                .. QmPCEApArzzZvQy9Rq1ZQa2PeNg5gFfxUkpZYrm7fwBcjK
+  Add file to IPFS build\MyNFT\MyNFT.json
+                .. QmZTw3vuLMAQ4J1FKffBkaSFp9BCDJ8B6fsLidK1ohXX2d
+  Add file to IPFS build\NftMarketplace\NftMarketplace.json
+                .. QmbHe7fd89eYrEo6ssvch7ADSF7PtXp2en12ZcjohNgRnL
+  Add file to IPFS build\MyNFT\MyNFT.wasm
+                .. QmWumbi18F35VrEfEx565WNoqpe3NYUYSFpazic65tkXp2
+  Add file to IPFS build\NftMarketplace\NftMarketplace.wasm
+                .. QmYeB2x1ZHCnM1mrLD5A1YaVG41JhQrzTqjtcKLJRJuvoJ
+✔ Upload subgraph to IPFS
+
+Build completed: QmWLCZs9HMP3u6LMoJkPmJ3Gykyyq2A9VMFVm4xA2gpSJW
+
+Deployed to https://thegraph.com/studio/subgraph/gallery-fi
+
+Subgraph endpoints:
+Queries (HTTP):     https://api.studio.thegraph.com/query/117753/gallery-fi/0.0.1
+
+
+Cuando deployees un nuevo smart contract recuerda poner en la web de etherscan scan de sepolia la direccion del contrato y copiar el start block y poner en el subgraph.yaml
+
+enric@EnricRobert MINGW64 ~/Desktop/formacion/blockchain/GalleryFi/packages/subgraph (main)
+$ npx graph auth 729b67f8b3c23046a9f77ebd3e271d5f
+Deploy key set for https://api.studio.thegraph.com/deploy/
+
+

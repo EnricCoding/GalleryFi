@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import WalletButton from '@/components/WalletButton';
+import WalletButton from '@/components/shared/WalletButton';
 
 export default function Home() {
   return (

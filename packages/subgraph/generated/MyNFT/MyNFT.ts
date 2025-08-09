@@ -282,6 +282,49 @@ export class MyNFT extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
+  mintWithRoyalty(
+    to: Address,
+    uri: string,
+    receiver: Address,
+    feeBps: BigInt,
+  ): BigInt {
+    let result = super.call(
+      "mintWithRoyalty",
+      "mintWithRoyalty(address,string,address,uint96):(uint256)",
+      [
+        ethereum.Value.fromAddress(to),
+        ethereum.Value.fromString(uri),
+        ethereum.Value.fromAddress(receiver),
+        ethereum.Value.fromUnsignedBigInt(feeBps),
+      ],
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_mintWithRoyalty(
+    to: Address,
+    uri: string,
+    receiver: Address,
+    feeBps: BigInt,
+  ): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "mintWithRoyalty",
+      "mintWithRoyalty(address,string,address,uint96):(uint256)",
+      [
+        ethereum.Value.fromAddress(to),
+        ethereum.Value.fromString(uri),
+        ethereum.Value.fromAddress(receiver),
+        ethereum.Value.fromUnsignedBigInt(feeBps),
+      ],
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
   name(): string {
     let result = super.call("name", "name():(string)", []);
 
@@ -558,6 +601,52 @@ export class MintCall__Outputs {
   _call: MintCall;
 
   constructor(call: MintCall) {
+    this._call = call;
+  }
+
+  get value0(): BigInt {
+    return this._call.outputValues[0].value.toBigInt();
+  }
+}
+
+export class MintWithRoyaltyCall extends ethereum.Call {
+  get inputs(): MintWithRoyaltyCall__Inputs {
+    return new MintWithRoyaltyCall__Inputs(this);
+  }
+
+  get outputs(): MintWithRoyaltyCall__Outputs {
+    return new MintWithRoyaltyCall__Outputs(this);
+  }
+}
+
+export class MintWithRoyaltyCall__Inputs {
+  _call: MintWithRoyaltyCall;
+
+  constructor(call: MintWithRoyaltyCall) {
+    this._call = call;
+  }
+
+  get to(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get uri(): string {
+    return this._call.inputValues[1].value.toString();
+  }
+
+  get receiver(): Address {
+    return this._call.inputValues[2].value.toAddress();
+  }
+
+  get feeBps(): BigInt {
+    return this._call.inputValues[3].value.toBigInt();
+  }
+}
+
+export class MintWithRoyaltyCall__Outputs {
+  _call: MintWithRoyaltyCall;
+
+  constructor(call: MintWithRoyaltyCall) {
     this._call = call;
   }
 

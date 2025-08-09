@@ -6,8 +6,9 @@ dataSources:
     name: MyNFT
     network: sepolia
     source:
-      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      address: "0xfd6580707778bE0d6Fc1447Ff42237e29a7cb047"
       abi: MyNFT
+      startBlock: 8946279
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -25,8 +26,9 @@ dataSources:
     name: NftMarketplace
     network: sepolia
     source:
-      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+      address: "0x5e3ef51F0a662dF65dea3e115C689E0cDE2A0F37"
       abi: NftMarketplace
+      startBlock: 8946526
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

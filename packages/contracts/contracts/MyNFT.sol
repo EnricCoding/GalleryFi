@@ -1,4 +1,4 @@
-// SPDX‑License‑Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
 import '@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol';
@@ -7,7 +7,7 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 
 /**
  * @title MyNFT
- * @notice Colección ERC‑721 con royalties (EIP‑2981) y URIs on‑chain.
+ * @notice Colección ERC-721 con royalties (EIP-2981) y URIs on-chain.
  */
 contract MyNFT is ERC721URIStorage, ERC2981, Ownable {
     uint256 private _tokenIds;
@@ -30,6 +30,20 @@ contract MyNFT is ERC721URIStorage, ERC2981, Ownable {
         return id;
     }
 
+    /// @notice Mint con royalty específico por token (para tu flujo de creación en frontend)
+    function mintWithRoyalty(
+        address to,
+        string calldata uri,
+        address receiver,
+        uint96 feeBps
+    ) external onlyOwner returns (uint256) {
+        uint256 id = ++_tokenIds;
+        _mint(to, id);
+        _setTokenURI(id, bytes(baseTokenURI).length == 0 ? uri : string.concat(baseTokenURI, uri));
+        _setTokenRoyalty(id, receiver, feeBps);
+        return id;
+    }
+
     /*──────────────────── Royalties admin ───────────────────*/
     function setDefaultRoyalty(address receiver, uint96 feeBps) external onlyOwner {
         _setDefaultRoyalty(receiver, feeBps);
@@ -39,7 +53,7 @@ contract MyNFT is ERC721URIStorage, ERC2981, Ownable {
         _deleteDefaultRoyalty();
     }
 
-    /*──────────────────── Base‑URI admin ────────────────────*/
+    /*──────────────────── Base-URI admin ────────────────────*/
     function setBaseTokenURI(string calldata uri) external onlyOwner {
         baseTokenURI = uri;
     }
@@ -51,6 +65,6 @@ contract MyNFT is ERC721URIStorage, ERC2981, Ownable {
         return super.supportsInterface(id);
     }
 
-    /*──────────── Storage gap (upgrade‑friendly) ────────────*/
+    /*──────────── Storage gap (upgrade-friendly) ────────────*/
     uint256[44] private __gap;
 }
