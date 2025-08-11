@@ -10,10 +10,7 @@ const CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 11155111);
 export default function CreatePage() {
     return (
         <main className="min-h-screen bg-primary-light dark:bg-neutral-900">
-            <div className="max-w-2xl mx-auto p-6 space-y-6">
-                <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
-                    Create &amp; List NFT
-                </h1>
+            <div className="w-full max-w-none mx-auto p-6 space-y-6">
                 <MintListForm
                     nftAddress={NFT}
                     marketAddress={MARKET}

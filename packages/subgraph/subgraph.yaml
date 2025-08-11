@@ -10,7 +10,7 @@ dataSources:
     source:
       address: '0xfd6580707778bE0d6Fc1447Ff42237e29a7cb047' # <- tu NFT en Sepolia
       abi: MyNFT
-      startBlock: 8946279  # (opcional) pon aquí el bloque de deploy/primer mint
+      startBlock: 8946279 # (opcional) pon aquí el bloque de deploy/primer mint
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -20,6 +20,8 @@ dataSources:
       abis:
         - name: MyNFT
           file: ./abis/MyNFT.json
+        - name: ERC721
+          file: ./abis/ERC721.json  
       eventHandlers:
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleTransfer
@@ -32,7 +34,7 @@ dataSources:
     source:
       address: '0x5e3ef51F0a662dF65dea3e115C689E0cDE2A0F37' # <- tu Marketplace en Sepolia
       abi: NftMarketplace
-      startBlock: 8946526  # (opcional) bloque de deploy/primer listado
+      startBlock: 8946526 # (opcional) bloque de deploy/primer listado
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -46,6 +48,8 @@ dataSources:
       abis:
         - name: NftMarketplace
           file: ./abis/NftMarketplace.json
+        - name: ERC721
+          file: ./abis/ERC721.json
       eventHandlers:
         # Coinciden con tu contrato: SOLO el primer parámetro (nft) es indexed
         - event: ItemListed(indexed address,uint256,address,uint256)
@@ -59,3 +63,21 @@ dataSources:
         - event: AuctionEnded(indexed address,uint256,address,uint256)
           handler: handleAuctionEnded
       file: ./mappings/NftMarketplace.ts
+
+# 3) Template para ERC721 — necesario para que se genere el binding
+templates:
+  - kind: ethereum/contract
+    name: ERC721
+    network: sepolia
+    source:
+      abi: ERC721
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities: []
+      abis:
+        - name: ERC721
+          file: ./abis/ERC721.json
+      eventHandlers: []
+      file: ./src/empty.ts

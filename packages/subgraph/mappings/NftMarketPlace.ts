@@ -5,6 +5,7 @@ import {
   AuctionCreated,
   AuctionEnded,
 } from '../generated/NftMarketplace/NftMarketplace';
+import { ERC721 } from '../generated/NftMarketplace/ERC721';
 import { Listing, Sale, Bid, AuctionCreated as AC, AuctionEnded as AE } from '../generated/schema';
 
 export function handleItemListed(e: ItemListed): void {
@@ -15,6 +16,33 @@ export function handleItemListed(e: ItemListed): void {
   l.seller = e.params.seller;
   l.price = e.params.price;
   l.timestamp = e.block.timestamp;
+
+  // Vinculamos el contrato ERC721 para acceder al tokenURI
+  const nftContract = ERC721.bind(e.params.nft);
+  const tokenUriResult = nftContract.try_tokenURI(e.params.id);
+  if (!tokenUriResult.reverted) {
+    l.tokenURI = tokenUriResult.value;
+
+    /**
+     * NOTA:
+     * The Graph no puede hacer fetch a IPFS/HTTP en tiempo de indexación,
+     * por lo que aquí solo guardamos el tokenURI.
+     * El front deberá usar este tokenURI para obtener:
+     *  - name
+     *  - description
+     *  - image
+     *
+     * Si tus metadatos están en IPFS y el tokenURI comienza con ipfs://,
+     * el front debe reemplazarlo por un gateway HTTP como:
+     * https://ipfs.io/ipfs/<CID>
+     */
+  }
+
+  // Inicializamos estos campos como null, para que el front los rellene
+  l.name = null;
+  l.description = null;
+  l.image = null;
+
   l.save();
 }
 

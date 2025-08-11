@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { parseEther, type Log, getAddress } from 'viem';
 import { useAccount, useChainId, usePublicClient, useWriteContract } from 'wagmi';
-import Callout from '@/components/ui/Callout';
 
 import MyNFT from '@/utils/abi/MyNFT.json';
 import Market from '@/utils/abi/NftMarketplace.json';
@@ -305,101 +304,297 @@ export default function MintListForm({ nftAddress, marketAddress, expectedChainI
         busy || !isConnected || !address || !owner || chainId !== expectedChainId || !canMint || !isFormValid;
 
     return (
-        <section className="space-y-5">
-            {/* Card shell */}
-            <div className="rounded-2xl bg-white/70 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 shadow-sm">
-                <div className="p-6 md:p-8 space-y-6">
-                    <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-50">Create &amp; List NFT</h1>
+        <section className="space-y-6 w-full max-w-[90vw] mx-auto">
+            {/* Enhanced card shell with better visual hierarchy */}
+            <div className="rounded-2xl bg-white/80 dark:bg-neutral-900/70 border border-neutral-200/60 dark:border-neutral-800/60 
+                          shadow-xl shadow-neutral-500/5 dark:shadow-neutral-900/20 backdrop-blur-md">
+                <div className="p-8 md:p-12 lg:p-16 space-y-10">
+                    {/* Enhanced header section */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-accent/20 to-accent-dark/20 
+                                          rounded-xl flex items-center justify-center">
+                                <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                          d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h1 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-neutral-50">
+                                    Create &amp; List NFT
+                                </h1>
+                                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                                    Mint your digital artwork and list it on the marketplace
+                                </p>
+                            </div>
+                        </div>
+                        
+                        {/* Progress indicator */}
+                        <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                            <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-accent rounded-full"></div>
+                                <span>Upload</span>
+                            </div>
+                            <div className="w-4 h-px bg-neutral-300 dark:bg-neutral-700"></div>
+                            <div className="flex items-center gap-1">
+                                <div className={`w-2 h-2 rounded-full ${file ? 'bg-accent' : 'bg-neutral-300 dark:bg-neutral-700'}`}></div>
+                                <span>Details</span>
+                            </div>
+                            <div className="w-4 h-px bg-neutral-300 dark:bg-neutral-700"></div>
+                            <div className="flex items-center gap-1">
+                                <div className={`w-2 h-2 rounded-full ${isFormValid ? 'bg-accent' : 'bg-neutral-300 dark:bg-neutral-700'}`}></div>
+                                <span>List</span>
+                            </div>
+                        </div>
+                    </div>
 
-                    {/* Notices */}
-                    {!isConnected && <Callout>Connect your wallet to continue.</Callout>}
+                    {/* Enhanced notices with better styling */}
+                    {!isConnected && (
+                        <div className="rounded-xl border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/50 p-4">
+                            <div className="flex items-start gap-3">
+                                <div className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                                        Connect Your Wallet
+                                    </h3>
+                                    <p className="text-sm text-blue-800 dark:text-blue-200 mt-1">
+                                        Please connect your wallet to start creating NFTs.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    
                     {isConnected && owner && address && address.toLowerCase() !== owner.toLowerCase() && (
-                        <Callout variant="warning">
-                            Only the <b>contract owner</b> can create NFTs for now. Owner: <code className="break-all">{owner}</code>
-                        </Callout>
+                        <div className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/50 p-4">
+                            <div className="flex items-start gap-3">
+                                <div className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                                        Owner Access Required
+                                    </h3>
+                                    <p className="text-sm text-amber-800 dark:text-amber-200 mt-1">
+                                        Only the contract owner can create NFTs. Owner: <code className="bg-amber-100 dark:bg-amber-900 px-1 rounded text-xs break-all">{owner}</code>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     )}
+                    
                     {chainId !== expectedChainId && (
-                        <Callout variant="warning">
-                            You are on chainId <b>{chainId}</b>. Please switch to <b>{expectedChainId}</b> (Sepolia).
-                        </Callout>
+                        <div className="rounded-xl border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/50 p-4">
+                            <div className="flex items-start gap-3">
+                                <div className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-medium text-red-900 dark:text-red-100">
+                                        Wrong Network
+                                    </h3>
+                                    <p className="text-sm text-red-800 dark:text-red-200 mt-1">
+                                        You are on chain <strong>{chainId}</strong>. Please switch to <strong>{expectedChainId}</strong> (Sepolia).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     )}
 
-                    {/* Two-column layout */}
-                    <form onSubmit={onSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6" aria-busy={busy}>
-                        {/* Left: uploader + preview (componente) */}
-                        <div className="lg:col-span-5 space-y-2">
+                    {/* Enhanced two-column layout */}
+                    <form onSubmit={onSubmit} className="grid grid-cols-1 xl:grid-cols-12 gap-12" aria-busy={busy}>
+                        {/* Left: Enhanced uploader section */}
+                        <div className="xl:col-span-5 space-y-6">
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                        Upload Artwork <span className="text-red-500">*</span>
+                                    </label>
+                                    <span className="text-xs text-neutral-500 px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded-md">
+                                        Step 1
+                                    </span>
+                                </div>
+                                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                                    PNG, JPEG, WEBP or GIF. Max {MAX_MB}MB.
+                                </p>
+                            </div>
+                            
                             <UploadCard file={file} setFile={handleFileChange} maxMb={MAX_MB} />
+                            
                             {errors.file && (
-                                <p className="text-sm text-error">{errors.file}</p>
+                                <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
+                                    <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <p className="text-sm text-red-700 dark:text-red-300">{errors.file}</p>
+                                </div>
+                            )}
+                            
+                            {/* Preview enhancement hint */}
+                            {file && !errors.file && (
+                                <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800">
+                                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <p className="text-sm text-green-700 dark:text-green-300">
+                                        Perfect! Your artwork looks great.
+                                    </p>
+                                </div>
                             )}
                         </div>
 
-                        {/* Right: fields */}
-                        <div className="lg:col-span-7 flex flex-col space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium">
+                        {/* Right: Enhanced form fields */}
+                        <div className="xl:col-span-7 space-y-8">
+                            {/* Step indicator for form fields */}
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                                    NFT Details
+                                </h2>
+                                <span className="text-xs text-neutral-500 px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded-md">
+                                    Step 2
+                                </span>
+                            </div>
+                            
+                            {/* Enhanced name field */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                                     Name <span className="text-red-500">*</span>
                                 </label>
-                                <input
-                                    className={`mt-1 w-full rounded-lg border p-2.5 focus:outline-none focus:ring-2 transition-colors
-                                        ${errors.name
-                                            ? 'border-error focus:ring-error/30 focus:border-error bg-error/5'
-                                            : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 focus:ring-accent/30 focus:border-accent'
-                                        }`}
-                                    placeholder="Enter NFT title (2-80 characters)"
-                                    value={name}
-                                    onChange={handleNameChange}
-                                    maxLength={80}
-                                    required
-                                />
+                                <div className="relative">
+                                    <input
+                                        className={`w-full rounded-xl border-2 p-4 pr-12 focus:outline-none focus:ring-4 transition-all duration-200
+                                            placeholder:text-neutral-400 dark:placeholder:text-neutral-500
+                                            ${errors.name
+                                                ? 'border-red-300 focus:ring-red-100 focus:border-red-500 bg-red-50 dark:bg-red-950/20 dark:border-red-700'
+                                                : name.trim()
+                                                ? 'border-green-300 focus:ring-green-100 focus:border-green-500 bg-green-50 dark:bg-green-950/20 dark:border-green-700'
+                                                : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 focus:ring-accent/20 focus:border-accent'
+                                            }`}
+                                        placeholder="Give your NFT a memorable name..."
+                                        value={name}
+                                        onChange={handleNameChange}
+                                        maxLength={80}
+                                        required
+                                    />
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                        {name.trim() && !errors.name ? (
+                                            <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        ) : errors.name ? (
+                                            <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        ) : null}
+                                    </div>
+                                </div>
                                 {errors.name && (
-                                    <p className="mt-1 text-sm text-error">{errors.name}</p>
+                                    <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
+                                        <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <p className="text-sm text-red-700 dark:text-red-300">{errors.name}</p>
+                                    </div>
                                 )}
-                                <p className="mt-1 text-xs text-neutral-500">
-                                    {name.length}/80 characters
-                                </p>
+                                <div className="flex justify-between items-center">
+                                    <p className="text-xs text-neutral-500">
+                                        Choose a unique, descriptive name for your NFT
+                                    </p>
+                                    <p className="text-xs text-neutral-500 font-mono">
+                                        {name.length}/80
+                                    </p>
+                                </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block">
-                                        <span className="text-sm font-medium">
-                                            Royalties (bps) <span className="text-red-500">*</span>
-                                        </span>
+                            {/* Enhanced grid for price and royalties */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* Enhanced royalties field */}
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                        Royalties <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative">
                                         <input
                                             type="number"
                                             min={0}
                                             max={1000}
                                             step={1}
-                                            className={`mt-1 w-full rounded-lg border p-2.5 focus:outline-none focus:ring-2 transition-colors
+                                            className={`w-full rounded-xl border-2 p-4 pr-12 focus:outline-none focus:ring-4 transition-all duration-200
+                                                placeholder:text-neutral-400 dark:placeholder:text-neutral-500
                                                 ${errors.royalty
-                                                    ? 'border-error focus:ring-error/30 focus:border-error bg-error/5'
-                                                    : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 focus:ring-accent/30 focus:border-accent'
+                                                    ? 'border-red-300 focus:ring-red-100 focus:border-red-500 bg-red-50 dark:bg-red-950/20'
+                                                    : royaltyBps >= 0 && royaltyBps <= 1000
+                                                    ? 'border-green-300 focus:ring-green-100 focus:border-green-500 bg-green-50 dark:bg-green-950/20'
+                                                    : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 focus:ring-accent/20 focus:border-accent'
                                                 }`}
                                             placeholder="500"
                                             value={royaltyBps}
                                             onChange={handleRoyaltyChange}
                                             required
                                         />
-                                        {errors.royalty && (
-                                            <p className="mt-1 text-sm text-error">{errors.royalty}</p>
-                                        )}
-                                        <p className="mt-1 text-xs text-neutral-500">
-                                            {royaltyBps / 100}% royalty fee
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-neutral-500">
+                                            bps
+                                        </div>
+                                    </div>
+                                    {errors.royalty && (
+                                        <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
+                                            <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <p className="text-sm text-red-700 dark:text-red-300">{errors.royalty}</p>
+                                        </div>
+                                    )}
+                                    <div className="space-y-1">
+                                        <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                                            Earn <strong>{(royaltyBps / 100).toFixed(1)}%</strong> on future sales
                                         </p>
-                                    </label>
+                                        <div className="flex gap-2">
+                                            {[250, 500, 750].map((preset) => (
+                                                <button
+                                                    key={preset}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setRoyaltyBps(preset);
+                                                        setErrors(prev => ({ ...prev, royalty: validateRoyalty(preset) }));
+                                                    }}
+                                                    className={`px-2 py-1 text-xs rounded-md transition-colors
+                                                        ${royaltyBps === preset 
+                                                            ? 'bg-accent text-white' 
+                                                            : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                                                        }`}
+                                                >
+                                                    {preset / 100}%
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <label className="block">
-                                        <span className="text-sm font-medium">
-                                            Listing price (ETH) <span className="text-red-500">*</span>
-                                        </span>
+                                {/* Enhanced price field */}
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                        Listing Price <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative">
                                         <input
-                                            className={`mt-1 w-full rounded-lg border p-2.5 focus:outline-none focus:ring-2 transition-colors
+                                            className={`w-full rounded-xl border-2 p-4 pl-12 pr-16 focus:outline-none focus:ring-4 transition-all duration-200
+                                                placeholder:text-neutral-400 dark:placeholder:text-neutral-500
                                                 ${errors.price
-                                                    ? 'border-error focus:ring-error/30 focus:border-error bg-error/5'
-                                                    : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 focus:ring-accent/30 focus:border-accent'
+                                                    ? 'border-red-300 focus:ring-red-100 focus:border-red-500 bg-red-50 dark:bg-red-950/20'
+                                                    : priceEth && Number(priceEth) > 0
+                                                    ? 'border-green-300 focus:ring-green-100 focus:border-green-500 bg-green-50 dark:bg-green-950/20'
+                                                    : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 focus:ring-accent/20 focus:border-accent'
                                                 }`}
                                             value={priceEth}
                                             onChange={handlePriceChange}
@@ -407,70 +602,171 @@ export default function MintListForm({ nftAddress, marketAddress, expectedChainI
                                             placeholder="0.05"
                                             required
                                         />
-                                        {errors.price && (
-                                            <p className="mt-1 text-sm text-error">{errors.price}</p>
-                                        )}
-                                        <p className="mt-1 text-xs text-neutral-500">
-                                            Price in ETH (max 6 decimals)
+                                        <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                                            <svg className="w-5 h-5 text-neutral-400" viewBox="0 0 320 512">
+                                                <path fill="currentColor" d="M311.9 260.8L160 353.6 8 260.8 160 0l151.9 260.8zM160 383.4L8 290.6 160 512l152-221.4-152 92.8z"/>
+                                            </svg>
+                                        </div>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                                            ETH
+                                        </div>
+                                    </div>
+                                    {errors.price && (
+                                        <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
+                                            <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <p className="text-sm text-red-700 dark:text-red-300">{errors.price}</p>
+                                        </div>
+                                    )}
+                                    <div className="space-y-1">
+                                        <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                                            Set your initial listing price
                                         </p>
-                                    </label>
+                                        <div className="flex gap-2">
+                                            {['0.01', '0.05', '0.1', '0.5'].map((preset) => (
+                                                <button
+                                                    key={preset}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setPriceEth(preset);
+                                                        setErrors(prev => ({ ...prev, price: validatePrice(preset) }));
+                                                    }}
+                                                    className={`px-2 py-1 text-xs rounded-md transition-colors
+                                                        ${priceEth === preset 
+                                                            ? 'bg-accent text-white' 
+                                                            : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                                                        }`}
+                                                >
+                                                    {preset} ETH
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block">
-                                    <span className="text-sm font-medium">Description</span>
+                            {/* Enhanced description field */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                    Description <span className="text-neutral-500">(Optional)</span>
+                                </label>
+                                <div className="relative">
                                     <textarea
-                                        className={`mt-1 w-full rounded-lg border p-2.5 focus:outline-none focus:ring-2 transition-colors resize-none
+                                        className={`w-full rounded-xl border-2 p-4 focus:outline-none focus:ring-4 transition-all duration-200 resize-none
+                                            placeholder:text-neutral-400 dark:placeholder:text-neutral-500
                                             ${errors.desc
-                                                ? 'border-error focus:ring-error/30 focus:border-error bg-error/5'
-                                                : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 focus:ring-accent/30 focus:border-accent'
+                                                ? 'border-red-300 focus:ring-red-100 focus:border-red-500 bg-red-50 dark:bg-red-950/20'
+                                                : desc.trim()
+                                                ? 'border-green-300 focus:ring-green-100 focus:border-green-500 bg-green-50 dark:bg-green-950/20'
+                                                : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 focus:ring-accent/20 focus:border-accent'
                                             }`}
-                                        placeholder="Describe your NFT (optional)"
+                                        placeholder="Tell the story behind your artwork. What inspired you? What makes it special?"
                                         value={desc}
                                         onChange={handleDescChange}
                                         rows={4}
                                         maxLength={1000}
                                     />
-                                    {errors.desc && (
-                                        <p className="mt-1 text-sm text-error">{errors.desc}</p>
-                                    )}
-                                    <p className="mt-1 text-xs text-neutral-500">
-                                        {desc.length}/1000 characters
+                                </div>
+                                {errors.desc && (
+                                    <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800">
+                                        <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <p className="text-sm text-red-700 dark:text-red-300">{errors.desc}</p>
+                                    </div>
+                                )}
+                                <div className="flex justify-between items-center">
+                                    <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                                        A good description helps buyers understand your NFT
                                     </p>
-                                </label>
+                                    <p className="text-xs text-neutral-500 font-mono">
+                                        {desc.length}/1000
+                                    </p>
+                                </div>
                             </div>
 
-                            <div className="flex-grow" />
-
-                            <div className="pt-4">
-                                <button
-                                    disabled={disabled}
-                                    className="w-full cursor-pointer disabled:cursor-not-allowed 
-                             flex items-center justify-center gap-3
-                             rounded-xl px-6 py-4 font-bold text-white text-lg
-                             bg-gradient-to-r from-accent-light via-accent to-accent-dark
-                             hover:from-accent hover:via-accent-dark hover:to-primary-dark
-                             hover:shadow-xl hover:shadow-accent/30
-                             active:scale-[0.98] active:shadow-lg
-                             transition-all duration-200 ease-out
-                             disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none
-                             shadow-lg border border-accent/20 hover:border-accent/40
-                             focus:outline-none focus:ring-4 focus:ring-accent/30
-                             backdrop-blur-sm transform hover:-translate-y-0.5"
-                                >
-                                    {busy ? (
-                                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z" />
-                                        </svg>
-                                    ) : (
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                        </svg>
+                            {/* Enhanced submit section */}
+                            <div className="pt-8 border-t border-neutral-200 dark:border-neutral-700">
+                                <div className="space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                                            Ready to Launch?
+                                        </h3>
+                                        <span className="text-xs text-neutral-500 px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded-md">
+                                            Step 3
+                                        </span>
+                                    </div>
+                                    
+                                    {/* Summary card */}
+                                    {file && name.trim() && priceEth && !hasErrors && (
+                                        <div className="p-4 rounded-xl bg-accent/5 border border-accent/20">
+                                            <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+                                                Summary
+                                            </h4>
+                                            <div className="space-y-1 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="text-neutral-600 dark:text-neutral-400">Name:</span>
+                                                    <span className="font-medium">{name}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-neutral-600 dark:text-neutral-400">Price:</span>
+                                                    <span className="font-medium">{priceEth} ETH</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-neutral-600 dark:text-neutral-400">Royalties:</span>
+                                                    <span className="font-medium">{(royaltyBps / 100).toFixed(1)}%</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     )}
-                                    <span>{busy ? 'Processing...' : 'Mint & List NFT'}</span>
-                                </button>
+
+                                    <button
+                                        disabled={disabled}
+                                        className="w-full group relative overflow-hidden cursor-pointer disabled:cursor-not-allowed 
+                                                 flex items-center justify-center gap-3
+                                                 rounded-xl px-8 py-5 font-bold text-white text-lg
+                                                 bg-gradient-to-r from-accent-light via-accent to-accent-dark
+                                                 hover:from-accent hover:via-accent-dark hover:to-primary-dark
+                                                 hover:shadow-2xl hover:shadow-accent/40
+                                                 active:scale-[0.98] active:shadow-lg
+                                                 transition-all duration-300 ease-out
+                                                 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none
+                                                 shadow-xl border border-accent/30 hover:border-accent/50
+                                                 focus:outline-none focus:ring-4 focus:ring-accent/30
+                                                 backdrop-blur-sm transform hover:-translate-y-1"
+                                    >
+                                        {busy ? (
+                                            <>
+                                                <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z" />
+                                                </svg>
+                                                <span>Processing...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-6 h-6 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                </svg>
+                                                <span>Mint & List NFT</span>
+                                                <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </>
+                                        )}
+                                        
+                                        {/* Enhanced button effects */}
+                                        <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                                    </button>
+                                    
+                                    {/* Helpful tips */}
+                                    <div className="text-xs text-neutral-500 space-y-1">
+                                        <p>💡 <strong>Tip:</strong> Higher quality images tend to sell better</p>
+                                        <p>⚡ <strong>Gas fees:</strong> You&apos;ll need ETH for minting and listing transactions</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </form>

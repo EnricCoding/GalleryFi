@@ -8,7 +8,7 @@
     "prepare": "graph codegen",
     "codegen": "graph codegen",
     "build":   "graph build",
-     "deploy":  "graph deploy --studio gallery-fi"
+    "deploy":  "graph deploy --studio gallery-fi"
   },
   "keywords": [],
   "author": "",

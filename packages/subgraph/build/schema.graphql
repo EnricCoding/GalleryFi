@@ -15,6 +15,10 @@ type Listing @entity(immutable: false) {
   tokenId: BigInt!
   seller: Bytes!
   price: BigInt!
+  tokenURI: String
+  name: String
+  description: String
+  image: String
   timestamp: BigInt!
 }
 

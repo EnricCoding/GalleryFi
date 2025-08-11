@@ -1,11 +1,14 @@
-// lib/types/listing.ts
 export interface Listing {
   id: string;
   nft: `0x${string}`;
-  tokenId: string; // BigInt as string
-  price: string; // Wei as string
+  tokenId: string;      
+  price: string;     
   seller: `0x${string}`;
-  timestamp: string; // unix seconds as string
+  timestamp: string;    
+  tokenURI?: string | null;
+  name?: string | null;
+  description?: string | null;
+  image?: string | null;
 }
 
 export interface ListingsResponse {

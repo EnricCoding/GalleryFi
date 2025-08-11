@@ -18,6 +18,8 @@ dataSources:
       abis:
         - name: MyNFT
           file: MyNFT\MyNFT.json
+        - name: ERC721
+          file: MyNFT\ERC721.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleTransfer
@@ -42,6 +44,8 @@ dataSources:
       abis:
         - name: NftMarketplace
           file: NftMarketplace\NftMarketplace.json
+        - name: ERC721
+          file: NftMarketplace\ERC721.json
       eventHandlers:
         - event: ItemListed(indexed address,uint256,address,uint256)
           handler: handleItemListed
@@ -54,3 +58,19 @@ dataSources:
         - event: AuctionEnded(indexed address,uint256,address,uint256)
           handler: handleAuctionEnded
       file: NftMarketplace\NftMarketplace.wasm
+templates:
+  - kind: ethereum/contract
+    name: ERC721
+    network: sepolia
+    source:
+      abi: ERC721
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities: []
+      abis:
+        - name: ERC721
+          file: ERC721\ERC721.json
+      eventHandlers: []
+      file: templates\ERC721\ERC721.wasm
