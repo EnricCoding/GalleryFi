@@ -151,3 +151,8 @@ tmp/
 temp/
 .tmp/
 .npmrc
+
+
+/DOCS.txt
+/DOCS_CHANGE_SOMETHING.txt
+/How_TO_DO.txt
