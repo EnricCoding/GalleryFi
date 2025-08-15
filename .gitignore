@@ -1,19 +1,153 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# OS / Editores
+# ──────────────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+Icon?
+.Spotlight-V100
+.Trashes
+*.swp
+*.swo
+.idea/
+*.iml
+
+# VS Code: ignora todo excepto archivos útiles de equipo
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Node / Monorepo / Gestores
+# ──────────────────────────────────────────────────────────────────────────────
 node_modules/
 packages/**/node_modules/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+# (lockfiles NO se ignoran; se recomienda commitearlos)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Builds / Caches / TypeScript
+# ──────────────────────────────────────────────────────────────────────────────
+dist/
+build/
+.cache/
+**/dist/
+**/build/
+**/.cache/
+.eslintcache
+*.tsbuildinfo
+*.tsbuildinfo.readable
+.turbo/
+.parcel-cache/
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Next.js
+# ──────────────────────────────────────────────────────────────────────────────
+.next/
+packages/**/.next/
+out/
+packages/**/out/
+.vercel/
+packages/**/.vercel/
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Turborepo (si lo usas)
+# ──────────────────────────────────────────────────────────────────────────────
+.turbo/
+packages/**/.turbo/
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Testing / Coverage
+# ──────────────────────────────────────────────────────────────────────────────
+coverage/
+coverage.json
+.nyc_output/
+cypress/videos/
+cypress/screenshots/
+playwright-report/
+blob-report/
+test-results/
+.playwright/
+jest-results/
+
+# Storybook
+storybook-static/
+
+# ──────────────────────────────────────────────────────────────────────────────
+# The Graph (Subgraph)
+# ──────────────────────────────────────────────────────────────────────────────
+subgraph/generated/
+subgraph/build/
+packages/**/subgraph/generated/
+packages/**/subgraph/build/
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Hardhat / TypeChain / Ignition / Deploys
+# ──────────────────────────────────────────────────────────────────────────────
+# (tus reglas originales + cobertura)
+cache/
+artifacts/
+typechain/
+typechain-types/
+**/cache/
+**/artifacts/
+**/typechain/
+**/typechain-types/
+
+# hardhat-deploy / foundry
+deployments/
+broadcast/
+
+# Ignition
+ignition/deployments/
+# Si SOLO quieres ignorar locales:
+# ignition/deployments/chain-31337
+
+# solidity-coverage
+coverage/
+coverage.json
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Entornos / Secretos
+# ──────────────────────────────────────────────────────────────────────────────
 .env
-.DS_Store
+.env.*
+!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.secret
+*.secrets
+secret.*
+secrets.*
+.envrc
 
-# Hardhat files
-/cache
-/artifacts
-
-# TypeChain files
-/typechain
-/typechain-types
-
-# solidity-coverage files
-/coverage
-/coverage.json
-
-# Hardhat Ignition default folder for deployments against a local node
-ignition/deployments/chain-31337
+# ──────────────────────────────────────────────────────────────────────────────
+# Miscelánea
+# ──────────────────────────────────────────────────────────────────────────────
+*.tmp
+*.temp
+tmp/
+temp/
+.tmp/
+.npmrc
