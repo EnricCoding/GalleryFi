@@ -10,6 +10,6 @@ export function useListings(params: ListParams = {}) {
     refetchInterval: 10_000,
     staleTime: 8_000,
     refetchOnWindowFocus: false,
-    gcTime: 5 * 60 * 1000, // 5 min
+    gcTime: 5 * 60 * 1000,
   });
 }

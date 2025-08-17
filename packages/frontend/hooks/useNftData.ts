@@ -26,10 +26,11 @@ export function useNftData({ nft, tokenId }: Params) {
     onchainOwner, // `0x...` | undefined
     listedNow,
     auctionNow,
+    refetchOnchainData,
   } = useOnchainNft(nft, tokenId);
 
   // 2) Subgraph
-  const { subgraphData, subgraphLoading, activity } = useNftActivity(nft, tokenIdBig);
+  const { subgraphData, subgraphLoading, activity, refetchActivity } = useNftActivity(nft, tokenIdBig);
 
   // 3) tokenURI preferente y metadata IPFS
   const tokenURI: string | null = useMemo(() => {
@@ -70,5 +71,17 @@ export function useNftData({ nft, tokenId }: Params) {
     // Config
     expectedChainId,
     MARKET,
+
+    // Refetch functions for manual data refresh
+    refreshAllData: async () => {
+      try {
+        await Promise.all([
+          refetchOnchainData(),
+          refetchActivity(),
+        ]);
+      } catch (error) {
+        console.warn('Error refreshing NFT data:', error);
+      }
+    },
   };
 }

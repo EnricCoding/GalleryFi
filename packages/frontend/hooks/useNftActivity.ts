@@ -118,10 +118,12 @@ function toActivity(input?: {
 }
 
 export function useNftActivity(nft: `0x${string}`, tokenIdBig: bigint | null) {
-  const { data: subgraphData, loading: subgraphLoading } = useQuery(NFT_ACTIVITY, {
+  const { data: subgraphData, loading: subgraphLoading, refetch } = useQuery(NFT_ACTIVITY, {
     variables: { nft: nft.toLowerCase(), tokenId: tokenIdBig?.toString() },
     skip: !tokenIdBig,
     fetchPolicy: 'cache-and-network',
+    // Enable polling for better real-time updates
+    pollInterval: 30000, // Poll every 30 seconds
   });
 
   const activity = toActivity({
@@ -130,5 +132,23 @@ export function useNftActivity(nft: `0x${string}`, tokenIdBig: bigint | null) {
     bids: subgraphData?.bids,
   });
 
-  return { subgraphData, subgraphLoading, activity };
+  // Enhanced refetch with fresh network data
+  const refetchActivity = async () => {
+    try {
+      await refetch({
+        fetchPolicy: 'network-only', // Force fresh data from network
+      });
+    } catch (error) {
+      console.warn('Failed to refetch activity:', error);
+      // Fallback to regular refetch if network-only fails
+      return refetch();
+    }
+  };
+
+  return { 
+    subgraphData, 
+    subgraphLoading, 
+    activity,
+    refetchActivity,
+  };
 }

@@ -97,7 +97,7 @@ export default function MintListForm({ nftAddress, marketAddress, expectedChainI
 
         const result = await submit({ file, name, desc, royaltyBps, priceEth });
         if (result?.tokenId != null) {
-            router.push(`/nft/${getAddress(nftAddress)}/${result.tokenId.toString()}`);
+            router.push(`/nft/${getAddress(nftAddress)}/${result.tokenId.toString()}?newly_created=true`);
         }
     }
 

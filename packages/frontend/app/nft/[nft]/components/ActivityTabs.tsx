@@ -6,6 +6,7 @@ import { formatEther } from 'viem';
 
 interface ActivityTabsProps {
     activity: NftActivity[];
+    isNewlyCreated?: boolean;
 }
 
 type TabId = 'activity' | 'offers' | 'history';
@@ -68,7 +69,7 @@ const DEFAULT_ACTIVITY_ICON = (
     </div>
 );
 
-export default function ActivityTabs({ activity }: ActivityTabsProps) {
+export default function ActivityTabs({ activity, isNewlyCreated }: ActivityTabsProps) {
     const [activeTab, setActiveTab] = useState<TabId>('activity');
 
     // Memoized utility functions
@@ -192,12 +193,18 @@ export default function ActivityTabs({ activity }: ActivityTabsProps) {
                         ) : (
                             <EmptyState
                                 icon={
-                                    <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                    </svg>
+                                    isNewlyCreated ? (
+                                        <svg className="w-8 h-8 text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                        </svg>
+                                    )
                                 }
-                                title="No activity yet"
-                                description="Activity will appear here when it occurs"
+                                title={isNewlyCreated ? "Loading activity..." : "No activity yet"}
+                                description={isNewlyCreated ? "Your NFT data is being indexed. This may take a few moments." : "Activity will appear here when it occurs"}
                             />
                         )}
                     </div>

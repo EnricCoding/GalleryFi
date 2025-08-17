@@ -18,6 +18,7 @@ interface UseBuyNftProps {
   expectedChainId: number;
   MARKET: `0x${string}`;
   showNotification: (message: string, type: 'success' | 'error' | 'info') => void;
+  refreshData?: () => Promise<void>;
 }
 
 export function useBuyNft({
@@ -29,6 +30,7 @@ export function useBuyNft({
   expectedChainId,
   MARKET,
   showNotification,
+  refreshData,
 }: UseBuyNftProps) {
   const router = useRouter();
   const { isConnected } = useAccount();
@@ -74,8 +76,33 @@ export function useBuyNft({
       const rcpt = await publicClient.waitForTransactionReceipt({ hash: txHash });
       if (rcpt.status !== 'success') throw new Error('Transaction reverted');
 
-      showNotification('Purchase successful!', 'success');
-      router.refresh();
+      showNotification('🎉 Purchase successful! Updating information...', 'success');
+      
+      // Refresh all NFT data (onchain + subgraph) instead of full page refresh
+      if (refreshData) {
+        try {
+          // Immediate refresh for onchain data
+          await refreshData();
+          
+          // Delayed refresh for subgraph data (subgraph needs time to index)
+          setTimeout(async () => {
+            try {
+              await refreshData();
+              showNotification('✅ Activity history updated successfully', 'info');
+            } catch (delayedRefreshError) {
+              console.warn('Failed to refresh delayed data:', delayedRefreshError);
+            }
+          }, 3000); // Wait 3 seconds for subgraph to index
+          
+        } catch (refreshError) {
+          console.warn('Failed to refresh data:', refreshError);
+          showNotification('ℹ️ Please refresh the page to see updated information', 'info');
+          // Fallback to router refresh if data refresh fails
+          router.refresh();
+        }
+      } else {
+        router.refresh();
+      }
     } catch (err: unknown) {
       const raw = err instanceof Error ? err.message : String(err);
       // Mensajes más claros

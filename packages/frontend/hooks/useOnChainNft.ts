@@ -33,40 +33,40 @@ export function useOnchainNft(nft: `0x${string}`, tokenId: string) {
   /* ---------- Reads on-chain (RAW) ---------- */
 
   // listings(nft, id) -> tuple
-  const { data: rawListing } = useReadContract({
+  const { data: rawListing, refetch: refetchListing } = useReadContract({
     address: MARKET,
     abi: MarketAbi,
     functionName: 'listings',
     args: [nft, tokenIdBig ?? BigInt(0)],
     query: { enabled: validInputs, refetchInterval: 10_000 }, // refresca cada 10s
-  }) as { data: ListingTuple | undefined };
+  }) as { data: ListingTuple | undefined; refetch: () => void };
 
   // auctions(nft, id) -> tuple (seller, end, bid, bidder)
-  const { data: rawAuction } = useReadContract({
+  const { data: rawAuction, refetch: refetchAuction } = useReadContract({
     address: MARKET,
     abi: MarketAbi,
     functionName: 'auctions',
     args: [nft, tokenIdBig ?? BigInt(0)],
     query: { enabled: validInputs, refetchInterval: 10_000 }, // refresca cada 10s
-  }) as { data: AuctionTuple | undefined };
+  }) as { data: AuctionTuple | undefined; refetch: () => void };
 
   // tokenURI(id)
-  const { data: onchainTokenURI } = useReadContract({
+  const { data: onchainTokenURI, refetch: refetchTokenURI } = useReadContract({
     address: nft,
     abi: NftAbi,
     functionName: 'tokenURI',
     args: [tokenIdBig ?? BigInt(0)],
     query: { enabled: validInputs }, // normalmente no cambia
-  }) as { data: string | undefined };
+  }) as { data: string | undefined; refetch: () => void };
 
   // ownerOf(id)
-  const { data: onchainOwner } = useReadContract({
+  const { data: onchainOwner, refetch: refetchOwner } = useReadContract({
     address: nft,
     abi: NftAbi,
     functionName: 'ownerOf',
     args: [tokenIdBig ?? BigInt(0)],
     query: { enabled: validInputs, refetchInterval: 15_000 }, // puede cambiar tras comprar
-  }) as { data: `0x${string}` | undefined };
+  }) as { data: `0x${string}` | undefined; refetch: () => void };
 
   /* ---------- Normalización ---------- */
 
@@ -103,5 +103,14 @@ export function useOnchainNft(nft: `0x${string}`, tokenId: string) {
     onchainOwner, // `0x...` | undefined
     listedNow,
     auctionNow,
+    // Refetch functions for manual data refresh
+    refetchOnchainData: async () => {
+      await Promise.all([
+        refetchListing(),
+        refetchAuction(),
+        refetchTokenURI(),
+        refetchOwner(),
+      ]);
+    },
   };
 }

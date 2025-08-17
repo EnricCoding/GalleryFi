@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useMemo, useState, memo } from 'react';
+import { useCallback, useMemo, useState, memo, useEffect, useRef } from 'react';
 import { useAccount } from 'wagmi';
 import { isAddressEqual } from 'viem';
+import { useSearchParams } from 'next/navigation';
 import { useNftData } from '@/hooks/useNftData';
 import { useBuyNft } from '@/hooks/useBuyNft';
 import { NftMetadata } from '@/lib/types/metadata';
@@ -23,7 +24,6 @@ interface ToastMessage {
     type: ToastKind;
 }
 
-/* ---------------- Loading skeleton ---------------- */
 const LoadingSkeleton = memo(() => (
     <div
         className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-8"
@@ -99,7 +99,9 @@ const NftDetailContent = memo(({
     seller,
     ownerAddress,
     onBuyClick,
-    isBuying
+    isBuying,
+    isRefreshing,
+    isNewlyCreated
 }: {
     imgUrl: string | null;
     meta: NftMetadata | null;
@@ -113,9 +115,19 @@ const NftDetailContent = memo(({
     ownerAddress?: `0x${string}` | undefined;
     onBuyClick: () => void;
     isBuying: boolean;
+    isRefreshing?: boolean;
+    isNewlyCreated: boolean;
 }) => (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Refresh indicator */}
+            {isRefreshing && (
+                <div className="fixed top-4 right-4 z-50 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2">
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    <span className="text-sm font-medium">Updating data...</span>
+                </div>
+            )}
+            
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
                 {/* NFT Image */}
                 <NftImage imgUrl={imgUrl} meta={meta} tokenId={tokenId} />
@@ -138,8 +150,8 @@ const NftDetailContent = memo(({
                 </div>
             </div>
 
-            <div className="mt-12">
-                <ActivityTabs activity={activity} />
+            <div className={`mt-12 transition-opacity duration-300 ${isRefreshing ? 'opacity-60' : 'opacity-100'}`}>
+                <ActivityTabs activity={activity} isNewlyCreated={isNewlyCreated} />
             </div>
         </div>
     </div>
@@ -149,6 +161,11 @@ NftDetailContent.displayName = 'NftDetailContent';
 export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailProps) {
     const { address } = useAccount();
     const [toastMessage, setToastMessage] = useState<ToastMessage | null>(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const searchParams = useSearchParams();
+    const autoRefreshCompleted = useRef(false);
+
+    const isNewlyCreated = searchParams.get('newly_created') === 'true';
 
     const {
         meta,
@@ -162,14 +179,13 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         validInputs,
         expectedChainId,
         MARKET,
+        refreshAllData,
     } = useNftData({ nft: contractAddress, tokenId });
 
-    // Derivados memoizados
     const { seller, price, isOwner, isForSale, tokenExists, loading } = useMemo(() => {
         const derivedSeller = onchainListing?.seller;
         const derivedPrice = onchainListing?.price;
 
-        // ✅ fuerza booleanos
         const isSellerMatch = !!(address && derivedSeller && isAddressEqual(address, derivedSeller));
         const isHolderMatch = !!(address && onchainOwner && isAddressEqual(address, onchainOwner));
         const derivedIsOwner = isSellerMatch || isHolderMatch;
@@ -203,6 +219,79 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         setToastMessage(null);
     }, []);
 
+    // Enhanced refresh function with loading state
+    const enhancedRefreshData = useCallback(async () => {
+        setIsRefreshing(true);
+        try {
+            await refreshAllData();
+        } finally {
+            setIsRefreshing(false);
+        }
+    }, [refreshAllData]);
+
+    // Auto-refresh for newly created NFTs
+    useEffect(() => {
+        if (!isNewlyCreated || autoRefreshCompleted.current) return;
+
+        let refreshCount = 0;
+        const maxRefreshes = 6; // Maximum 6 attempts
+        let isActive = true; // Flag to prevent state updates after cleanup
+        
+        // Show initial message that disappears after 3 seconds
+        setToastMessage({ message: '🔄 Loading newly created NFT data...', type: 'info' });
+        const initialMessageTimeout = setTimeout(() => {
+            if (isActive) {
+                setToastMessage(null); // Hide the initial message
+            }
+        }, 3000);
+        
+        const autoRefreshInterval = setInterval(async () => {
+            if (!isActive) return;
+            
+            refreshCount++;
+            
+            try {
+                await refreshAllData();
+                
+                // Only show progress messages after the first refresh
+                if (refreshCount > 1 && isActive) {
+                    setToastMessage({ message: `Still loading... (${refreshCount}/${maxRefreshes})`, type: 'info' });
+                }
+                
+                // Stop refreshing after max attempts
+                if (refreshCount >= maxRefreshes) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshCompleted.current = true; // Mark as completed
+                    if (isActive) {
+                        setToastMessage({ message: 'ℹ️ Data may still be indexing. Try refreshing the page in a moment.', type: 'info' });
+                    }
+                }
+            } catch (error) {
+                console.error('Auto-refresh failed:', error);
+                if (refreshCount >= maxRefreshes && isActive) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshCompleted.current = true; // Mark as completed
+                    setToastMessage({ message: '⚠️ Auto-refresh completed. Data may still be indexing.', type: 'info' });
+                }
+            }
+        }, 5000); // Refresh every 5 seconds
+
+        // Cleanup on unmount
+        return () => {
+            isActive = false;
+            clearInterval(autoRefreshInterval);
+            clearTimeout(initialMessageTimeout);
+        };
+    }, [isNewlyCreated, refreshAllData]);
+
+    // Separate effect to handle activity data detection
+    useEffect(() => {
+        if (isNewlyCreated && !autoRefreshCompleted.current && activity.length > 0) {
+            autoRefreshCompleted.current = true;
+            setToastMessage({ message: '✅ NFT data loaded successfully!', type: 'success' });
+        }
+    }, [isNewlyCreated, activity.length]);
+
     const { busy, handleBuyNow } = useBuyNft({
         nft: contractAddress,
         tokenIdBig,
@@ -212,6 +301,7 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         expectedChainId,
         MARKET,
         showNotification,
+        refreshData: enhancedRefreshData,
     });
 
     console.log('useBuyNft debug:', {
@@ -243,6 +333,8 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
                 ownerAddress={onchainOwner}
                 onBuyClick={handleBuyNow}
                 isBuying={busy}
+                isRefreshing={isRefreshing}
+                isNewlyCreated={isNewlyCreated}
             />
 
             {/* Toast notifications */}
