@@ -183,7 +183,7 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         return {
             seller: derivedSeller,
             price: derivedPrice,
-            isOwner: derivedIsOwner,      
+            isOwner: derivedIsOwner,
             isForSale: derivedIsForSale,
             tokenExists: derivedTokenExists,
             loading: derivedLoading,
@@ -212,6 +212,17 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         expectedChainId,
         MARKET,
         showNotification,
+    });
+
+    console.log('useBuyNft debug:', {
+        busy,
+        contractAddress,
+        tokenIdBig,
+        validInputs,
+        listedNow,
+        onchainListing,
+        expectedChainId,
+        MARKET: MARKET?.slice(0, 10) + '...'
     });
 
     if (loading) return <LoadingSkeleton />;

@@ -15,9 +15,10 @@ export interface Listing {
 
 export interface ListingsResponse {
   listings: Listing[];
+  totalCount?: number;
+  hasMore: boolean;
 }
 
-/** Parámetros soportados por /api/listings y hooks */
 export interface ListParams {
   first?: number; 
   skip?: number;

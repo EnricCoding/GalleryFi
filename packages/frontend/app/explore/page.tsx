@@ -1,30 +1,49 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import SkeletonGrid from './components/SkeletonGrid';
 import CenteredMessage from './components/CenteredMessage';
-import { useListings } from '@/hooks/useListing';
-import { OrderBy, OrderDir } from '@/lib/services/listing';
 import ListingsGrid from './components/ListingGrid';
+import { fetchListings, OrderBy, OrderDir } from '@/lib/services/listing';
+import { useListings } from '@/hooks/useListing';
 
-const DEFAULT_FIRST = 24 as const;
-const DEFAULT_SKIP = 0 as const;
+const PAGE_SIZE = 6 as const;
 const DEFAULT_ORDER_BY: OrderBy = 'timestamp';
 const DEFAULT_ORDER_DIR: OrderDir = 'desc';
 
 export default function ExplorePage() {
+    const [page, setPage] = useState(1);
+    const queryClient = useQueryClient();
+
     const params = useMemo(
         () => ({
-            first: DEFAULT_FIRST,
-            skip: DEFAULT_SKIP,
+            first: PAGE_SIZE,
+            skip: (page - 1) * PAGE_SIZE,
             orderBy: DEFAULT_ORDER_BY,
             orderDirection: DEFAULT_ORDER_DIR,
         }),
-        [],
+        [page],
     );
 
     const { data, isLoading, isFetching, error, refetch } = useListings(params);
     const listings = data?.listings ?? [];
+
+    useEffect(() => {
+        if (listings.length === PAGE_SIZE) {
+            const nextParams = { ...params, skip: page * PAGE_SIZE };
+            queryClient.prefetchQuery({
+                queryKey: ['listings', nextParams],
+                queryFn: ({ signal }) => fetchListings(nextParams, { signal }),
+            });
+        }
+    }, [listings.length, page, params, queryClient]);
+
+    useEffect(() => {
+        if (!isLoading && !isFetching && page > 1 && listings.length === 0) {
+            setPage((p) => Math.max(1, p - 1));
+        }
+    }, [isLoading, isFetching, listings.length, page]);
 
     if (isLoading) {
         return (
@@ -91,7 +110,43 @@ export default function ExplorePage() {
                         </p>
                     </div>
                 ) : (
-                    <ListingsGrid listings={listings} />
+                    <>
+                        <ListingsGrid listings={listings} />
+
+                        {/* Paginador simple */}
+                        <nav className="mt-8 flex items-center justify-between" aria-label="Pagination">
+                            <button
+                                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                disabled={page === 1 || isFetching}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700
+                           text-neutral-700 dark:text-neutral-200 bg-white dark:bg-neutral-800
+                           disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50 dark:hover:bg-neutral-700 transition"
+                            >
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                </svg>
+                                Previous
+                            </button>
+
+                            <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                                Page <strong>{page}</strong>
+                                {isFetching && <span className="ml-2 animate-pulse">…loading</span>}
+                            </span>
+
+                            <button
+                                onClick={() => setPage((p) => p + 1)}
+                                disabled={listings.length < PAGE_SIZE || isFetching}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700
+                           text-neutral-700 dark:text-neutral-200 bg-white dark:bg-neutral-800
+                           disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50 dark:hover:bg-neutral-700 transition"
+                            >
+                                Next
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </nav>
+                    </>
                 )}
             </div>
         </main>

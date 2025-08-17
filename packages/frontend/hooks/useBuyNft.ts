@@ -14,7 +14,7 @@ interface UseBuyNftProps {
   tokenIdBig: bigint | null;
   validInputs: boolean;
   listedNow: boolean;
-  onchainListing: NormalizedListing; // ✅ ahora esperamos el objeto normalizado
+  onchainListing: NormalizedListing; 
   expectedChainId: number;
   MARKET: `0x${string}`;
   showNotification: (message: string, type: 'success' | 'error' | 'info') => void;
@@ -33,7 +33,7 @@ export function useBuyNft({
   const router = useRouter();
   const { isConnected } = useAccount();
   const chainId = useChainId();
-  const { switchChainAsync } = useSwitchChain(); // ✅ versión async
+  const { switchChain } = useSwitchChain(); 
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
 
@@ -45,16 +45,18 @@ export function useBuyNft({
       if (!isConnected) throw new Error('Connect your wallet');
       if (!publicClient) throw new Error('RPC client not available');
 
-      // ✅ intenta cambiar de red y solo lanza si falla
       if (chainId !== expectedChainId) {
         try {
-          await switchChainAsync?.({ chainId: expectedChainId });
+          switchChain?.({ chainId: expectedChainId });
+          showNotification(`Switching network to ${expectedChainId}…`, 'info');
+          return; 
         } catch {
           throw new Error(`Wrong network. Switch to chainId ${expectedChainId} (Sepolia).`);
         }
       }
 
-      if (!listedNow || !onchainListing?.price || onchainListing.price <= BigInt(0)) {
+      const price = onchainListing?.price ?? BigInt(0);
+      if (!listedNow || price <= BigInt(0)) {
         throw new Error('This NFT is not currently listed');
       }
 
@@ -66,7 +68,7 @@ export function useBuyNft({
         abi: MarketAbi,
         functionName: 'buyItem',
         args: [nft, tokenIdBig],
-        value: onchainListing.price, // ✅ bigint
+        value: price, // bigint
       });
 
       const rcpt = await publicClient.waitForTransactionReceipt({ hash: txHash });
@@ -75,7 +77,13 @@ export function useBuyNft({
       showNotification('Purchase successful!', 'success');
       router.refresh();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error during purchase';
+      const raw = err instanceof Error ? err.message : String(err);
+      // Mensajes más claros
+      const message = /User rejected|User denied|rejected/i.test(raw)
+        ? 'Transaction rejected in wallet.'
+        : /insufficient funds|gas/i.test(raw)
+          ? 'Insufficient funds for gas or value.'
+          : raw || 'Unknown error during purchase';
       showNotification(message, 'error');
     } finally {
       setBusy(false);
@@ -88,6 +96,5 @@ export function useBuyNft({
     isConnected,
     chainId,
     expectedChainId,
-    switchChain: switchChainAsync, 
   };
 }
