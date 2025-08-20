@@ -69,12 +69,8 @@ const NotFoundError = memo(({ onGoBack }: { onGoBack: () => void }) => (
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                    NFT not found
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    The requested token does not exist or an error occurred.
-                </p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">NFT not found</h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">The requested token does not exist or an error occurred.</p>
                 <button
                     onClick={onGoBack}
                     className="px-6 py-3 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white font-semibold rounded-xl transition-all duration-200 active:scale-95"
@@ -87,6 +83,7 @@ const NotFoundError = memo(({ onGoBack }: { onGoBack: () => void }) => (
 ));
 NotFoundError.displayName = 'NotFoundError';
 
+/* ---------------- Content ---------------- */
 const NftDetailContent = memo(({
     imgUrl,
     meta,
@@ -101,7 +98,8 @@ const NftDetailContent = memo(({
     onBuyClick,
     isBuying,
     isRefreshing,
-    isNewlyCreated
+    isNewlyCreated,
+    onRefreshData,               // ← NEW: se lo pasamos a NftInfo
 }: {
     imgUrl: string | null;
     meta: NftMetadata | null;
@@ -117,22 +115,20 @@ const NftDetailContent = memo(({
     isBuying: boolean;
     isRefreshing?: boolean;
     isNewlyCreated: boolean;
+    onRefreshData?: () => Promise<void>;  // ← NEW
 }) => (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Refresh indicator */}
             {isRefreshing && (
                 <div className="fixed top-4 right-4 z-50 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2">
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
                     <span className="text-sm font-medium">Updating data...</span>
                 </div>
             )}
-            
+
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-                {/* NFT Image */}
                 <NftImage imgUrl={imgUrl} meta={meta} tokenId={tokenId} />
 
-                {/* NFT Info and Actions */}
                 <div className="xl:col-span-6">
                     <NftInfo
                         meta={meta}
@@ -146,6 +142,7 @@ const NftDetailContent = memo(({
                         isBuying={isBuying}
                         ownerAddress={ownerAddress}
                         sellerAddress={seller}
+                        onRefreshData={onRefreshData}  // ← NEW: lo consume NftInfo (listar/cancelar)
                     />
                 </div>
             </div>
@@ -158,6 +155,7 @@ const NftDetailContent = memo(({
 ));
 NftDetailContent.displayName = 'NftDetailContent';
 
+/* ---------------- Page ---------------- */
 export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailProps) {
     const { address } = useAccount();
     const [toastMessage, setToastMessage] = useState<ToastMessage | null>(null);
@@ -190,9 +188,7 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         const isHolderMatch = !!(address && onchainOwner && isAddressEqual(address, onchainOwner));
         const derivedIsOwner = isSellerMatch || isHolderMatch;
 
-        const derivedIsForSale =
-            typeof derivedPrice !== 'undefined' && derivedPrice !== null && derivedPrice > BigInt(0);
-
+        const derivedIsForSale = typeof derivedPrice !== 'undefined' && derivedPrice !== null && derivedPrice > BigInt(0);
         const derivedTokenExists = validInputs && tokenIdBig !== null;
         const derivedLoading = subgraphLoading && !meta;
 
@@ -206,20 +202,14 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         };
     }, [onchainListing, onchainOwner, address, validInputs, tokenIdBig, subgraphLoading, meta]);
 
-    // Callbacks
+    /* ---------- Toasts ---------- */
     const showNotification = useCallback((message: string, type: ToastKind) => {
         setToastMessage({ message, type });
     }, []);
+    const handleGoBack = useCallback(() => window.history.back(), []);
+    const handleCloseToast = useCallback(() => setToastMessage(null), []);
 
-    const handleGoBack = useCallback(() => {
-        window.history.back();
-    }, []);
-
-    const handleCloseToast = useCallback(() => {
-        setToastMessage(null);
-    }, []);
-
-    // Enhanced refresh function with loading state
+    /* ---------- Refresh wrapper ---------- */
     const enhancedRefreshData = useCallback(async () => {
         setIsRefreshing(true);
         try {
@@ -229,54 +219,41 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         }
     }, [refreshAllData]);
 
-    // Auto-refresh for newly created NFTs
+    /* ---------- Auto-refresh para newly_created ---------- */
     useEffect(() => {
         if (!isNewlyCreated || autoRefreshCompleted.current) return;
 
         let refreshCount = 0;
-        const maxRefreshes = 6; // Maximum 6 attempts
-        let isActive = true; // Flag to prevent state updates after cleanup
-        
-        // Show initial message that disappears after 3 seconds
+        const maxRefreshes = 6;
+        let isActive = true;
+
         setToastMessage({ message: '🔄 Loading newly created NFT data...', type: 'info' });
         const initialMessageTimeout = setTimeout(() => {
-            if (isActive) {
-                setToastMessage(null); // Hide the initial message
-            }
+            if (isActive) setToastMessage(null);
         }, 3000);
-        
+
         const autoRefreshInterval = setInterval(async () => {
             if (!isActive) return;
-            
             refreshCount++;
-            
             try {
                 await refreshAllData();
-                
-                // Only show progress messages after the first refresh
                 if (refreshCount > 1 && isActive) {
                     setToastMessage({ message: `Still loading... (${refreshCount}/${maxRefreshes})`, type: 'info' });
                 }
-                
-                // Stop refreshing after max attempts
                 if (refreshCount >= maxRefreshes) {
                     clearInterval(autoRefreshInterval);
-                    autoRefreshCompleted.current = true; // Mark as completed
-                    if (isActive) {
-                        setToastMessage({ message: 'ℹ️ Data may still be indexing. Try refreshing the page in a moment.', type: 'info' });
-                    }
+                    autoRefreshCompleted.current = true;
+                    if (isActive) setToastMessage({ message: 'ℹ️ Data may still be indexing. Try refreshing the page in a moment.', type: 'info' });
                 }
-            } catch (error) {
-                console.error('Auto-refresh failed:', error);
+            } catch {
                 if (refreshCount >= maxRefreshes && isActive) {
                     clearInterval(autoRefreshInterval);
-                    autoRefreshCompleted.current = true; // Mark as completed
+                    autoRefreshCompleted.current = true;
                     setToastMessage({ message: '⚠️ Auto-refresh completed. Data may still be indexing.', type: 'info' });
                 }
             }
-        }, 5000); // Refresh every 5 seconds
+        }, 5000);
 
-        // Cleanup on unmount
         return () => {
             isActive = false;
             clearInterval(autoRefreshInterval);
@@ -284,7 +261,6 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         };
     }, [isNewlyCreated, refreshAllData]);
 
-    // Separate effect to handle activity data detection
     useEffect(() => {
         if (isNewlyCreated && !autoRefreshCompleted.current && activity.length > 0) {
             autoRefreshCompleted.current = true;
@@ -292,6 +268,7 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         }
     }, [isNewlyCreated, activity.length]);
 
+    /* ---------- BUY ---------- */
     const { busy, handleBuyNow } = useBuyNft({
         nft: contractAddress,
         tokenIdBig,
@@ -302,17 +279,6 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         MARKET,
         showNotification,
         refreshData: enhancedRefreshData,
-    });
-
-    console.log('useBuyNft debug:', {
-        busy,
-        contractAddress,
-        tokenIdBig,
-        validInputs,
-        listedNow,
-        onchainListing,
-        expectedChainId,
-        MARKET: MARKET?.slice(0, 10) + '...'
     });
 
     if (loading) return <LoadingSkeleton />;
@@ -335,9 +301,10 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
                 isBuying={busy}
                 isRefreshing={isRefreshing}
                 isNewlyCreated={isNewlyCreated}
+                onRefreshData={enhancedRefreshData}   // ← clave para listar/cancelar en NftInfo
             />
 
-            {/* Toast notifications */}
+            {/* Toasts */}
             <div aria-live="polite" aria-atomic="true">
                 {toastMessage && (
                     <Toast

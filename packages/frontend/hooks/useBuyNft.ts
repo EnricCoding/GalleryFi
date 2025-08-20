@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAccount, useChainId, usePublicClient, useSwitchChain, useWriteContract } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 import MarketJson from '@/utils/abi/NftMarketplace.json';
 
 const MarketAbi = MarketJson.abi;
@@ -14,11 +15,13 @@ interface UseBuyNftProps {
   tokenIdBig: bigint | null;
   validInputs: boolean;
   listedNow: boolean;
-  onchainListing: NormalizedListing; 
+  onchainListing: NormalizedListing;
   expectedChainId: number;
   MARKET: `0x${string}`;
   showNotification: (message: string, type: 'success' | 'error' | 'info') => void;
   refreshData?: () => Promise<void>;
+  refetchListing?: () => Promise<unknown>;
+  refetchOwner?: () => Promise<unknown>;
 }
 
 export function useBuyNft({
@@ -31,34 +34,49 @@ export function useBuyNft({
   MARKET,
   showNotification,
   refreshData,
+  refetchListing,
+  refetchOwner,
 }: UseBuyNftProps) {
   const router = useRouter();
-  const { isConnected } = useAccount();
+  const queryClient = useQueryClient();
+  const { address, isConnected } = useAccount();
   const chainId = useChainId();
-  const { switchChain } = useSwitchChain(); 
+  const { switchChainAsync } = useSwitchChain(); // usar versión async para esperar el cambio
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
 
   const [busy, setBusy] = useState(false);
 
   const handleBuyNow = async () => {
+    if (busy) return; 
     try {
       if (!validInputs || !tokenIdBig) throw new Error('Invalid parameters');
       if (!isConnected) throw new Error('Connect your wallet');
       if (!publicClient) throw new Error('RPC client not available');
 
+      if (
+        address &&
+        onchainListing?.seller &&
+        address.toLowerCase() === onchainListing.seller.toLowerCase()
+      ) {
+        throw new Error('You are the seller of this NFT.');
+      }
+
+      // Asegura red correcta
       if (chainId !== expectedChainId) {
         try {
-          switchChain?.({ chainId: expectedChainId });
           showNotification(`Switching network to ${expectedChainId}…`, 'info');
-          return; 
+          await switchChainAsync?.({ chainId: expectedChainId });
         } catch {
           throw new Error(`Wrong network. Switch to chainId ${expectedChainId} (Sepolia).`);
         }
       }
 
       const price = onchainListing?.price ?? BigInt(0);
-      if (!listedNow || price <= BigInt(0)) {
+      const sellerOk =
+        !!onchainListing?.seller &&
+        onchainListing.seller !== ('0x0000000000000000000000000000000000000000' as `0x${string}`);
+      if (!listedNow || !sellerOk || price <= BigInt(0)) {
         throw new Error('This NFT is not currently listed');
       }
 
@@ -70,34 +88,24 @@ export function useBuyNft({
         abi: MarketAbi,
         functionName: 'buyItem',
         args: [nft, tokenIdBig],
-        value: price, // bigint
+        value: price,
       });
 
       const rcpt = await publicClient.waitForTransactionReceipt({ hash: txHash });
       if (rcpt.status !== 'success') throw new Error('Transaction reverted');
 
-      showNotification('🎉 Purchase successful! Updating information...', 'success');
-      
-      // Refresh all NFT data (onchain + subgraph) instead of full page refresh
+      showNotification('🎉 Purchase successful! Updating information…', 'success');
+
+      await Promise.allSettled([refetchListing?.(), refetchOwner?.()]);
+      queryClient.invalidateQueries({ queryKey: ['listings'] });
       if (refreshData) {
         try {
-          // Immediate refresh for onchain data
-          await refreshData();
-          
-          // Delayed refresh for subgraph data (subgraph needs time to index)
-          setTimeout(async () => {
-            try {
-              await refreshData();
-              showNotification('✅ Activity history updated successfully', 'info');
-            } catch (delayedRefreshError) {
-              console.warn('Failed to refresh delayed data:', delayedRefreshError);
-            }
-          }, 3000); // Wait 3 seconds for subgraph to index
-          
-        } catch (refreshError) {
-          console.warn('Failed to refresh data:', refreshError);
-          showNotification('ℹ️ Please refresh the page to see updated information', 'info');
-          // Fallback to router refresh if data refresh fails
+          await refreshData(); 
+          setTimeout(() => {
+            refreshData().catch(() => {
+            });
+          }, 3000); 
+        } catch {
           router.refresh();
         }
       } else {
@@ -105,12 +113,13 @@ export function useBuyNft({
       }
     } catch (err: unknown) {
       const raw = err instanceof Error ? err.message : String(err);
-      // Mensajes más claros
-      const message = /User rejected|User denied|rejected/i.test(raw)
-        ? 'Transaction rejected in wallet.'
-        : /insufficient funds|gas/i.test(raw)
-          ? 'Insufficient funds for gas or value.'
-          : raw || 'Unknown error during purchase';
+      const message = /You are the seller/i.test(raw)
+        ? 'You cannot buy your own listing.'
+        : /User rejected|User denied|rejected/i.test(raw)
+          ? 'Transaction rejected in wallet.'
+          : /insufficient funds|gas/i.test(raw)
+            ? 'Insufficient funds for gas or value.'
+            : raw || 'Unknown error during purchase';
       showNotification(message, 'error');
     } finally {
       setBusy(false);

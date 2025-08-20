@@ -56,10 +56,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         abi: NftAbi,
         functionName: 'ownerOf',
         args: [BigInt(tokenId)],
-        query: {
-            enabled: !!nft && !!tokenId,
-            refetchInterval: 30_000,
-        },
+        query: { enabled: !!nft && !!tokenId, refetchInterval: 30_000 },
     }) as { data: `0x${string}` | undefined };
 
     const { data: rawListing } = useReadContract({
@@ -67,12 +64,10 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         abi: MarketAbi,
         functionName: 'listings',
         args: [nft, BigInt(tokenId)],
-        query: {
-            enabled: !!MARKET_ADDRESS && !!nft && !!tokenId,
-            refetchInterval: 30_000,
-        },
+        query: { enabled: !!MARKET_ADDRESS && !!nft && !!tokenId, refetchInterval: 30_000 },
     }) as { data: readonly [`0x${string}`, bigint] | undefined };
 
+    // Normaliza el listing on-chain
     const onchainListing = useMemo(
         () =>
             rawListing
@@ -82,27 +77,36 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                 })
                 : undefined,
         [rawListing],
-    )
+    );
 
+    // Eres owner on-chain (si hay escrow no lo serás)
     const isOwner =
         !!address && !!actualOwner && isAddressEqual(address as `0x${string}`, actualOwner);
 
-    const isAvailable =
-        !!onchainListing &&
-        onchainListing.price > BigInt(0) &&
-        onchainListing.seller !== ZERO;
+    // ✅ Eres el seller del listing (aunque no seas owner por escrow)
+    const isSeller =
+        !!address &&
+        ((onchainListing?.seller &&
+            isAddressEqual(address as `0x${string}`, onchainListing.seller)) ||
+            isAddressEqual(address as `0x${string}`, seller as `0x${string}`));
 
+    // Disponible si hay listing válido con price>0
+    const isAvailable =
+        !!onchainListing && onchainListing.price > BigInt(0) && onchainListing.seller !== ZERO;
+
+    // Vendido si no está disponible y el owner ya no es el MARKET (ni el seller del listing)
     const wasSold =
         !isAvailable &&
         !!actualOwner &&
         !isAddressEqual(actualOwner, MARKET_ADDRESS as `0x${string}`) &&
         (!onchainListing || !isAddressEqual(actualOwner, onchainListing.seller));
 
+    // Debug
     console.log('On-chain Listing:', onchainListing);
     console.log('Actual Owner:', actualOwner);
+    console.log('Is Seller:', isSeller);
     console.log('Was Sold:', wasSold);
     console.log('Is Available:', isAvailable);
-
 
     useEffect(() => {
         let cancelled = false;
@@ -204,7 +208,15 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                         {isAvailable ? 'Available' : wasSold ? 'Sold' : 'Unavailable'}
                     </span>
 
-                    {/* Owner badge: SOLO si la wallet conectada ES el owner on-chain */}
+                    {/* Badge para vendedor cuando no es owner por escrow */}
+                    {isSeller && !isOwner && isAvailable && (
+                        <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold 
+                             bg-amber-500/90 text-white border border-amber-400/30 shadow-lg shadow-amber-500/25">
+                            ✨ Your listing
+                        </span>
+                    )}
+
+                    {/* Owner badge: solo si eres owner on-chain */}
                     {isOwner && (
                         <span
                             className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold 
@@ -269,8 +281,8 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                 <div className="flex items-center space-x-3 pt-2 border-t border-neutral-100 dark:border-neutral-700">
                     <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center ${isOwner
-                            ? 'bg-gradient-to-br from-amber-400/30 to-yellow-500/30 ring-2 ring-amber-400/40'
-                            : 'bg-gradient-to-br from-accent/20 to-accent-dark/20'
+                                ? 'bg-gradient-to-br from-amber-400/30 to-yellow-500/30 ring-2 ring-amber-400/40'
+                                : 'bg-gradient-to-br from-accent/20 to-accent-dark/20'
                             }`}
                     >
                         {isOwner ? (
@@ -289,7 +301,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                             <p className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
                                 {wasSold ? 'Current Owner' : isOwner ? 'Owner' : 'Seller'}
                             </p>
-                            {isOwner && (
+                            {(isOwner || isSeller) && (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-700/50">
                                     ✨ You
                                 </span>
@@ -305,7 +317,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                 </div>
 
                 {/* Buy Now */}
-                {!isOwner && isAvailable && (
+                {!isOwner && !isSeller && isAvailable && (
                     <button
                         type="button"
                         onClick={(e) => {
@@ -352,11 +364,13 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                     </button>
                 )}
 
-                {!isConnected && !isOwner && isAvailable && (
-                    <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">Connect your wallet to purchase this item.</p>
+                {!isConnected && !isOwner && !isSeller && isAvailable && (
+                    <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+                        Connect your wallet to purchase this item.
+                    </p>
                 )}
 
-                {!isAvailable && wasSold && !isOwner && (
+                {!isAvailable && wasSold && !isOwner && !isSeller && (
                     <p className="mt-2 text-xs text-blue-600 dark:text-blue-400 font-medium text-center">
                         This NFT has been sold and is no longer available.
                     </p>

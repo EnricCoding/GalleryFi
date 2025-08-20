@@ -10,6 +10,7 @@ export default async function NftPage({
     
     return (
         <NftDetail
+            key={`${nft}-${id}`}
             nft={nft as `0x${string}`}
             tokenId={id}
         />
