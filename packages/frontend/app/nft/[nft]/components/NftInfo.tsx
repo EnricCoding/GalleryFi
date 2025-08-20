@@ -8,6 +8,8 @@ import { NftMetadata } from '@/lib/types/metadata';
 import { NftActivity } from '@/lib/types/activity';
 import { useListForSale } from '@/hooks/useListForSale';
 import { useCancelListing } from '@/hooks/useCancelListing';
+import { useChangePrice } from '@/hooks/useChangePrice';
+import { useBookmarks } from '@/hooks/useBookmarks'; // ⬅️ NUEVO
 import NftInfoActionBar from './NftInfoActionBar';
 import ListForSaleModal from './ListForSaleModal';
 import OwnerInfo from './OwnerInfo';
@@ -21,8 +23,8 @@ interface NftInfoProps {
     isForSale: boolean;
     activity: NftActivity[];
     onBuyClick: () => void;
-    onShare?: () => void;
-    onSaveToBookmarks?: () => void;
+    onShare?: () => void; // (opcional externo) se seguirá llamando
+    onSaveToBookmarks?: () => void; // (opcional externo) se seguirá llamando
     isBuying: boolean;
     isSelling?: boolean;
     ownerAddress?: string;
@@ -52,20 +54,15 @@ export default function NftInfo(props: NftInfoProps) {
     const router = useRouter();
     const [banner, setBanner] = useState<{ kind: 'info' | 'success' | 'error'; text: string } | null>(null);
 
-    // --- NUEVO: temporizador para auto-cierre del banner ---
+    /* ───────────── Banner con autocierre ───────────── */
     const bannerTimerRef = useRef<number | null>(null);
-
     const showBanner = useCallback(
         (kind: 'info' | 'success' | 'error', text: string, durationMs = 3000) => {
             setBanner({ kind, text });
-
-            // limpia temporizador anterior
             if (bannerTimerRef.current) {
                 clearTimeout(bannerTimerRef.current);
                 bannerTimerRef.current = null;
             }
-
-            // solo auto-cierra para info/success; deja errores pegados si durationMs = 0
             if ((kind === 'info' || kind === 'success') && durationMs > 0) {
                 bannerTimerRef.current = window.setTimeout(() => {
                     setBanner(null);
@@ -75,20 +72,24 @@ export default function NftInfo(props: NftInfoProps) {
         },
         [],
     );
-
     useEffect(() => {
         return () => {
-            if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
+            if (bannerTimerRef.current) {
+                clearTimeout(bannerTimerRef.current);
+            }
         };
     }, []);
-    // --- FIN NUEVO ---
 
-    // Precios
+    /* ───────────── Precios ───────────── */
     const { lastPrice, formattedPrice } = useMemo(() => {
         const lastSale = activity.find((a) => a.activityType === 'SALE');
         const lastPriceValue = lastSale ? Number(formatEther(BigInt(lastSale.price || '0'))) : null;
         let currentPrice: string | null = null;
-        try { currentPrice = price ? formatEther(price) : null; } catch { currentPrice = null; }
+        try {
+            currentPrice = price ? formatEther(price) : null;
+        } catch {
+            currentPrice = null;
+        }
         return { lastPrice: lastPriceValue, formattedPrice: currentPrice };
     }, [activity, price]);
 
@@ -99,7 +100,7 @@ export default function NftInfo(props: NftInfoProps) {
     const explorerUrl = useMemo(() => `https://sepolia.etherscan.io/address/${contractAddress}`, [contractAddress]);
     const shortAddr = useCallback((addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`, []);
 
-    // LISTAR
+    /* ───────────── LISTAR ───────────── */
     const {
         open,
         priceInput,
@@ -116,50 +117,129 @@ export default function NftInfo(props: NftInfoProps) {
         tokenId,
         isOwner,
         onListed: async () => {
-            showBanner('success', 'Listed successfully!');     // ← auto-cierra en 3s
+            showBanner('success', 'Listed successfully!');
             await onRefreshData?.();
             router.refresh();
         },
-        onStatus: (text) => showBanner('info', text, 2500),  // ← info 2.5s
+        onStatus: (text) => showBanner('info', text, 2500),
     });
 
-    // CANCELAR
+    /* ───────────── CANCELAR ───────────── */
     const { busyCancel, canCancel, cancel } = useCancelListing({
         nft: contractAddress,
         tokenId,
         isForSale,
         isOwner,
         onCanceled: async () => {
-            showBanner('success', 'Listing cancelled');        // ← auto-cierra en 3s
+            showBanner('success', 'Listing cancelled');
             await onRefreshData?.();
             router.refresh();
         },
         onStatus: (s) => showBanner('info', s, 2500),
     });
 
-    // Visibilidad de botones
+    /* ───────────── CAMBIAR PRECIO ───────────── */
+    const {
+        open: openChange,
+        priceInput: changePriceInput,
+        setPriceInput: setChangePriceInput,
+        error: errorChange,
+        busyChange,
+        canChange,
+        openModal: openChangeModal,
+        closeModal: closeChangeModal,
+        confirmChange,
+    } = useChangePrice({
+        nft: contractAddress,
+        tokenId,
+        isOwner,
+        isForSale,
+        onChanged: async () => {
+            showBanner('success', 'Price updated!');
+            await onRefreshData?.();
+            router.refresh();
+        },
+        onStatus: (s) => showBanner('info', s, 2500),
+    });
+
+    const handleOpenChange = useCallback(() => {
+        if (!canChange) {
+            showBanner('error', 'You can only change price of your active listing', 3000);
+            return;
+        }
+        const prefill = formattedPrice ?? '';
+        openChangeModal(prefill);
+        if (prefill) setChangePriceInput(prefill);
+    }, [canChange, formattedPrice, openChangeModal, setChangePriceInput, showBanner]);
+
+    /* ───────────── BOOKMARKS (Guardar) ───────────── */
+    const { isBookmarked, toggleBookmark } = useBookmarks(contractAddress, tokenId);
+
+    const handleBookmark = useCallback(() => {
+        toggleBookmark({
+            nft: contractAddress,
+            tokenId,
+            name: meta?.name ?? `Token #${tokenId}`,
+            image: (meta?.image as string | null) ?? null, // ajusta si tu metadata usa otra key
+            addedAt: Date.now(),
+        });
+        if (isBookmarked) {
+            showBanner('info', 'Removed from bookmarks', 2000);
+        } else {
+            showBanner('success', 'Saved to bookmarks', 2000);
+        }
+        onSaveToBookmarks?.();
+    }, [toggleBookmark, contractAddress, tokenId, meta, isBookmarked, onSaveToBookmarks, showBanner]);
+
+    /* ───────────── SHARE (compartir) ───────────── */
+    const handleShare = useCallback(async () => {
+        try {
+            const url = window.location.href;
+            const title = meta?.name || `Token #${tokenId}`;
+            const text = `Check out ${title}`;
+            if (navigator.share) {
+                await navigator.share({ title, text, url });
+                showBanner('success', 'Link shared!');
+            } else {
+                // Fallback: copia al portapapeles y abre X/Twitter intent
+                await navigator.clipboard.writeText(url);
+                const tw = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                    text,
+                )}&url=${encodeURIComponent(url)}`;
+                window.open(tw, '_blank', 'noopener,noreferrer');
+                showBanner('info', 'Link copied and Twitter opened', 2500);
+            }
+            onShare?.();
+        } catch {
+            // usuario canceló o no se pudo
+            showBanner('error', 'Share cancelled or failed', 2000);
+        }
+    }, [meta?.name, tokenId, onShare, showBanner]);
+
+    /* ───────────── Visibilidad de botones de acción ───────────── */
     const showBuyButton = isForSale && !isOwner && !!price && (price ?? BigInt(0)) > BigInt(0);
     const showListButton = isOwner && !isForSale && canList;
     const showCancelButton = isOwner && isForSale && canCancel;
+    const showEditButton = isOwner && isForSale && canChange;
     const showOfferDisabled = !isOwner && !isForSale;
 
     return (
         <div className="space-y-8">
-            {/* banner */}
+            {/* Banner */}
             {banner && (
                 <div
                     className={`rounded-xl px-4 py-3 ${banner.kind === 'success'
-                            ? 'bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-200'
-                            : banner.kind === 'error'
-                                ? 'bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-200'
-                                : 'bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200'
+                        ? 'bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-200'
+                        : banner.kind === 'error'
+                            ? 'bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-200'
+                            : 'bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200'
                         }`}
                 >
                     {banner.text}
                 </div>
             )}
 
-            {/* panel principal */}
+            {/* Panel principal */}
             <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 p-8 transition-shadow hover:shadow-2xl">
                 <div className="flex items-start justify-between mb-6">
                     <div className="flex-1 min-w-0">
@@ -173,24 +253,45 @@ export default function NftInfo(props: NftInfoProps) {
                     </div>
 
                     <div className="flex items-center gap-2 ml-4">
+                        {/* SHARE */}
                         <button
                             type="button"
-                            onClick={() => onShare?.()}
+                            onClick={handleShare}
                             className="p-3 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400"
                             aria-label="Share"
+                            title="Share"
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                                />
                             </svg>
                         </button>
+
+                        {/* BOOKMARK / SAVE */}
                         <button
                             type="button"
-                            onClick={() => onSaveToBookmarks?.()}
-                            className="p-3 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400"
-                            aria-label="Bookmark"
+                            onClick={handleBookmark}
+                            className={`p-3 rounded-xl transition-colors ${isBookmarked
+                                ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
+                                }`}
+                            aria-pressed={isBookmarked}
+                            aria-label={isBookmarked ? 'Remove bookmark' : 'Save to bookmarks'}
+                            title={isBookmarked ? 'Remove bookmark' : 'Save to bookmarks'}
                         >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                            <svg
+                                className="w-5 h-5"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                fill={isBookmarked ? 'currentColor' : 'none'}
+                                aria-hidden
+                            >
+                                <path d="M5 5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16l-7-3.5L7 21V5z" />
                             </svg>
                         </button>
                     </div>
@@ -225,9 +326,15 @@ export default function NftInfo(props: NftInfoProps) {
                         showBuyButton={showBuyButton}
                         showListButton={showListButton}
                         showOfferDisabled={showOfferDisabled}
+                        /* Cancelar */
                         showCancelButton={showCancelButton}
                         onCancelClick={cancel}
                         isCancelBusy={busyCancel}
+                        /* Editar precio */
+                        showEditButton={showEditButton}
+                        onEditClick={handleOpenChange}
+                        isEditBusy={busyChange}
+                        /* Listar / Comprar */
                         onBuyClick={onBuyClick}
                         onListClick={() => {
                             showBanner('info', 'Preparing listing…', 1500);
@@ -298,7 +405,7 @@ export default function NftInfo(props: NftInfoProps) {
                 )}
             </div>
 
-            {/* Modal listar */}
+            {/* Modal LISTAR */}
             <ListForSaleModal
                 open={open}
                 onClose={closeModal}
@@ -308,6 +415,20 @@ export default function NftInfo(props: NftInfoProps) {
                 error={error}
                 busyApprove={busyApprove}
                 busyList={busyList}
+            />
+
+            {/* Modal CAMBIAR PRECIO */}
+            <ListForSaleModal
+                open={openChange}
+                onClose={closeChangeModal}
+                onConfirm={confirmChange}
+                value={changePriceInput}
+                setValue={setChangePriceInput}
+                error={errorChange}
+                busyApprove={false}
+                busyList={busyChange}
+                title="Change price"
+                confirmLabel={busyChange ? 'Changing…' : 'Confirm'}
             />
         </div>
     );

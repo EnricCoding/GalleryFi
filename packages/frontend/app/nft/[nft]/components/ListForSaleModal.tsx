@@ -12,6 +12,9 @@ type Props = {
     error: string | null;
     busyApprove: boolean;
     busyList: boolean;
+    // NUEVO:
+    title?: string;
+    confirmLabel?: string;
 };
 
 const ListForSaleModal = memo(function ListForSaleModal({
@@ -23,14 +26,18 @@ const ListForSaleModal = memo(function ListForSaleModal({
     error,
     busyApprove,
     busyList,
+    title = 'List for Sale',
+    confirmLabel,
 }: Props) {
     if (!open) return null;
+
+    const finalConfirm = confirmLabel ?? (busyApprove ? 'Approving…' : busyList ? 'Listing…' : 'Confirm');
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
             <div className="absolute inset-0 bg-black/50" onClick={onClose} />
             <div className="relative bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-gray-200/60 dark:border-gray-700/60">
-                <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">List for Sale</h3>
+                <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">{title}</h3>
 
                 <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">Price (ETH)</label>
                 <input
@@ -60,7 +67,7 @@ const ListForSaleModal = memo(function ListForSaleModal({
                         className="px-5 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
                         disabled={busyApprove || busyList}
                     >
-                        {busyApprove ? 'Approving…' : busyList ? 'Listing…' : 'Confirm'}
+                        {finalConfirm}
                     </button>
                 </div>
             </div>

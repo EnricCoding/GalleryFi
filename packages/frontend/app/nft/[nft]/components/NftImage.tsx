@@ -116,27 +116,6 @@ export default function NftImage({
         setImageState('loading');
     }, []);
 
-    const handleLike = useCallback(() => {
-        onLike?.();
-    }, [onLike]);
-
-    const handleShare = useCallback(async () => {
-        if (navigator.share && meta?.name) {
-            try {
-                await navigator.share({
-                    title: meta.name,
-                    text: meta.description || `Check out this NFT: ${meta.name}`,
-                    url: window.location.href,
-                });
-            } catch {
-                // Fallback to custom share logic or copy to clipboard
-                onShare?.();
-            }
-        } else {
-            onShare?.();
-        }
-    }, [meta, onShare]);
-
     return (
         <div className="xl:col-span-6 lg:col-span-5 md:col-span-6">
             <div className="sticky top-8">
@@ -174,24 +153,6 @@ export default function NftImage({
                             className={`absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent transition-all duration-300 ${showActions && imageState === 'loaded' ? 'opacity-100' : 'opacity-0'
                                 }`}
                         >
-                            <div className="absolute top-4 right-4 flex gap-3">
-                                <ActionButton
-                                    onClick={handleLike}
-                                    ariaLabel={isLiked ? "Remove from favorites" : "Add to favorites"}
-                                    className={isLiked ? "text-red-500" : "text-gray-700 dark:text-gray-300"}
-                                >
-                                    <HeartIcon filled={isLiked} />
-                                </ActionButton>
-
-                                <ActionButton
-                                    onClick={handleShare}
-                                    ariaLabel="Share NFT"
-                                    className="text-gray-700 dark:text-gray-300"
-                                >
-                                    <ShareIcon />
-                                </ActionButton>
-                            </div>
-
                             {/* Image Info Overlay */}
                             {meta?.name && (
                                 <div className="absolute bottom-4 left-4 right-4">
