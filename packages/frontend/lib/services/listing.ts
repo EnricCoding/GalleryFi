@@ -12,7 +12,7 @@ export interface ListParams {
 
 type ApiResponse = {
   listings?: Listing[];
-  totalCount?: number; 
+  totalCount?: number;
 };
 
 function buildQuery(params: ListParams): {
@@ -49,13 +49,28 @@ function buildQuery(params: ListParams): {
   return { qs: search.toString(), first, skip, orderBy, orderDirection };
 }
 
+function isPositivePrice(price: unknown): boolean {
+  try {
+    if (typeof price === 'bigint') return price > BigInt(0);
+    if (typeof price === 'number') return Number.isFinite(price) && price > 0;
+    if (typeof price === 'string') {
+      return BigInt(price) > BigInt(0);
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 export async function fetchListings(
   params: ListParams = {},
-  opts: { signal?: AbortSignal } = {},
+  opts: { signal?: AbortSignal; onlyListed?: boolean } = {},
 ): Promise<ListingsResponse> {
   const { qs, first, skip } = buildQuery(params);
+  const { onlyListed } = opts;
+  const url = `/api/listings?${qs}${onlyListed ? '&listed=1' : ''}`;
 
-  const res = await fetch(`/api/listings?${qs}`, {
+  const res = await fetch(url, {
     method: 'GET',
     headers: { accept: 'application/json' },
     cache: 'no-store',
@@ -69,7 +84,11 @@ export async function fetchListings(
 
   const json = (await res.json()) as ApiResponse;
 
-  const listings = json.listings ?? [];
+  let listings = json.listings ?? [];
+  if (onlyListed) {
+    listings = listings.filter((l: Listing) => isPositivePrice(l.price));
+  }
+
   const totalCount = json.totalCount;
 
   const hasMore =

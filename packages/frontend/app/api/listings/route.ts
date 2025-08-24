@@ -32,6 +32,11 @@ const LISTINGS_GQL = `
       tokenURI
       timestamp
     }
+    
+    # Query para obtener el total count
+    listingsMeta: listings(where: $where) {
+      id
+    }
   }
 `;
 
@@ -128,7 +133,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Subgraph error', detail: json.errors }, { status: 502 });
     }
 
-    const response = NextResponse.json(json.data, { status: 200 });
+    const listings = json.data?.listings || [];
+    const totalCount = json.data?.listingsMeta?.length || 0;
+
+    const responseData = {
+      listings,
+      totalCount,
+      hasMore: listings.length === first && (skip + listings.length < totalCount)
+    };
+
+    const response = NextResponse.json(responseData, { status: 200 });
     // cache CDN
     response.headers.set('Cache-Control', 's-maxage=10, stale-while-revalidate=60');
     return response;
