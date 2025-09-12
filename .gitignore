@@ -156,3 +156,14 @@ temp/
 /DOCS.txt
 /DOCS_CHANGE_SOMETHING.txt
 /How_TO_DO.txt
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Generated Documentation Files (AI Assistant)
+# ──────────────────────────────────────────────────────────────────────────────
+# Archivos de documentación generados automáticamente durante el desarrollo
+AUCTION_IMPROVEMENTS.md
+ARREGLO_COPY_CONTRADICTORIO.md
+SOLUCION_AUCTIONS_PERDIDAS.md
+FRONTEND_CONTEXT.md
+SMARTCONTRACTS_CONTEXT.md
+SUBGRAPH_CONTEXT.md

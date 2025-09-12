@@ -65,7 +65,11 @@ export function useOnchainNft(nft: `0x${string}`, tokenId: string) {
     abi: NftAbi,
     functionName: 'ownerOf',
     args: [tokenIdBig ?? BigInt(0)],
-    query: { enabled: validInputs, refetchInterval: 15_000 }, // puede cambiar tras comprar
+    query: { 
+      enabled: validInputs, 
+      refetchInterval: 5_000, // Reduced from 15s to 5s for faster owner updates
+      staleTime: 1_000, // Data becomes stale after 1 second
+    }, 
   }) as { data: `0x${string}` | undefined; refetch: () => void };
 
   /* ---------- Normalización ---------- */

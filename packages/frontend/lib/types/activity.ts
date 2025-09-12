@@ -27,6 +27,7 @@ export type NftActivity =
       to: HexAddress;
       timestamp: string;
       from?: HexAddress;
+      txHash?: string;
     }
   | {
       id: string;
@@ -35,6 +36,7 @@ export type NftActivity =
       from: HexAddress;
       timestamp: string;
       to?: HexAddress;
+      txHash?: string;
     }
   | {
       id: string;
@@ -43,6 +45,7 @@ export type NftActivity =
       from: HexAddress;
       timestamp: string;
       to?: HexAddress;
+      txHash?: string;
     }
   | {
       id: string;
@@ -51,4 +54,22 @@ export type NftActivity =
       to?: HexAddress;
       timestamp: string;
       price?: string;
+      txHash?: string;
+    }
+  | {
+      id: string;
+      activityType: 'AUCTION_CREATED';
+      from: HexAddress;
+      timestamp: string;
+      price?: string;
+      txHash?: string;
+    }
+  | {
+      id: string;
+      activityType: 'AUCTION_ENDED';
+      from?: HexAddress;
+      to?: HexAddress;
+      timestamp: string;
+      price?: string;
+      txHash?: string;
     };
