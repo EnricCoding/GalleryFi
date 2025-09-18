@@ -14,39 +14,7 @@ import { useBookmarks } from '@/hooks/useBookmarks';
 import NftInfoActionBar from './NftInfoActionBar';
 import ListForSaleModal from './ListForSaleModal';
 
-/* ───────────────────── Enhanced Types ───────────────────── */
-/* 
-// ✅ COMMENTED: Auction functionality moved to specialized component
-export type AuctionData = {
-    seller: `0x${string}`;
-    end: bigint;            // epoch seconds
-    bid: bigint;            // wei
-    bidder?: `0x${string}`; // opcional
-};
 
-export type AuctionProps = {
-    auction?: AuctionData | null;
-    auctionLive?: boolean;
-    auctionHasBid?: boolean;
-    timeLeftMs?: number;
-    isSellerOfAuction?: boolean;
-    canCreateAuction?: boolean;
-    canBidAuction?: boolean;
-    canEndAuction?: boolean;
-    canCancelAuction?: boolean;
-    busyCreate?: boolean;
-    busyBid?: boolean;
-    busyEnd?: boolean;
-    busyCancel?: boolean;
-    openCreate?: () => void;
-    openBid?: () => void;
-    onCreateAuction?: () => void;
-    onBidAuction?: () => void;
-    onEndAuction?: () => void;
-    onCancelAuction?: () => void;
-    isProcessingAuction?: boolean;
-};
-*/
 
 export type BannerType = 'info' | 'success' | 'error' | 'warning';
 export interface BannerMessage {
@@ -488,11 +456,6 @@ export default function NftInfo(props: NftInfoProps) {
     const router = useRouter();
     const { address: userAddress } = useAccount();
     const [banner, setBanner] = useState<BannerMessage | null>(null);
-
-    // ✅ COMMENTED: Real-time auction timer state - moved to specialized component
-    // const [liveTimeLeft, setLiveTimeLeft] = useState<number | undefined>(auctionProps?.timeLeftMs);
-
-    // ✅ COMMENTED: Real-time timer effect - moved to specialized component
     // useEffect(() => {
     //     // Update local state when props change
     //     setLiveTimeLeft(auctionProps?.timeLeftMs);
@@ -587,7 +550,6 @@ export default function NftInfo(props: NftInfoProps) {
     const isAuctionEnded = false;
 
     const statusLabel = useMemo(() => {
-        console.log({ isAuctionActive, isAuctionEnded, isForSale, isOwner, ownerAddress, userAddress });
         
         // ✅ FIXED: Use actual ownership state instead of derived isOwner
         if (isAuctionActive) return 'Live Auction';

@@ -30,7 +30,6 @@ describe('NftMarketplace', () => {
     const mintRc = await (await nft.connect(deployer).mint(aliceAddr, 'cid')).wait();
     const tokenId = emittedTokenId(mintRc);
     await nft.connect(alice).approve(await market.getAddress(), tokenId);
-    console.log('🔹 tokenId =', tokenId.toString());
 
     /************ 2. List & buy ************/
     await market.connect(alice).listItem(await nft.getAddress(), tokenId, price);
@@ -43,29 +42,21 @@ describe('NftMarketplace', () => {
     const sellerNet = price - fee - royalty;
     const feeRecipient = await market.feeRecipient();
 
-    console.log(
-      `🔹 royaltyRecv=${royRecv}  feeRecipient=${feeRecipient}\n` +
-        `   royalty=${royalty}  fee=${fee}  sellerNet=${sellerNet}`,
-    );
-
     expect(await nft.ownerOf(tokenId)).to.equal(await bob.getAddress()); 
     expect(await market.proceeds(aliceAddr)).to.equal(sellerNet);
 
     if (royRecv === feeRecipient) {
       const combined = royalty + fee;
       expect(await market.proceeds(royRecv)).to.equal(combined);
-      console.log('🔹 Misma dirección: recibe royalty + fee =', combined.toString());
     } else {
       expect(await market.proceeds(royRecv)).to.equal(royalty);
       expect(await market.proceeds(feeRecipient)).to.equal(fee);
-      console.log('🔹 Distintas direcciones – royalty y fee separados');
     }
 
     await expect(() => market.connect(alice).withdrawProceeds()).to.changeEtherBalance(
       alice,
       sellerNet,
     );
-    console.log('🔹 Alice ha retirado', sellerNet.toString(), 'wei');
   });
 
   it('allows delisting and returns NFT to seller', async () => {

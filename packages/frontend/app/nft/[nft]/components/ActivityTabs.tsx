@@ -173,7 +173,6 @@ export default function ActivityTabs({
                 maximumFractionDigits: 4
             })} ETH`;
         } catch (error) {
-            console.warn('Failed to format price:', error);
             return null;
         }
     }, []);

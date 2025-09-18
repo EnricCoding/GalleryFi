@@ -77,7 +77,7 @@ export function useEndAuction({
   const isNetworkCorrect = chainId === EXPECTED_CHAIN_ID;
   const canEnd = useMemo(() => {
     if (!auctionEndTime) {
-      console.debug('[useEndAuction] No auction end time provided');
+
       return false;
     }
     const result = Date.now() >= auctionEndTime;
@@ -101,7 +101,7 @@ export function useEndAuction({
       setTxHash(null);
       setEndReason(null);
 
-      // Debug logging
+
       console.debug('🔚 EndAuction Debug:', {
         isConnected,
         isReady,
@@ -191,13 +191,6 @@ export function useEndAuction({
       if (receipt?.status === 'success') {
         setCurrentStep('success');
         setEndReason('ended_successfully');
-        
-        console.info('🏁 Auction ended successfully!', {
-          txHash: hash,
-          hasWinner,
-          blockNumber: receipt.blockNumber,
-          gasUsed: receipt.gasUsed?.toString(),
-        });
         
         if (hasWinner) {
           onStatus?.('Auction ended - NFT transferred to winner!');

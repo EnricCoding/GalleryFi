@@ -12,7 +12,6 @@ const pinata = new PinataSDK({
 export async function POST(req: NextRequest) {
   try {
     if (!process.env.PINATA_JWT) {
-      console.error('[IPFS] Missing PINATA_JWT');
       return NextResponse.json({ error: 'PINATA_JWT no configurado.' }, { status: 500 });
     }
 
@@ -29,7 +28,6 @@ export async function POST(req: NextRequest) {
 
     const ALLOWED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
     if (!ALLOWED_TYPES.has(file.type)) {
-      console.warn('[IPFS] Rejected MIME:', file.type);
       return NextResponse.json(
         { error: `Tipo no permitido (${file.type}). Usa PNG, JPEG, WEBP o GIF.` },
         { status: 400 },
@@ -37,7 +35,6 @@ export async function POST(req: NextRequest) {
     }
     const MAX_MB = 15;
     if (file.size > MAX_MB * 1024 * 1024) {
-      console.warn('[IPFS] Oversized file:', file.size);
       return NextResponse.json(
         { error: `Archivo demasiado grande. Máximo ${MAX_MB}MB.` },
         { status: 413 },
@@ -54,7 +51,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ imageCid: imgUpload.cid, metadataCid: jsonUpload.cid });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'Error IPFS';
-    console.error('[IPFS] Error:', message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -85,7 +85,6 @@ function isBigIntish(s: string | null): s is string {
 }
 
 export async function GET(req: NextRequest) {
-  console.log('🚀 API LISTINGS CALLED:', new Date().toISOString());
   
   try {
     if (!SUBGRAPH_URL) {
@@ -106,48 +105,27 @@ export async function GET(req: NextRequest) {
     const nftParam = searchParams.get('nft');
     const sellerParam = searchParams.get('seller');
     const tokenIdParam = searchParams.get('tokenId');
-    const onlyListedParam = searchParams.get('onlyListed'); // ✅ NEW: Accept filter param
-
-    console.log('🎯 API RECEIVED PARAMS:', {
-      first,
-      skip,
-      orderBy,
-      orderDirection,
-      nft: nftParam,
-      seller: sellerParam,
-      tokenId: tokenIdParam,
-      onlyListed: onlyListedParam // ✅ NEW: Log filter param
-    });
-
+    const onlyListedParam = searchParams.get('onlyListed');
     // construimos "where" solo con campos válidos
     const where: Record<string, unknown> = {};
     if (isHexAddress(nftParam)) where.nft = nftParam.toLowerCase();
     if (isHexAddress(sellerParam)) where.seller = sellerParam.toLowerCase();
     if (isBigIntish(tokenIdParam)) where.tokenId = tokenIdParam;
 
-    // ✅ NEW: For filtering, we need to get MORE listings than requested
-    // If onlyListed filter is applied, get more data to ensure we have enough after filtering
-    const multiplier = onlyListedParam === 'true' ? 3 : 1; // Get 3x more data when filtering
-    const fetchFirst = Math.min(first * multiplier, 150); // Cap at 150 to avoid overwhelming
+    const multiplier = onlyListedParam === 'true' ? 3 : 1;
+    const fetchFirst = Math.min(first * multiplier, 150);
     
-    // ✅ NEW: When filtering, start from 0 and apply skip later
     const fetchSkip = onlyListedParam === 'true' ? 0 : skip;
 
     const variables = {
-      first: fetchFirst, // ✅ Fetch more when filtering
-      skip: fetchSkip, // ✅ Skip=0 when filtering, normal skip when showing all
+      first: fetchFirst,
+      skip: fetchSkip,
       orderBy, // enum Listing_orderBy en el schema
       orderDirection, // enum OrderDirection
       where: Object.keys(where).length ? where : undefined,
     };
 
     const body = JSON.stringify({ query: LISTINGS_GQL, variables });
-
-    console.log('📤 SENDING TO SUBGRAPH:', {
-      url: SUBGRAPH_URL,
-      query: LISTINGS_GQL.substring(0, 200) + '...',
-      variables
-    });
 
     // timeout defensivo
     const controller = new AbortController();
@@ -181,21 +159,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Subgraph error', detail: json.errors }, { status: 502 });
     }
 
-    console.log('🔍 RAW SUBGRAPH DATA:', {
-      listings: json.data?.listings?.length || 0,
-      auctionCreateds: json.data?.auctionCreateds?.length || 0,
-      bids: json.data?.bids?.length || 0,
-      errors: json.errors
-    });
-
     const listings = json.data?.listings || [];
     const totalCountBeforeFilter = json.data?.listingsMeta?.length || 0;
-    
-    console.log('📋 RAW LISTINGS FROM SUBGRAPH:', {
-      totalListings: listings.length,
-      totalCountBeforeFilter,
-      onlyListedRequested: onlyListedParam
-    });
     
     // ✅ RESTORED: Process auction data to enhance listings
     const auctionCreateds = json.data?.auctionCreateds || [];
@@ -205,23 +170,6 @@ export async function GET(req: NextRequest) {
     type AuctionCreated = { id: string; nft: string; tokenId: string; seller: string; end: string; timestamp: string };
     type Bid = { nft: string; tokenId: string; bidder: string; amount: string; timestamp: string };
     type ListingData = { nft: string; tokenId: string; [key: string]: unknown };
-    
-    console.log('🎯 AUCTION DATA DETAILS:', {
-      auctionCreateds: (auctionCreateds as AuctionCreated[]).slice(0, 3).map((a) => ({ 
-        id: a.id, 
-        nft: a.nft, 
-        tokenId: a.tokenId, 
-        end: a.end,
-        endDate: new Date(parseInt(a.end) * 1000).toISOString(),
-        isStillActive: parseInt(a.end) > Math.floor(Date.now() / 1000)
-      })),
-      bids: (bids as Bid[]).slice(0, 3).map((b) => ({ 
-        nft: b.nft, 
-        tokenId: b.tokenId, 
-        amount: b.amount,
-        bidder: b.bidder 
-      }))
-    });
     
     // Create a map of auctions - prioritize ACTIVE auctions, then most recent
     const auctionsMap = new Map();
@@ -273,13 +221,6 @@ export async function GET(req: NextRequest) {
       }
     });
     
-    console.log('🗺️ AUCTION MAPS:', {
-      auctionsMapSize: auctionsMap.size,
-      bidsMapSize: bidsMap.size,
-      sampleAuctionKeys: Array.from(auctionsMap.keys()).slice(0, 3),
-      sampleBidKeys: Array.from(bidsMap.keys()).slice(0, 3)
-    });
-    
     // ✅ RESTORED: Enhance listings with auction data
     const enhancedListings = (listings as ListingData[]).map((listing) => {
       const key = `${listing.nft.toLowerCase()}-${listing.tokenId}`;
@@ -287,11 +228,6 @@ export async function GET(req: NextRequest) {
       const bidData = bidsMap.get(key);
       
       if (auctionData) {
-        console.log(`🎯 ENHANCING LISTING ${key} WITH AUCTION:`, {
-          listing: { nft: listing.nft, tokenId: listing.tokenId },
-          auction: auctionData,
-          bid: bidData
-        });
         return {
           ...listing,
           auction: {
@@ -308,74 +244,36 @@ export async function GET(req: NextRequest) {
       return { ...listing, auction: null };
     });
     
-    console.log('📦 FINAL ENHANCED LISTINGS:', {
-      total: enhancedListings.length,
-      withAuctions: enhancedListings.filter(l => l.auction?.isActive).length,
-      sample: enhancedListings.slice(0, 3).map(l => ({
-        nft: l.nft,
-        tokenId: l.tokenId,
-        hasAuction: !!l.auction,
-        auctionActive: l.auction?.isActive
-      }))
-    });
-
     // ✅ NEW: Apply server-side filtering ONLY when requested
     let filteredListings = enhancedListings;
     let totalCountAfterFilter = totalCountBeforeFilter;
     
     if (onlyListedParam === 'true') {
-      console.log('🎯 APPLYING SERVER-SIDE FILTER: Only purchasable/biddable NFTs');
-      console.log('📋 BEFORE FILTER:', enhancedListings.length, 'NFTs');
       
       filteredListings = enhancedListings.filter((listing) => {
         const listingWithPrice = listing as ListingData & { price?: string; auction?: { isActive?: boolean } }; // Specific type
         
         // Case 1: Active auction - can BID
         if (listingWithPrice.auction?.isActive === true) {
-          console.log(`🔥 SERVER: CAN BID - ${listingWithPrice.nft}/${listingWithPrice.tokenId}`);
           return true;
         }
         
         // Case 2: Pure marketplace listing (no auction) - can BUY  
         if (!listingWithPrice.auction && listingWithPrice.price && listingWithPrice.price !== '0') {
-          console.log(`💰 SERVER: CAN BUY - ${listingWithPrice.nft}/${listingWithPrice.tokenId} (price: ${listingWithPrice.price})`);
           return true;
         }
         
-        console.log(`❌ SERVER: NOT AVAILABLE - ${listingWithPrice.nft}/${listingWithPrice.tokenId}`, {
-          hasAuction: !!listingWithPrice.auction,
-          auctionActive: listingWithPrice.auction?.isActive,
-          price: listingWithPrice.price
-        });
         return false;
       });
       
       totalCountAfterFilter = filteredListings.length;
-      
-      console.log('📊 SERVER FILTER RESULTS:', {
-        before: enhancedListings.length,
-        after: filteredListings.length,
-        filtered: enhancedListings.length - filteredListings.length
-      });
-      
       // ✅ Apply pagination to FILTERED results
       const paginatedListings = filteredListings.slice(skip, skip + first);
-      
-      console.log('📄 PAGINATION APPLIED TO FILTERED:', {
-        totalAfterFilter: totalCountAfterFilter,
-        skip,
-        first,
-        paginatedCount: paginatedListings.length,
-        hasMore: skip + paginatedListings.length < totalCountAfterFilter
-      });
       
       filteredListings = paginatedListings;
     } else {
       // ✅ SHOW ALL: No filtering, pagination already applied by GraphQL
-      console.log('📋 SHOWING ALL NFTs (no filter applied):', {
-        count: enhancedListings.length,
-        totalCount: totalCountBeforeFilter
-      });
+     
     }
 
     const responseData = {
@@ -384,7 +282,6 @@ export async function GET(req: NextRequest) {
       hasMore: onlyListedParam === 'true' 
         ? skip + filteredListings.length < totalCountAfterFilter
         : skip + filteredListings.length < totalCountBeforeFilter, // ✅ Correct hasMore logic
-      // ✅ DEBUG: Add debug info to response
       debug: {
         originalCount: totalCountBeforeFilter,
         afterEnhancement: enhancedListings.length,

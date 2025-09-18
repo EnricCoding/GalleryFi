@@ -128,7 +128,6 @@ export function useNftActivity(nft: `0x${string}`, tokenIdBig: bigint | null) {
     notifyOnNetworkStatusChange: false, // Reduce unnecessary re-renders
   });
 
-  // Debug query to check if bids exist at all for this NFT
   const { data: debugBidsData } = useQuery(gql`
     query DebugBids($nft: Bytes!) {
       bids(first: 20, orderBy: timestamp, orderDirection: desc, where: { nft: $nft }) {
@@ -143,48 +142,15 @@ export function useNftActivity(nft: `0x${string}`, tokenIdBig: bigint | null) {
   `, {
     variables: { nft: nft.toLowerCase() },
     skip: !tokenIdBig,
-    pollInterval: 60000, // Reduced from 10s to 60s - debug query doesn't need to be frequent
+    pollInterval: 60000,
     errorPolicy: 'all',
   });
 
   // Log debug bids data
-  if (debugBidsData?.bids) {
-    console.debug(`🔍 Debug: All bids for NFT ${nft}:`, {
-      totalBidsForContract: debugBidsData.bids.length,
-      bidsData: debugBidsData.bids.map((b: { id: string; tokenId: string; bidder: string; amount: string; timestamp: string }) => ({
-        id: b.id,
-        tokenId: b.tokenId.toString(),
-        bidder: b.bidder,
-        amount: b.amount,
-        timestamp: b.timestamp
-      }))
-    });
-  }
-
   const activity = toActivity({
     listings: subgraphData?.listings,
     sales: subgraphData?.sales,
     bids: subgraphData?.bids,
-  });
-
-  // Debug logging for bid activity tracking
-  console.debug(`🔍 NFT Activity Debug - ${nft}:${tokenIdBig}`, {
-    querySkipped: !tokenIdBig,
-    subgraphLoading,
-    hasSubgraphData: !!subgraphData,
-    totalBids: subgraphData?.bids?.length || 0,
-    totalSales: subgraphData?.sales?.length || 0,
-    totalListings: subgraphData?.listings?.length || 0,
-    totalAuctionCreateds: subgraphData?.auctionCreateds?.length || 0,
-    totalAuctionEndeds: subgraphData?.auctionEndeds?.length || 0,
-    rawBidsData: subgraphData?.bids?.map((b: BidEvent) => ({ 
-      id: b.id, 
-      bidder: b.bidder, 
-      amount: b.amount, 
-      timestamp: b.timestamp 
-    })) || [],
-    processedBidActivity: activity.filter(a => a.activityType === 'BID').length,
-    processedTotalActivity: activity.length,
   });
 
   // Direct subgraph connectivity test (run once)
@@ -225,15 +191,15 @@ export function useNftActivity(nft: `0x${string}`, tokenIdBig: bigint | null) {
 
         // Alert if subgraph is way behind
         if (blockDiff > 1000) {
-          console.warn(`🚨 Subgraph is ${blockDiff} blocks behind! This explains why recent bids don't appear.`);
+          console.warn(`Subgraph is ${blockDiff} blocks behind! This explains why recent bids don't appear.`);
         } else if (blockDiff > 100) {
-          console.warn(`⚠️ Subgraph is ${blockDiff} blocks behind. Recent bids may not appear yet.`);
+          console.warn(`Subgraph is ${blockDiff} blocks behind. Recent bids may not appear yet.`);
         } else {
-          console.info(`✅ Subgraph is relatively up-to-date (${blockDiff} blocks behind).`);
+
         }
         
       } catch (error) {
-        console.error('❌ Direct subgraph test failed:', error);
+        console.error('Direct subgraph test failed:', error);
       }
     };
     

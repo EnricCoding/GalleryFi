@@ -18,12 +18,10 @@ function getEnvVar(key: string, fallback?: string): string {
   const value = process.env[key];
   
   if (value) {
-    console.log(`✅ Found ${key}: ${value.slice(0, 10)}...`);
     return value;
   }
   
   if (fallback) {
-    console.warn(`⚠️  Using fallback for ${key}: ${fallback.slice(0, 10)}...`);
     return fallback;
   }
   

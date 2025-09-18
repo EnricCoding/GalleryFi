@@ -39,21 +39,6 @@ export default function ExplorePage() {
     const { data, isLoading, isFetching, error, refetch } = useListings(params, { onlyListed });
     const listings = data?.listings ?? [];
     
-    // ✅ ENHANCED DEBUG: Check auction data
-    console.log('🏠 EXPLORE PAGE DATA:', {
-        params,
-        onlyListed,
-        listingsCount: listings.length,
-        sampleListings: listings.slice(0, 3).map(l => ({
-            nft: l.nft,
-            tokenId: l.tokenId,
-            hasAuction: !!l.auction,
-            auctionActive: l.auction?.isActive,
-            auctionEnd: l.auction?.end,
-            currentBid: l.auction?.currentBid
-        }))
-    });
-    
     const totalCount = data?.totalCount ?? 0;
     
     // Calcular total de páginas

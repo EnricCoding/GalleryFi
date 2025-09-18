@@ -28,7 +28,6 @@ export function useAuctionData({
     try {
       return BigInt(tokenId);
     } catch {
-      console.warn('[useAuctionData] Invalid tokenId:', tokenId);
       return BigInt(0);
     }
   }, [tokenId]);
@@ -40,7 +39,6 @@ export function useAuctionData({
     try {
       return isValidMarketplace(market);
     } catch (error) {
-      console.warn('[useAuctionData] Invalid market address:', market, error);
       return false;
     }
   }, [enabled, market, nft, tokenIdBig]);

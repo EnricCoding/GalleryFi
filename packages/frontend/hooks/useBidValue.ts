@@ -55,7 +55,6 @@ export function useBidAuction({
 
   // Validation warnings
   if (!MARKET) {
-    console.warn('[useBidAuction] Missing NEXT_PUBLIC_MARKET_ADDRESS');
   }
 
   const { address, isConnected } = useAccount();

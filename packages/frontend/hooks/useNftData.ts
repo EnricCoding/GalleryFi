@@ -292,7 +292,7 @@ export function useNftData({ nft, tokenId }: Params): NFTData {
 
       await Promise.allSettled(refreshPromises);
 
-      console.debug('NFT data refreshed successfully for', { nft, tokenId });
+
     } catch (error) {
       console.error('Error refreshing NFT data:', error);
       throw error; // Re-throw to allow calling components to handle
@@ -328,7 +328,7 @@ export function useNftData({ nft, tokenId }: Params): NFTData {
     auctionNow,
     isForSaleNow,
     isAuctionActiveNow,
-    isOwnedByUser: false, // TODO: Implement user address comparison
+    isOwnedByUser: false,
 
     // Time information
     auctionTimeRemaining,

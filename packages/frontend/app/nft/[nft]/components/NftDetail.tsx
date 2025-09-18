@@ -222,38 +222,23 @@ const NftDetailContent = memo(({
                                 const marketplaceAddress = CONTRACTS.MARKETPLACE.toLowerCase();
                                 const currentOwner = ownerAddress?.toLowerCase();
                                 
-                                console.log('🔍 PURCHASE AVAILABILITY CHECK:', {
-                                    marketplaceAddress,
-                                    currentOwner,
-                                    isMarketplaceOwner: currentOwner === marketplaceAddress,
-                                    isForSale,
-                                    price: price?.toString(),
-                                    hasAuctionProps: !!auctionProps,
-                                    auctionActive: auctionProps?.auctionLive
-                                });
-                                
                                 // ✅ FIXED LOGIC: Block new listings if marketplace owns NFT, 
                                 // BUT allow purchase if NFT is already listed for sale
                                 if (currentOwner === marketplaceAddress) {
                                     // Case 1: NFT in active auction
                                     if (auctionProps?.auctionLive) {
-                                        console.log('🔥 AUCTION MODE: NFT in active auction - blocking listing, allowing bids');
                                         return true; // Block listing (auction active)
                                     }
                                     
                                     // Case 2: NFT listed for sale (marketplace escrow)
                                     if (isForSale && price && price > BigInt(0)) {
-                                        console.log('� SALE MODE: NFT listed for sale - blocking new listing, ALLOWING PURCHASE');
-                                        return false; // ✅ ALLOW purchase of listed NFT
+                                        return false;
                                     }
                                     
-                                    // Case 3: NFT in escrow but not listed (ended auction, etc.)
-                                    console.log('⏳ ESCROW MODE: NFT in marketplace but not for sale - blocking listing');
                                     return true; // Block listing (needs to be claimed first)
                                 }
                                 
                                 // Case 4: User owns NFT directly
-                                console.log('✅ DIRECT OWNERSHIP: User owns NFT directly - allowing listing');
                                 return false; // Allow listing
                             })()}
                         />
@@ -395,7 +380,6 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
                     }
                 }
             } catch (error) {
-                console.error('Auto-refresh error:', error);
 
                 if (refreshCount >= maxRefreshes && isActive) {
                     clearInterval(autoRefreshInterval);
@@ -456,7 +440,7 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         tokenId,
     });
 
-    console.debug('Auction data:', { auction, auctionLive, auctionHasBid, timeLeftMs, loadingAuction, auctionError });
+
     
 
     // ✅ NUEVA LÓGICA DE OWNERSHIP CORREGIDA
@@ -482,11 +466,11 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         
             // Diagnóstico detallado
             if (!ownershipState.isDirectOwner && ownershipState.isAuctionSeller) {
-                console.info('✅ User is auction seller (NFT in escrow) - showing as owner for UX');
+
             } else if (ownershipState.isDirectOwner && !ownershipState.isAuctionSeller) {
-                console.info('✅ User is direct NFT owner');
+
             } else if (!ownershipState.canViewAsOwner) {
-                console.warn('❌ User has no ownership rights');
+                console.warn('User has no ownership rights');
             }
         }
 

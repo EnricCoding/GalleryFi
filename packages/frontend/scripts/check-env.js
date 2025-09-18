@@ -6,7 +6,6 @@
 
 require('dotenv').config({ path: '.env.local' });
 
-console.log('🔍 Checking environment variables...\n');
 
 const requiredVars = [
   'NEXT_PUBLIC_MARKET_ADDRESS',
