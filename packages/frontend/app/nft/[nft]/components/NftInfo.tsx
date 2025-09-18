@@ -3,6 +3,7 @@
 import { formatEther } from 'viem';
 import { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAccount } from 'wagmi';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { NftMetadata } from '@/lib/types/metadata';
 import { NftActivity } from '@/lib/types/activity';
@@ -14,6 +15,8 @@ import NftInfoActionBar from './NftInfoActionBar';
 import ListForSaleModal from './ListForSaleModal';
 
 /* ───────────────────── Enhanced Types ───────────────────── */
+/* 
+// ✅ COMMENTED: Auction functionality moved to specialized component
 export type AuctionData = {
     seller: `0x${string}`;
     end: bigint;            // epoch seconds
@@ -43,6 +46,7 @@ export type AuctionProps = {
     onCancelAuction?: () => void;
     isProcessingAuction?: boolean;
 };
+*/
 
 export type BannerType = 'info' | 'success' | 'error' | 'warning';
 export interface BannerMessage {
@@ -68,32 +72,38 @@ export interface NftInfoProps {
     ownerAddress?: string;
     sellerAddress?: string;
     onRefreshData?: () => Promise<void>;
-    auctionProps?: AuctionProps;
+    // ✅ COMMENTED: Auction functionality moved to specialized component
+    // auctionProps?: AuctionProps;
+    // ✅ NEW: Critical security check - prevent listing when auction is active
+    hasActiveAuction?: boolean;
 }
 
 /* ───────────────────── Enhanced Time Formatting ───────────────────── */
+/* 
+// ✅ COMMENTED: Auction functionality moved to specialized component
 function fmtTimeLeft(ms?: number): { display: string; isUrgent: boolean; isEnded: boolean } {
     if (ms == null) return { display: '--:--', isUrgent: false, isEnded: false };
     if (ms <= 0) return { display: 'Ended', isUrgent: false, isEnded: true };
-    
+
     const s = Math.floor(ms / 1000);
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
     const sec = s % 60;
-    
+
     const display = h > 0 ? `${h}h ${m}m ${sec}s` : `${m}m ${sec}s`;
     const isUrgent = ms < 300000; // Less than 5 minutes
-    
+
     return { display, isUrgent, isEnded: false };
 }
+*/
 
 /* ───────────────────── Enhanced Banner Component ───────────────────── */
-const EnhancedBanner = memo(({ 
-    banner, 
-    onClose 
-}: { 
-    banner: BannerMessage; 
-    onClose: () => void; 
+const EnhancedBanner = memo(({
+    banner,
+    onClose
+}: {
+    banner: BannerMessage;
+    onClose: () => void;
 }) => {
     const bannerConfig = {
         success: { bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-800 dark:text-emerald-200', border: 'border-emerald-200 dark:border-emerald-800', icon: banner.icon || '✅' },
@@ -101,9 +111,9 @@ const EnhancedBanner = memo(({
         warning: { bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-800 dark:text-amber-200', border: 'border-amber-200 dark:border-amber-800', icon: banner.icon || '⚠️' },
         info: { bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-800 dark:text-blue-200', border: 'border-blue-200 dark:border-blue-800', icon: banner.icon || 'ℹ️' }
     };
-    
+
     const config = bannerConfig[banner.kind];
-    
+
     return (
         <div className={`rounded-2xl p-4 border ${config.bg} ${config.border} transition-all duration-300 transform animate-in slide-in-from-top-2`}>
             <div className="flex items-center justify-between">
@@ -127,6 +137,8 @@ const EnhancedBanner = memo(({
 EnhancedBanner.displayName = 'EnhancedBanner';
 
 /* ───────────────────── Enhanced Auction Action Bar ───────────────────── */
+/* 
+// ✅ COMMENTED: Auction functionality moved to specialized component
 const AuctionActionBar = memo(({
     auction,
     auctionLive,
@@ -145,29 +157,31 @@ const AuctionActionBar = memo(({
     isForSale,
 }: AuctionProps & { isOwner: boolean; isForSale: boolean }) => {
     const timeInfo = fmtTimeLeft(timeLeftMs);
-    
+
+    // ✅ CRITICAL FIX: Use auctionLive directly from props (now correctly calculated from parent)
+    const isActuallyLive = !!auctionLive;
+
     if (auction) {
         const hasBid = (auction.bid ?? BigInt(0)) > BigInt(0);
-        
+
         return (
             <div className="space-y-6">
-                {/* Auction Status Header */}
+                // Auction Status Header - FIXED
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                            {auctionLive ? 'Live Auction' : 'Auction Ended'}
+                            {isActuallyLive ? 'Live Auction' : 'Auction Ended'}
                         </h3>
                     </div>
-                    <div className={`px-4 py-2 rounded-full text-sm font-bold ${
-                        auctionLive 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' 
+                    <div className={`px-4 py-2 rounded-full text-sm font-bold ${isActuallyLive
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                             : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
-                    }`}>
-                        {auctionLive ? '🟢 Active' : '🔴 Ended'}
+                        }`}>
+                        {isActuallyLive ? '🟢 Active' : '🔴 Ended'}
                     </div>
                 </div>
 
-                {/* Auction Info Grid */}
+                // Auction Info Grid
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-6 border border-blue-200/50 dark:border-blue-800/50">
                         <div className="flex items-center gap-3 mb-3">
@@ -192,28 +206,26 @@ const AuctionActionBar = memo(({
                     <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-2xl p-6 border border-orange-200/50 dark:border-orange-800/50">
                         <div className="flex items-center gap-3 mb-3">
                             <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                                Status
+                                Statuss
                             </h4>
                         </div>
-                        <p className={`text-3xl font-bold mb-2 ${
-                            timeInfo.isUrgent && auctionLive
+                        <p className={`text-3xl font-bold mb-2 ${timeInfo.isUrgent && isActuallyLive
                                 ? 'text-red-600 dark:text-red-400 animate-pulse'
-                                : auctionLive 
-                                ? 'text-gray-900 dark:text-white'
-                                : 'text-gray-600 dark:text-gray-400'
-                        }`}>
-                            {auctionLive ? timeInfo.display : 'Ended'}
-                        </p>
-                        {!auctionLive && (
-                            <p className={`text-sm font-medium ${
-                                hasBid 
-                                    ? 'text-green-600 dark:text-green-400' 
-                                    : 'text-orange-600 dark:text-orange-400'
+                                : isActuallyLive
+                                    ? 'text-gray-900 dark:text-white'
+                                    : 'text-gray-600 dark:text-gray-400'
                             }`}>
+                            {isActuallyLive ? timeInfo.display : 'Ended'}
+                        </p>
+                        {!isActuallyLive && (
+                            <p className={`text-sm font-medium ${hasBid
+                                    ? 'text-green-600 dark:text-green-400'
+                                    : 'text-orange-600 dark:text-orange-400'
+                                }`}>
                                 {hasBid ? '✅ Ready to finalize' : '🔄 Needs retrieval'}
                             </p>
                         )}
-                        {timeInfo.isUrgent && auctionLive && (
+                        {timeInfo.isUrgent && isActuallyLive && (
                             <p className="text-sm text-red-600 dark:text-red-400 font-medium">
                                 ⚡ Ending soon!
                             </p>
@@ -221,9 +233,9 @@ const AuctionActionBar = memo(({
                     </div>
                 </div>
 
-                {/* Action Buttons */}
+                // Action Buttons - FIXED logic
                 <div className="flex flex-wrap gap-4">
-                    {auctionLive && !isSellerOfAuction && (
+                    {isActuallyLive && !isSellerOfAuction && (
                         <button
                             type="button"
                             onClick={openBid}
@@ -232,9 +244,9 @@ const AuctionActionBar = memo(({
                             aria-label="Place bid on auction"
                         >
                             {busyBid ? (
-                                <div className="flex items-center justify-center gap-2">
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    Placing Bid...
+                                <div className="flex items-center justify-center gap-3">
+                                    <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                                    <span className="font-semibold">Placing Bid...</span>
                                 </div>
                             ) : (
                                 <span className="flex items-center justify-center gap-2">
@@ -244,7 +256,7 @@ const AuctionActionBar = memo(({
                         </button>
                     )}
 
-                    {auctionLive && isSellerOfAuction && !auctionHasBid && (
+                    {isActuallyLive && isSellerOfAuction && !auctionHasBid && (
                         <button
                             type="button"
                             onClick={onCancelAuction}
@@ -252,12 +264,19 @@ const AuctionActionBar = memo(({
                             className="px-6 py-4 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] disabled:scale-100"
                             aria-label="Cancel auction"
                         >
-                            {busyCancel ? 'Cancelling...' : '❌ Cancel Auction'}
+                            {busyCancel ? (
+                                <div className="flex items-center justify-center gap-2">
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    <span>Cancelling...</span>
+                                </div>
+                            ) : (
+                                '❌ Cancel Auction'
+                            )}
                         </button>
                     )}
 
-                    {/* End Auction Button - Only for auction seller */}
-                    {!auctionLive && isSellerOfAuction && (
+                    // End Auction Button - Only for auction seller when ended
+                    {!isActuallyLive && isSellerOfAuction && (
                         <button
                             type="button"
                             onClick={onEndAuction}
@@ -266,9 +285,11 @@ const AuctionActionBar = memo(({
                             aria-label="End auction and finalize"
                         >
                             {busyEnd ? (
-                                <div className="flex items-center justify-center gap-2">
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    {hasBid ? 'Finalizing Sale...' : 'Retrieving NFT...'}
+                                <div className="flex items-center justify-center gap-3">
+                                    <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                                    <span className="font-semibold">
+                                        {hasBid ? 'Finalizing Sale...' : 'Retrieving NFT...'}
+                                    </span>
                                 </div>
                             ) : (
                                 <span className="flex items-center justify-center gap-2">
@@ -278,8 +299,8 @@ const AuctionActionBar = memo(({
                         </button>
                     )}
 
-                    {/* Information for non-sellers when auction ended */}
-                    {!auctionLive && !isSellerOfAuction && (
+                    // Information for non-sellers when auction ended
+                    {!isActuallyLive && !isSellerOfAuction && (
                         <div className="flex-1 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
                             <div className="text-center">
                                 <div className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -322,9 +343,9 @@ const AuctionActionBar = memo(({
                     aria-label="Create new auction"
                 >
                     {busyCreate ? (
-                        <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            Creating Auction...
+                        <div className="flex items-center justify-center gap-3">
+                            <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                            <span className="font-semibold">Creating Auction...</span>
                         </div>
                     ) : (
                         <span className="flex items-center gap-2">
@@ -339,6 +360,7 @@ const AuctionActionBar = memo(({
     return null;
 });
 AuctionActionBar.displayName = 'AuctionActionBar';
+*/
 
 /* ───────────────────── Enhanced Share & Bookmark Components ───────────────────── */
 const ShareButton = memo(({ onShare, disabled }: { onShare: () => void; disabled?: boolean }) => (
@@ -361,24 +383,23 @@ const ShareButton = memo(({ onShare, disabled }: { onShare: () => void; disabled
 ));
 ShareButton.displayName = 'ShareButton';
 
-const BookmarkButton = memo(({ 
-    isBookmarked, 
-    onBookmark, 
-    disabled 
-}: { 
-    isBookmarked: boolean; 
-    onBookmark: () => void; 
-    disabled?: boolean; 
+const BookmarkButton = memo(({
+    isBookmarked,
+    onBookmark,
+    disabled
+}: {
+    isBookmarked: boolean;
+    onBookmark: () => void;
+    disabled?: boolean;
 }) => (
     <button
         type="button"
         onClick={onBookmark}
         disabled={disabled}
-        className={`p-3 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
-            isBookmarked
+        className={`p-3 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${isBookmarked
                 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300 hover:bg-yellow-200 dark:hover:bg-yellow-900/60'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:bg-gray-600 dark:hover:text-gray-200'
-        }`}
+            }`}
         aria-pressed={isBookmarked}
         aria-label={isBookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
         title={isBookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
@@ -398,12 +419,12 @@ const BookmarkButton = memo(({
 BookmarkButton.displayName = 'BookmarkButton';
 
 /* ───────────────────── Enhanced Detail Row Component ───────────────────── */
-const DetailRow = memo(({ 
-    label, 
-    value 
-}: { 
-    label: string; 
-    value: React.ReactNode; 
+const DetailRow = memo(({
+    label,
+    value
+}: {
+    label: string;
+    value: React.ReactNode;
 }) => (
     <div className="flex justify-between items-center py-4 border-b border-gray-200/50 dark:border-gray-700/50 hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors rounded-lg px-2">
         <div className="flex items-center gap-3">
@@ -415,14 +436,14 @@ const DetailRow = memo(({
 DetailRow.displayName = 'DetailRow';
 
 /* ───────────────────── Enhanced Attributes Grid ───────────────────── */
-const AttributeCard = memo(({ 
-    traitType, 
-    value, 
-    rarity 
-}: { 
-    traitType: string; 
-    value: string; 
-    rarity?: number; 
+const AttributeCard = memo(({
+    traitType,
+    value,
+    rarity
+}: {
+    traitType: string;
+    value: string;
+    rarity?: number;
 }) => (
     <div className="group bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-800/50 rounded-2xl p-4 text-center hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 transition-all duration-200 transform hover:scale-105 hover:shadow-lg border border-gray-200/50 dark:border-gray-700/50">
         <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 truncate uppercase tracking-wider font-semibold" title={traitType}>
@@ -458,23 +479,56 @@ export default function NftInfo(props: NftInfoProps) {
         ownerAddress,
         sellerAddress,
         onRefreshData,
-        auctionProps, // ← NEW
+        // ✅ COMMENTED: Auction functionality moved to specialized component
+        // auctionProps, // ← NEW
+        // ✅ NEW: Critical security check - prevent listing when auction is active
+        hasActiveAuction = false,
     } = props;
 
     const router = useRouter();
+    const { address: userAddress } = useAccount();
     const [banner, setBanner] = useState<BannerMessage | null>(null);
+
+    // ✅ COMMENTED: Real-time auction timer state - moved to specialized component
+    // const [liveTimeLeft, setLiveTimeLeft] = useState<number | undefined>(auctionProps?.timeLeftMs);
+
+    // ✅ COMMENTED: Real-time timer effect - moved to specialized component
+    // useEffect(() => {
+    //     // Update local state when props change
+    //     setLiveTimeLeft(auctionProps?.timeLeftMs);
+    // }, [auctionProps?.timeLeftMs]);
+
+    // useEffect(() => {
+    //     // Only run timer for active auctions with time left
+    //     if (!auctionProps?.auctionLive || !auctionProps?.auction || (liveTimeLeft ?? 0) <= 0) {
+    //         return;
+    //     }
+
+    //     const timer = setInterval(() => {
+    //         setLiveTimeLeft(prevTime => {
+    //             if (!prevTime || prevTime <= 1000) {
+    //                 // Auction ended, trigger refresh if possible
+    //                 setTimeout(() => onRefreshData?.(), 100); // Small delay to avoid concurrent updates
+    //                 return 0;
+    //             }
+    //             return prevTime - 1000; // Decrease by 1 second (1000ms)
+    //         });
+    //     }, 1000); // Update every second
+
+    //     return () => clearInterval(timer);
+    // }, [auctionProps?.auctionLive, auctionProps?.auction, liveTimeLeft, onRefreshData]);
 
     /* Enhanced Banner with auto-dismiss */
     const bannerTimerRef = useRef<number | null>(null);
     const showBanner = useCallback(
         (kind: BannerType, text: string, durationMs = 4000, icon?: string) => {
             setBanner({ kind, text, icon, duration: durationMs });
-            
+
             if (bannerTimerRef.current) {
                 clearTimeout(bannerTimerRef.current);
                 bannerTimerRef.current = null;
             }
-            
+
             if ((kind === 'info' || kind === 'success') && durationMs > 0) {
                 bannerTimerRef.current = window.setTimeout(() => {
                     setBanner(null);
@@ -493,8 +547,8 @@ export default function NftInfo(props: NftInfoProps) {
         }
     }, []);
 
-    useEffect(() => () => { 
-        if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current); 
+    useEffect(() => () => {
+        if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
     }, []);
 
     /* Precios */
@@ -506,30 +560,64 @@ export default function NftInfo(props: NftInfoProps) {
         return { lastPrice: lastPriceValue, formattedPrice: currentPrice };
     }, [activity, price]);
 
-    /* Enhanced status and computed properties */
-    const thereIsAuction = useMemo(() => {
-        const hasAuction = !!auctionProps?.auction || auctionProps?.auctionLive;
-        return hasAuction;
-    }, [auctionProps]);
+    /* Enhanced status and computed properties with FIXED auction logic */
+    // ✅ COMMENTED: Auction state calculations moved to specialized component
+    /*
+    const { thereIsAuction, isAuctionActive, isAuctionEnded } = useMemo(() => {
+        // ✅ FIXED: Proper auction state calculation using real-time timer
+        const hasAuction = !!auctionProps?.auction;
+        const isLive = !!auctionProps?.auctionLive;
+        const timeLeft = liveTimeLeft ?? 0; // ✅ Use real-time state instead of props
+
+        // 🔥 CRITICAL: Determine if auction is actually active
+        const isActive = hasAuction && isLive && timeLeft > 0;
+        const isEnded = hasAuction && (!isLive || timeLeft <= 0);
+
+        return {
+            thereIsAuction: hasAuction,
+            isAuctionActive: isActive,
+            isAuctionEnded: isEnded
+        };
+    }, [auctionProps, liveTimeLeft]); // ✅ Added liveTimeLeft dependency
+    */
+
+    // ✅ SIMPLIFIED: Only basic NFT states (no auction logic)
+    const thereIsAuction = false; // Always false since auctions are handled by specialized component
+    const isAuctionActive = false;
+    const isAuctionEnded = false;
 
     const statusLabel = useMemo(() => {
-        if (thereIsAuction) return 'In Auction';
+        console.log({ isAuctionActive, isAuctionEnded, isForSale, isOwner, ownerAddress, userAddress });
+        
+        // ✅ FIXED: Use actual ownership state instead of derived isOwner
+        if (isAuctionActive) return 'Live Auction';
+        if (isAuctionEnded) return 'Auction Ended';
         if (isForSale) return 'For Sale';
-        if (isOwner) return 'Owned by You';
+        
+        // Check if marketplace owns the NFT
+        if (ownerAddress?.toLowerCase() === process.env.NEXT_PUBLIC_MARKET_ADDRESS?.toLowerCase()) {
+            return 'In Marketplace Escrow';
+        }
+        
+        // Check if user is the direct owner
+        if (ownerAddress?.toLowerCase() === userAddress?.toLowerCase()) {
+            return 'Owned by You';
+        }
+        
         return 'Not Available';
-    }, [thereIsAuction, isForSale, isOwner]);
+    }, [isAuctionActive, isAuctionEnded, isForSale, isOwner, ownerAddress, userAddress]);
 
     const statusBadgeStatus = useMemo(() => {
-        return thereIsAuction || isForSale ? 'listed' : 'unlisted';
-    }, [thereIsAuction, isForSale]);
+        return isAuctionActive || isForSale ? 'listed' : 'unlisted';
+    }, [isAuctionActive, isForSale]);
 
-    const explorerUrl = useMemo(() => 
-        `https://sepolia.etherscan.io/address/${contractAddress}`, 
+    const explorerUrl = useMemo(() =>
+        `https://sepolia.etherscan.io/address/${contractAddress}`,
         [contractAddress]
     );
 
-    const shortAddr = useCallback((addr: string) => 
-        `${addr.slice(0, 6)}...${addr.slice(-4)}`, 
+    const shortAddr = useCallback((addr: string) =>
+        `${addr.slice(0, 6)}...${addr.slice(-4)}`,
         []
     );
 
@@ -614,17 +702,17 @@ export default function NftInfo(props: NftInfoProps) {
             const url = window.location.href;
             const title = meta?.name || `Token #${tokenId}`;
             const text = `Check out "${title}" on GalleryFi! 🎨`;
-            
+
             if (navigator.share && navigator.canShare?.({ title, text, url })) {
                 await navigator.share({ title, text, url });
                 showBanner('success', 'Link shared successfully! 📱', 3000, '✅');
             } else {
                 await navigator.clipboard.writeText(url);
-                
+
                 // Optional: Open Twitter share
                 const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}&hashtags=NFT,GalleryFi,Ethereum`;
                 const shouldOpenTwitter = window.confirm('Link copied! Would you like to share on Twitter?');
-                
+
                 if (shouldOpenTwitter) {
                     window.open(twitterUrl, '_blank', 'noopener,noreferrer');
                     showBanner('info', 'Link copied and Twitter opened! 🐦', 3000, 'ℹ️');
@@ -648,30 +736,35 @@ export default function NftInfo(props: NftInfoProps) {
             image: (meta?.image as string | null) ?? null,
             addedAt: Date.now(),
         };
-        
+
         toggleBookmark(bookmarkData);
-        
+
         if (isBookmarked) {
             showBanner('info', 'Removed from bookmarks 📂', 2000, '🗑️');
         } else {
             showBanner('success', 'Saved to bookmarks! 💾', 2000, '⭐');
         }
-        
+
         onSaveToBookmarks?.();
     }, [toggleBookmark, contractAddress, tokenId, meta, isBookmarked, onSaveToBookmarks, showBanner]);
 
-    /* Enhanced button visibility with memoization */
+    /* Enhanced button visibility with FIXED auction logic */
     const buttonVisibility = useMemo(() => {
         const visibility = {
-            showBuy: !thereIsAuction && isForSale && !isOwner && !!price && (price ?? BigInt(0)) > BigInt(0),
-            showList: !thereIsAuction && isOwner && !isForSale && canList,
-            showCancel: !thereIsAuction && isOwner && isForSale && canCancel,
-            showEdit: !thereIsAuction && isOwner && isForSale && canChange,
-            showOfferDisabled: !thereIsAuction && !isOwner && !isForSale,
+            // ✅ FIXED: Only show buy button if NOT in any auction state and properly for sale
+            showBuy: !thereIsAuction && !hasActiveAuction && isForSale && !isOwner && !!price && (price ?? BigInt(0)) > BigInt(0),
+            // ✅ CRITICAL: Only show list button if NO auction exists AND no active auction
+            showList: !thereIsAuction && !hasActiveAuction && isOwner && !isForSale && canList,
+            // ✅ FIXED: Only show cancel if NO auction and owner has active listing
+            showCancel: !thereIsAuction && !hasActiveAuction && isOwner && isForSale && canCancel,
+            // ✅ FIXED: Only show edit if NO auction and owner has active listing
+            showEdit: !thereIsAuction && !hasActiveAuction && isOwner && isForSale && canChange,
+            // ✅ FIXED: Show offer disabled when not owner and not for sale and no auction
+            showOfferDisabled: !thereIsAuction && !hasActiveAuction && !isOwner && !isForSale,
         };
-        
+
         return visibility;
-    }, [thereIsAuction, isForSale, isOwner, price, canList, canCancel, canChange]);
+    }, [thereIsAuction, hasActiveAuction, isForSale, isOwner, price, canList, canCancel, canChange]);
 
     return (
         <div className="space-y-8">
@@ -680,35 +773,37 @@ export default function NftInfo(props: NftInfoProps) {
                 <EnhancedBanner banner={banner} onClose={closeBanner} />
             )}
 
-            {/* Critical Action Required Banner for stuck NFTs */}
-            {ownerAddress?.toLowerCase() === process.env.NEXT_PUBLIC_MARKET_ADDRESS?.toLowerCase() && 
-             thereIsAuction && !auctionProps?.auctionLive && 
-             auctionProps?.isSellerOfAuction && (
-                <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-2 border-red-200 dark:border-red-800 rounded-2xl p-6 shadow-lg">
-                    <div className="flex items-start gap-4">
-                        <div className="flex-shrink-0">
-                            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                                <span className="text-2xl">⚠️</span>
+            {/* Critical Action Required Banner for stuck NFTs - FIXED */}
+            {/* ✅ COMMENTED: Auction-related banners moved to specialized component
+            {ownerAddress?.toLowerCase() === process.env.NEXT_PUBLIC_MARKET_ADDRESS?.toLowerCase() &&
+                isAuctionEnded &&
+                auctionProps?.isSellerOfAuction && (
+                    <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-2 border-red-200 dark:border-red-800 rounded-2xl p-6 shadow-lg">
+                        <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0">
+                                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                                    <span className="text-2xl">⚠️</span>
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex-1">
-                            <h3 className="text-lg font-bold text-red-800 dark:text-red-200 mb-2">
-                                Action Required: Your NFT Needs Retrieval
-                            </h3>
-                            <p className="text-red-700 dark:text-red-300 mb-4">
-                                {auctionProps?.auctionHasBid 
-                                    ? "Your auction ended successfully! Click the button below to finalize the sale and transfer the NFT to the winning bidder."
-                                    : "Your auction ended without any bids. Click the button below to retrieve your NFT back to your wallet."
-                                }
-                            </p>
-                            <div className="bg-red-100 dark:bg-red-900/30 rounded-lg p-3 text-sm text-red-800 dark:text-red-200">
-                                <strong>Why is this necessary?</strong> The marketplace holds your NFT in escrow during auctions. 
-                                You must manually complete this final step to {auctionProps?.auctionHasBid ? 'receive payment and transfer ownership' : 'get your NFT back'}.
+                            <div className="flex-1">
+                                <h3 className="text-lg font-bold text-red-800 dark:text-red-200 mb-2">
+                                    Action Required: Your NFT Needs Retrieval
+                                </h3>
+                                <p className="text-red-700 dark:text-red-300 mb-4">
+                                    {auctionProps?.auctionHasBid
+                                        ? "Your auction ended successfully! Click the button below to finalize the sale and transfer the NFT to the winning bidder."
+                                        : "Your auction ended without any bids. Click the button below to retrieve your NFT back to your wallet."
+                                    }
+                                </p>
+                                <div className="bg-red-100 dark:bg-red-900/30 rounded-lg p-3 text-sm text-red-800 dark:text-red-200">
+                                    <strong>Why is this necessary?</strong> The marketplace holds your NFT in escrow during auctions.
+                                    You must manually complete this final step to {auctionProps?.auctionHasBid ? 'receive payment and transfer ownership' : 'get your NFT back'}.
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            */}
 
             {/* Enhanced Main Panel */}
             <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 overflow-hidden transition-all duration-300 hover:shadow-2xl">
@@ -720,31 +815,33 @@ export default function NftInfo(props: NftInfoProps) {
                                 <h1 className="text-4xl font-bold text-gray-900 dark:text-white truncate">
                                     {meta?.name || `Token #${tokenId}`}
                                 </h1>
-                                <StatusBadge 
-                                    status={statusBadgeStatus} 
-                                    label={statusLabel} 
+                                <StatusBadge
+                                    status={statusBadgeStatus}
+                                    label={statusLabel}
                                 />
                             </div>
                             <div className="flex items-center gap-4 flex-wrap">
                                 <span className="text-gray-600 dark:text-gray-400 font-mono text-sm">
                                     ID: <span className="font-semibold">#{tokenId}</span>
                                 </span>
-                                {thereIsAuction && (
+                                {/* ✅ COMMENTED: Auction status indicators moved to specialized component
+                                {(thereIsAuction && auctionProps?.auction) && (
                                     <div className="flex items-center gap-2">
-                                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                                        <span className="text-sm font-semibold text-red-600 dark:text-red-400">
-                                            Live Auction
+                                        <span className={`w-2 h-2 rounded-full ${isAuctionActive ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`} />
+                                        <span className={`text-sm font-semibold ${isAuctionActive ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                                            {isAuctionActive ? 'Live Auction' : 'Auction Ended'}
                                         </span>
                                     </div>
                                 )}
+                                */}
                             </div>
                         </div>
 
                         <div className="flex items-center gap-3 ml-4">
                             <ShareButton onShare={handleShare} />
-                            <BookmarkButton 
-                                isBookmarked={isBookmarked} 
-                                onBookmark={handleBookmark} 
+                            <BookmarkButton
+                                isBookmarked={isBookmarked}
+                                onBookmark={handleBookmark}
                             />
                         </div>
                     </div>
@@ -771,34 +868,41 @@ export default function NftInfo(props: NftInfoProps) {
                             </h3>
                             <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
                                 <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                                Owned by
-                                            </span>
-                                            {ownerAddress && (
-                                                <div className="flex items-center gap-2">
-                                                    {/* Check if it's marketplace address */}
-                                                    {ownerAddress.toLowerCase() === process.env.NEXT_PUBLIC_MARKET_ADDRESS?.toLowerCase() ? (
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="px-3 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 rounded-full text-xs font-semibold">
-                                                                🏪 Marketplace Escrow
+                                    <div className="flex-1 space-y-4">
+                                        {/* Current Owner Section */}
+                                        <div>
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                    Current Owner
+                                                </span>
+                                                {ownerAddress && (
+                                                    <div className="flex items-center gap-2">
+                                                        {/* Check if it's marketplace address */}
+                                                        {ownerAddress.toLowerCase() === process.env.NEXT_PUBLIC_MARKET_ADDRESS?.toLowerCase() ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="px-3 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 rounded-full text-xs font-semibold">
+                                                                    🏪 Marketplace Escrow
+                                                                </span>
+                                                                {/* Show original owner when in escrow */}
+                                                                {isOwner && (
+                                                                    <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 rounded-full text-xs">
+                                                                        (Your NFT)
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        ) : ownerAddress.toLowerCase() === userAddress?.toLowerCase() ? (
+                                                            <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 rounded-full text-xs font-semibold">
+                                                                ✅ You (Direct Owner)
                                                             </span>
-                                                        </div>
-                                                    ) : isOwner ? (
-                                                        <span className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 rounded-full text-xs font-semibold">
-                                                            ✅ You
-                                                        </span>
-                                                    ) : (
-                                                        <span className="px-3 py-1 bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300 rounded-full text-xs font-semibold">
-                                                            👤 Other User
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                        
-                                        <div className="space-y-2">
+                                                        ) : (
+                                                            <span className="px-3 py-1 bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300 rounded-full text-xs font-semibold">
+                                                                👤 Other User
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xs text-gray-500 dark:text-gray-400">Address:</span>
                                                 <code className="text-sm font-mono text-gray-900 dark:text-white bg-white dark:bg-gray-700 px-2 py-1 rounded border">
@@ -807,35 +911,63 @@ export default function NftInfo(props: NftInfoProps) {
                                                 <button
                                                     onClick={() => navigator.clipboard.writeText(ownerAddress || '')}
                                                     className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                                                    title="Copy address"
+                                                    title="Copy current owner address"
                                                 >
                                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                     </svg>
                                                 </button>
                                             </div>
-                                            
-                                            {/* Explanation when marketplace owns it */}
-                                            {ownerAddress?.toLowerCase() === process.env.NEXT_PUBLIC_MARKET_ADDRESS?.toLowerCase() && (
-                                                <div className="mt-3 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-                                                    <p className="text-xs text-orange-700 dark:text-orange-300">
-                                                        <strong>Why is the marketplace the owner?</strong><br/>
-                                                        {isForSale && "This NFT is currently listed for sale. The marketplace temporarily holds it in escrow until sold or delisted."}
-                                                        {thereIsAuction && auctionProps?.auctionLive && "This NFT is in an active auction. The marketplace holds it in escrow until the auction ends."}
-                                                        {thereIsAuction && !auctionProps?.auctionLive && (
-                                                            <>
-                                                                This NFT&apos;s auction has ended. 
-                                                                {auctionProps?.auctionHasBid 
-                                                                    ? " The seller needs to finalize the sale to transfer it to the winning bidder."
-                                                                    : " The seller needs to retrieve their NFT since no bids were received."
-                                                                }
-                                                            </>
-                                                        )}
-                                                        {!isForSale && !thereIsAuction && "This NFT was transferred to the marketplace for listing or auction purposes."}
-                                                    </p>
-                                                </div>
-                                            )}
                                         </div>
+
+                                        {/* Seller/Original Owner Section - Show when NFT is in marketplace escrow */}
+                                        {ownerAddress?.toLowerCase() === process.env.NEXT_PUBLIC_MARKET_ADDRESS?.toLowerCase() && sellerAddress && (
+                                            <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                                        Listed by (Original Seller)
+                                                    </span>
+                                                    <div className="flex items-center gap-2">
+                                                        {sellerAddress.toLowerCase() === userAddress?.toLowerCase() ? (
+                                                            <span className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 rounded-full text-xs font-semibold">
+                                                                ✅ You
+                                                            </span>
+                                                        ) : (
+                                                            <span className="px-3 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 rounded-full text-xs font-semibold">
+                                                                👤 Seller
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs text-gray-500 dark:text-gray-400">Address:</span>
+                                                    <code className="text-sm font-mono text-gray-900 dark:text-white bg-white dark:bg-gray-700 px-2 py-1 rounded border">
+                                                        {shortAddr(sellerAddress)}
+                                                    </code>
+                                                    <button
+                                                        onClick={() => navigator.clipboard.writeText(sellerAddress)}
+                                                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                                        title="Copy seller address"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Explanation when marketplace owns it */}
+                                        {ownerAddress?.toLowerCase() === process.env.NEXT_PUBLIC_MARKET_ADDRESS?.toLowerCase() && (
+                                            <div className="mt-4 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                                                <p className="text-xs text-orange-700 dark:text-orange-300">
+                                                    <strong>Why is the marketplace the current owner?</strong><br />
+                                                    {isForSale && "This NFT is currently listed for sale. The marketplace temporarily holds it in escrow until sold or delisted."}
+                                                    {!isForSale && !thereIsAuction && "This NFT was transferred to the marketplace for listing or auction purposes."}
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -844,13 +976,46 @@ export default function NftInfo(props: NftInfoProps) {
 
                     {/* Price/Auction Section */}
                     <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
+                        {/* ✅ COMMENTED: Auction functionality moved to specialized component
                         {thereIsAuction ? (
                             <AuctionActionBar
                                 {...auctionProps}
+                                // ✅ OVERRIDE: Use locally calculated states and real-time timer
+                                auctionLive={isAuctionActive}
+                                timeLeftMs={liveTimeLeft} // ✅ Use real-time timer
                                 isOwner={isOwner}
                                 isForSale={isForSale}
                             />
                         ) : (
+                        */}
+                        {/* ✅ SIMPLIFIED: Only show regular marketplace actions (no auction logic) */}
+                        
+                        {/* ⚠️ SECURITY WARNING: Show warning when listing is blocked by marketplace ownership */}
+                        {hasActiveAuction && isOwner && !isForSale && (
+                            <div className="mb-6 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-200">
+                                <div className="flex items-center gap-2">
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                    <span className="font-medium">⚠️ Cannot List: NFT in Marketplace Escrow</span>
+                                </div>
+                                <p className="mt-2 text-xs text-red-700 dark:text-red-300">
+                                    <strong>This NFT is currently held by the marketplace and cannot be listed.</strong>
+                                    <br />
+                                    This could be due to:
+                                </p>
+                                <ul className="mt-1 text-xs text-red-700 dark:text-red-300 list-disc list-inside space-y-1">
+                                    <li>An active or recently ended auction that needs to be claimed</li>
+                                    <li>An existing listing that needs to be cancelled first</li>
+                                    <li>A pending transaction that needs to be completed</li>
+                                </ul>
+                                <p className="mt-2 text-xs text-red-700 dark:text-red-300">
+                                    <strong>Action required:</strong> Check your auction status or cancel any existing listings before creating a new one.
+                                </p>
+                            </div>
+                        )}
+
+                        {(
                             <NftInfoActionBar
                                 isForSale={isForSale}
                                 formattedPrice={formattedPrice}

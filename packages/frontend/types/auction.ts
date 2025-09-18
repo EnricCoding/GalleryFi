@@ -69,12 +69,14 @@ export class AuctionUtils {
    * Determines if an auction exists and is valid
    */
   static isValidAuction(auction: AuctionData | null): auction is AuctionData {
-    return !!(
+    const isValid = !!(
       auction && 
       auction.seller &&
       auction.seller !== ZERO_ADDRESS &&
       auction.end > BigInt(0)
     );
+    
+    return isValid;
   }
 
   /**
@@ -91,7 +93,7 @@ export class AuctionUtils {
     if (endTimeSec > nowSec) {
       return 'live';
     } else {
-      return 'ended'; // TODO: Detect 'settled' vs 'ended' from events
+      return 'ended';
     }
   }
 

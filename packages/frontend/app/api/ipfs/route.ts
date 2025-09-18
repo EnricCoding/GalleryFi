@@ -44,15 +44,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log('[IPFS] Upload start:', { name, type: file.type, size: file.size });
     const imgUpload = await pinata.upload.public.file(file, { metadata: { name } });
-    console.log('[IPFS] Image CID:', imgUpload.cid);
 
     const metadataJson = { name, description, image: `ipfs://${imgUpload.cid}` };
     const jsonUpload = await pinata.upload.public.json(metadataJson, {
       metadata: { name: `${name}.json` },
     });
-    console.log('[IPFS] Metadata CID:', jsonUpload.cid);
 
     return NextResponse.json({ imageCid: imgUpload.cid, metadataCid: jsonUpload.cid });
   } catch (e: unknown) {

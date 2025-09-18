@@ -101,13 +101,6 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         !isAddressEqual(actualOwner, MARKET_ADDRESS as `0x${string}`) &&
         (!onchainListing || !isAddressEqual(actualOwner, onchainListing.seller));
 
-    // Debug
-    console.log('On-chain Listing:', onchainListing);
-    console.log('Actual Owner:', actualOwner);
-    console.log('Is Seller:', isSeller);
-    console.log('Was Sold:', wasSold);
-    console.log('Is Available:', isAvailable);
-
     useEffect(() => {
         let cancelled = false;
 
@@ -130,6 +123,8 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                     : rawImage
                 : null;
 
+            
+
             setImgUrl(resolved || null);
             setLoadingMeta(false);
         })();
@@ -150,6 +145,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             cancelled = true;
         };
     }, [tokenURI]);
+
 
     return (
         <Link
@@ -194,19 +190,31 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                 )}
 
                 <div className="absolute top-3 left-3 flex flex-col gap-2">
-                    {/* Status badge */}
-                    <span
-                        className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold 
-                        backdrop-blur-sm border ${isAvailable
-                                ? 'bg-green-500/90 text-white border-green-400/20 shadow-lg shadow-green-500/25'
-                                : wasSold
-                                    ? 'bg-blue-500/90 text-white border-blue-400/20 shadow-lg shadow-blue-500/25'
-                                    : 'bg-neutral-500/90 text-white border-neutral-400/20 shadow-lg shadow-neutral-500/25'
-                            }`}
-                    >
-                        <span className="w-1.5 h-1.5 bg-white rounded-full mr-2 animate-pulse" />
-                        {isAvailable ? 'Available' : wasSold ? 'Sold' : 'Unavailable'}
-                    </span>
+                    {/* ✅ NEW: Auction indicator - highest priority */}
+                    {listing.auction?.isActive && (
+                        <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold 
+                             backdrop-blur-sm border bg-gradient-to-r from-purple-600/95 to-blue-600/95 
+                             text-white border-purple-400/30 shadow-lg shadow-purple-500/40">
+                            <span className="w-1.5 h-1.5 bg-white rounded-full mr-2 animate-pulse" />
+                            🔥 Live Auction
+                        </span>
+                    )}
+
+                    {/* Status badge - only show if not in auction */}
+                    {!listing.auction?.isActive && (
+                        <span
+                            className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold 
+                            backdrop-blur-sm border ${isAvailable
+                                    ? 'bg-green-500/90 text-white border-green-400/20 shadow-lg shadow-green-500/25'
+                                    : wasSold
+                                        ? 'bg-blue-500/90 text-white border-blue-400/20 shadow-lg shadow-blue-500/25'
+                                        : 'bg-neutral-500/90 text-white border-neutral-400/20 shadow-lg shadow-neutral-500/25'
+                                }`}
+                        >
+                            <span className="w-1.5 h-1.5 bg-white rounded-full mr-2 animate-pulse" />
+                            {isAvailable ? 'Available' : wasSold ? 'Sold' : 'Unavailable'}
+                        </span>
+                    )}
 
                     {/* Badge para vendedor cuando no es owner por escrow */}
                     {isSeller && !isOwner && isAvailable && (
@@ -252,28 +260,89 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                     )}
                 </div>
 
-                {/* Price */}
+                {/* Price / Auction Info */}
                 <div className="flex items-end justify-between">
-                    <div className="space-y-1">
-                        <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium">Current Price</p>
-                        <div className="space-y-0.5">
-                            <p className="text-xl font-bold text-neutral-900 dark:text-neutral-50">{formatEth(price)} ETH</p>
-                            <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                {loadingPrice ? (
-                                    <span className="inline-block w-16 h-4 bg-neutral-200 dark:bg-neutral-600 rounded animate-pulse" />
-                                ) : ethPriceUsd ? (
-                                    formatUsdPrice(formatEth(price), ethPriceUsd)
-                                ) : (
-                                    '~$-- USD'
-                                )}
+                    {listing.auction?.isActive ? (
+                        // ✅ NEW: Show auction info when in auction
+                        <div className="space-y-1">
+                            <p className="text-sm text-purple-600 dark:text-purple-400 font-medium flex items-center gap-1">
+                                <span className="text-base">🔥</span>
+                                Live Auction
                             </p>
+                            <div className="space-y-0.5">
+                                <p className="text-xl font-bold text-neutral-900 dark:text-neutral-50">
+                                    {listing.auction.currentBid && BigInt(listing.auction.currentBid) > BigInt(0)
+                                        ? `${formatEth(listing.auction.currentBid)} ETH`
+                                        : 'No bids yet'
+                                    }
+                                </p>
+                                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                    {listing.auction.currentBid && BigInt(listing.auction.currentBid) > BigInt(0) ? (
+                                        loadingPrice ? (
+                                            <span className="inline-block w-16 h-4 bg-neutral-200 dark:bg-neutral-600 rounded animate-pulse" />
+                                        ) : ethPriceUsd ? (
+                                            formatUsdPrice(formatEth(listing.auction.currentBid), ethPriceUsd)
+                                        ) : (
+                                            '~$-- USD'
+                                        )
+                                    ) : (
+                                        'Place the first bid!'
+                                    )}
+                                </p>
+                            </div>
                         </div>
-                    </div>
+                    ) : (
+                        // ✅ EXISTING: Show regular marketplace price
+                        <div className="space-y-1">
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium">Current Price</p>
+                            <div className="space-y-0.5">
+                                <p className="text-xl font-bold text-neutral-900 dark:text-neutral-50">{formatEth(price)} ETH</p>
+                                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                    {loadingPrice ? (
+                                        <span className="inline-block w-16 h-4 bg-neutral-200 dark:bg-neutral-600 rounded animate-pulse" />
+                                    ) : ethPriceUsd ? (
+                                        formatUsdPrice(formatEth(price), ethPriceUsd)
+                                    ) : (
+                                        '~$-- USD'
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    
                     <div className="text-right">
-                        <p className="text-xs text-neutral-400 dark:text-neutral-500 font-medium mb-1">Listed</p>
-                        <span className="text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-700 px-2 py-1 rounded-md">
-                            {timeAgo(timestamp)}
-                        </span>
+                        {listing.auction?.isActive ? (
+                            // ✅ NEW: Show time left for auction
+                            <>
+                                <p className="text-xs text-purple-600 dark:text-purple-400 font-medium mb-1">Ends in</p>
+                                <span className="text-xs text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-md font-medium">
+                                    {(() => {
+                                        if (!listing.auction.timeLeft || listing.auction.timeLeft <= 0) {
+                                            return 'Ended';
+                                        }
+                                        const hours = Math.floor(listing.auction.timeLeft / (1000 * 60 * 60));
+                                        const minutes = Math.floor((listing.auction.timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                                        
+                                        if (hours > 24) {
+                                            const days = Math.floor(hours / 24);
+                                            return `${days}d ${hours % 24}h`;
+                                        } else if (hours > 0) {
+                                            return `${hours}h ${minutes}m`;
+                                        } else {
+                                            return `${minutes}m`;
+                                        }
+                                    })()}
+                                </span>
+                            </>
+                        ) : (
+                            // ✅ EXISTING: Show listing time
+                            <>
+                                <p className="text-xs text-neutral-400 dark:text-neutral-500 font-medium mb-1">Listed</p>
+                                <span className="text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-700 px-2 py-1 rounded-md">
+                                    {timeAgo(timestamp)}
+                                </span>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -316,8 +385,8 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                     </div>
                 </div>
 
-                {/* Buy Now */}
-                {!isOwner && !isSeller && isAvailable && (
+                {/* Action Button */}
+                {!isOwner && !isSeller && (listing.auction?.isActive || isAvailable) && (
                     <button
                         type="button"
                         onClick={(e) => {
@@ -330,28 +399,53 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                             }
                             router.push(`/nft/${nft}/${tokenId}`);
                         }}
-                        className="w-full mt-4 group/btn relative overflow-hidden
-                       bg-gradient-to-r from-accent via-accent to-accent-dark 
-                       hover:from-accent-dark hover:via-accent hover:to-accent-light
+                        className={`w-full mt-4 group/btn relative overflow-hidden
+                       ${listing.auction?.isActive
+                                ? 'bg-gradient-to-r from-purple-600 via-purple-600 to-blue-600 hover:from-purple-700 hover:via-purple-700 hover:to-blue-700 border-purple-500/30 hover:border-purple-500/50 hover:shadow-purple-500/40'
+                                : 'bg-gradient-to-r from-accent via-accent to-accent-dark hover:from-accent-dark hover:via-accent hover:to-accent-light border-accent/30 hover:border-accent/50 hover:shadow-accent/40'
+                            }
                        text-white font-bold py-3.5 px-6 rounded-xl 
                        transition-all duration-300 ease-out
-                       hover:shadow-xl hover:shadow-accent/40
+                       hover:shadow-xl
                        hover:scale-[1.02] active:scale-[0.98]
-                       border border-accent/30 hover:border-accent/50
-                       focus:outline-none focus:ring-4 focus:ring-accent/20"
-                        aria-label={isConnected ? 'Buy now' : 'Connect wallet to buy'}
+                       border
+                       focus:outline-none focus:ring-4 ${listing.auction?.isActive ? 'focus:ring-purple-500/20' : 'focus:ring-accent/20'}`}
+                        aria-label={isConnected 
+                            ? (listing.auction?.isActive ? 'Place bid' : 'Buy now')
+                            : 'Connect wallet'
+                        }
                     >
                         <span className="relative z-10 flex items-center justify-center gap-2.5">
-                            <svg className="w-4 h-4 transition-all duration-300 group-hover/btn:scale-110 group-hover/btn:rotate-12"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
-                                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                            </svg>
-                            <span className="font-semibold tracking-wide">{isConnected ? 'Buy Now' : 'Connect Wallet'}</span>
-                            <svg className="w-4 h-4 transition-all duration-300 group-hover/btn:translate-x-1"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
+                            {listing.auction?.isActive ? (
+                                // ✅ NEW: Auction button
+                                <>
+                                    <svg className="w-4 h-4 transition-all duration-300 group-hover/btn:scale-110" 
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                                            d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3" />
+                                    </svg>
+                                    <span className="font-semibold tracking-wide">
+                                        {isConnected ? 'Place Bid' : 'Connect Wallet'}
+                                    </span>
+                                    <span className="text-lg">🔥</span>
+                                </>
+                            ) : (
+                                // ✅ EXISTING: Buy button
+                                <>
+                                    <svg className="w-4 h-4 transition-all duration-300 group-hover/btn:scale-110 group-hover/btn:rotate-12"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                    </svg>
+                                    <span className="font-semibold tracking-wide">
+                                        {isConnected ? 'Buy Now' : 'Connect Wallet'}
+                                    </span>
+                                    <svg className="w-4 h-4 transition-all duration-300 group-hover/btn:translate-x-1"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </>
+                            )}
                         </span>
 
                         <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 
@@ -359,20 +453,31 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 
                             -translate-x-full group-hover/btn:translate-x-full 
                             transition-transform duration-700 ease-out" />
-                        <div className="absolute inset-0 rounded-xl bg-accent/20 scale-0 group-hover/btn:scale-100 
-                            transition-transform duration-300 ease-out animate-pulse" />
+                        <div className={`absolute inset-0 rounded-xl scale-0 group-hover/btn:scale-100 
+                            transition-transform duration-300 ease-out animate-pulse
+                            ${listing.auction?.isActive ? 'bg-purple-500/20' : 'bg-accent/20'}`} />
                     </button>
                 )}
 
-                {!isConnected && !isOwner && !isSeller && isAvailable && (
+                {!isConnected && !isOwner && !isSeller && (listing.auction?.isActive || isAvailable) && (
                     <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-                        Connect your wallet to purchase this item.
+                        {listing.auction?.isActive 
+                            ? 'Connect your wallet to place a bid on this auction.'
+                            : 'Connect your wallet to purchase this item.'
+                        }
                     </p>
                 )}
 
-                {!isAvailable && wasSold && !isOwner && !isSeller && (
+                {!isAvailable && !listing.auction?.isActive && wasSold && !isOwner && !isSeller && (
                     <p className="mt-2 text-xs text-blue-600 dark:text-blue-400 font-medium text-center">
                         This NFT has been sold and is no longer available.
+                    </p>
+                )}
+
+                {/* ✅ NEW: Special message for ended auctions */}
+                {listing.auction && !listing.auction.isActive && !wasSold && (
+                    <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 font-medium text-center">
+                        🔥 Auction has ended. Check details to see the outcome.
                     </p>
                 )}
             </div>

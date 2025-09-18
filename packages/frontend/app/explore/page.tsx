@@ -38,11 +38,26 @@ export default function ExplorePage() {
     // Hook: pasamos el flag onlyListed en opts
     const { data, isLoading, isFetching, error, refetch } = useListings(params, { onlyListed });
     const listings = data?.listings ?? [];
+    
+    // ✅ ENHANCED DEBUG: Check auction data
+    console.log('🏠 EXPLORE PAGE DATA:', {
+        params,
+        onlyListed,
+        listingsCount: listings.length,
+        sampleListings: listings.slice(0, 3).map(l => ({
+            nft: l.nft,
+            tokenId: l.tokenId,
+            hasAuction: !!l.auction,
+            auctionActive: l.auction?.isActive,
+            auctionEnd: l.auction?.end,
+            currentBid: l.auction?.currentBid
+        }))
+    });
+    
     const totalCount = data?.totalCount ?? 0;
     
     // Calcular total de páginas
     const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-    const hasNextPage = page < totalPages;
 
     // Si cambian los filtros (onlyListed o sort), vuelve a página 1
     useEffect(() => {
@@ -117,7 +132,7 @@ export default function ExplorePage() {
                 {listings.length === 0 ? (
                     <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-800 p-10 text-center">
                         <p className="text-neutral-700 dark:text-neutral-300 mb-2">
-                            {onlyListed ? 'No listed items found.' : 'No active listings found.'}
+                            {onlyListed ? 'No NFTs available for purchase or bidding.' : 'No active listings found.'}
                         </p>
                         <p className="text-sm text-neutral-500 dark:text-neutral-400">
                             New items will appear here as soon as they’re indexed.
@@ -267,16 +282,22 @@ function Header({
             </h2>
 
             <div className="flex items-center gap-3">
-                {/* Toggle Only listed */}
-                <label className="flex items-center gap-2 select-none cursor-pointer">
-                    <span className="text-sm text-neutral-700 dark:text-neutral-300">Only listed</span>
-                    <span
-                        className={[
-                            'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                            onlyListed
-                                ? 'bg-[--accent-dark] dark:bg-[--accent] ring-2 ring-[--accent] shadow-sm shadow-[--accent]/40'
-                                : 'bg-neutral-300 dark:bg-neutral-600',
-                        ].join(' ')}
+                {/* Toggle Only listed - Enhanced Design */}
+                <label className="flex items-center gap-3 select-none cursor-pointer group">
+                    <span className={`text-sm font-medium transition-colors duration-200 ${
+                        onlyListed 
+                            ? 'text-accent-dark dark:text-accent font-semibold' 
+                            : 'text-neutral-600 dark:text-neutral-400'
+                    }`}>
+                        Can buy/bid
+                    </span>
+                    <div
+                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 ease-out cursor-pointer
+                            ${onlyListed
+                                ? 'bg-gradient-to-r from-accent-dark to-accent shadow-lg shadow-accent/30 ring-2 ring-accent/20 scale-105'
+                                : 'bg-neutral-300 dark:bg-neutral-600 hover:bg-neutral-400 dark:hover:bg-neutral-500'
+                            }
+                            group-hover:scale-110 active:scale-95`}
                         role="switch"
                         aria-checked={onlyListed}
                         tabIndex={0}
@@ -288,12 +309,47 @@ function Header({
                             }
                         }}
                     >
+                        {/* Background glow effect when active */}
+                        {onlyListed && (
+                            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-accent-dark to-accent opacity-60 blur animate-pulse" />
+                        )}
+                        
+                        {/* Toggle thumb */}
                         <span
-                            className={[
-                                'inline-block h-5 w-5 transform rounded-full bg-white transition-transform',
-                                onlyListed ? 'translate-x-5' : 'translate-x-1',
-                            ].join(' ')}
-                        />
+                            className={`relative inline-block h-5 w-5 transform rounded-full transition-all duration-300 ease-out
+                                ${onlyListed 
+                                    ? 'translate-x-6 bg-white shadow-lg ring-2 ring-white/20' 
+                                    : 'translate-x-1 bg-white shadow-md'
+                                }
+                                group-hover:shadow-xl`}
+                        >
+                            {/* Inner icon for active state */}
+                            {onlyListed && (
+                                <svg 
+                                    className="absolute inset-0 w-3 h-3 m-1 text-accent animate-pulse" 
+                                    fill="currentColor" 
+                                    viewBox="0 0 20 20"
+                                >
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                            )}
+                        </span>
+                        
+                        {/* Active indicator text */}
+                        {onlyListed && (
+                            <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-bold text-accent-dark dark:text-accent animate-bounce">
+                                ON
+                            </span>
+                        )}
+                    </div>
+                    
+                    {/* Helper text */}
+                    <span className={`text-xs transition-all duration-200 ${
+                        onlyListed 
+                            ? 'text-accent-dark dark:text-accent font-medium animate-pulse' 
+                            : 'text-neutral-400 dark:text-neutral-500'
+                    }`}>
+                        {onlyListed ? '🎯 Available now' : 'Show all'}
                     </span>
                 </label>
 

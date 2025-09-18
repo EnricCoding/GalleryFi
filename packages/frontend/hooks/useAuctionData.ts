@@ -66,7 +66,9 @@ export function useAuctionData({
 
   // ✅ Parse auction data using centralized utility
   const auction = useMemo<AuctionData | null>(() => {
-    if (!data || !Array.isArray(data) || data.length !== 4) return null;
+    if (!data || !Array.isArray(data) || data.length !== 4) {
+      return null;
+    }
     
     const [seller, end, bid, bidder] = data;
     
@@ -78,7 +80,8 @@ export function useAuctionData({
     };
     
     // Validate using centralized utility
-    return AuctionUtils.isValidAuction(auctionData) ? auctionData : null;
+    const isValid = AuctionUtils.isValidAuction(auctionData);
+    return isValid ? auctionData : null;
   }, [data]);
 
   // ✅ Enhanced status and timing using centralized utilities
@@ -95,13 +98,17 @@ export function useAuctionData({
   
   const isLoadingOrFetching = isLoading || isFetching;
 
+  const isLive = useMemo(() => {
+    return auctionStatus === 'live';
+  }, [auctionStatus]);
+
   return {
     // Core auction data
     auction,
     
     // Status information using new types
     status: auctionStatus,
-    isLive: auctionStatus === 'live',
+    isLive: isLive,
     hasEnded: auctionStatus === 'ended',
     
     // Bidding information

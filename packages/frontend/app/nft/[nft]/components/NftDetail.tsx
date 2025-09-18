@@ -16,7 +16,6 @@ import { CONTRACTS } from '@/config/contracts';
 import { AuctionUtils, type OwnershipState, type AuctionActionValidity } from '@/types/auction';
 import { analyzeAuctionForUX } from '@/lib/ui/auction-ux';
 import { EnhancedAuctionSection } from '@/components/shared/EnhancedAuctionSection';
-import { PerfectOwnershipDisplay } from '@/components/shared/PerfectOwnershipDisplay';
 import NftImage from './NftImage';
 import NftInfo from './NftInfo';
 import ActivityTabs from './ActivityTabs';
@@ -218,7 +217,45 @@ const NftDetailContent = memo(({
                             ownerAddress={ownerAddress}
                             sellerAddress={seller}
                             onRefreshData={onRefreshData}
-                            auctionProps={auctionProps}
+                            hasActiveAuction={(() => {
+                                // ✅ FIXED: Properly distinguish between listing block and purchase availability
+                                const marketplaceAddress = CONTRACTS.MARKETPLACE.toLowerCase();
+                                const currentOwner = ownerAddress?.toLowerCase();
+                                
+                                console.log('🔍 PURCHASE AVAILABILITY CHECK:', {
+                                    marketplaceAddress,
+                                    currentOwner,
+                                    isMarketplaceOwner: currentOwner === marketplaceAddress,
+                                    isForSale,
+                                    price: price?.toString(),
+                                    hasAuctionProps: !!auctionProps,
+                                    auctionActive: auctionProps?.auctionLive
+                                });
+                                
+                                // ✅ FIXED LOGIC: Block new listings if marketplace owns NFT, 
+                                // BUT allow purchase if NFT is already listed for sale
+                                if (currentOwner === marketplaceAddress) {
+                                    // Case 1: NFT in active auction
+                                    if (auctionProps?.auctionLive) {
+                                        console.log('🔥 AUCTION MODE: NFT in active auction - blocking listing, allowing bids');
+                                        return true; // Block listing (auction active)
+                                    }
+                                    
+                                    // Case 2: NFT listed for sale (marketplace escrow)
+                                    if (isForSale && price && price > BigInt(0)) {
+                                        console.log('� SALE MODE: NFT listed for sale - blocking new listing, ALLOWING PURCHASE');
+                                        return false; // ✅ ALLOW purchase of listed NFT
+                                    }
+                                    
+                                    // Case 3: NFT in escrow but not listed (ended auction, etc.)
+                                    console.log('⏳ ESCROW MODE: NFT in marketplace but not for sale - blocking listing');
+                                    return true; // Block listing (needs to be claimed first)
+                                }
+                                
+                                // Case 4: User owns NFT directly
+                                console.log('✅ DIRECT OWNERSHIP: User owns NFT directly - allowing listing');
+                                return false; // Allow listing
+                            })()}
                         />
 
                         {/* ✨ Enhanced Auction Section with improved UX */}
@@ -404,18 +441,23 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
     // Usar configuración centralizada
     const marketplaceAddress = CONTRACTS.MARKETPLACE;
 
-    // Lectura on-chain de la subasta + estado
+    // Lectura on-chain de la subasta + estado con debugging mejorado
     const {
         auction,
         isLive: auctionLive,
         hasBid: auctionHasBid,
         refetchAuction,
         timeLeftMs,
+        loadingAuction,
+        error: auctionError,
     } = useAuctionData({
         market: marketplaceAddress,
         nft: contractAddress,
         tokenId,
     });
+
+    console.debug('Auction data:', { auction, auctionLive, auctionHasBid, timeLeftMs, loadingAuction, auctionError });
+    
 
     // ✅ NUEVA LÓGICA DE OWNERSHIP CORREGIDA
     const ownershipState: OwnershipState = useMemo(() => {
@@ -437,16 +479,7 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
 
         // 🚨 CRITICAL DEBUG: Log ownership calculation con nueva lógica
         if (address) {
-            console.group('🔍 NEW OWNERSHIP CALCULATION DEBUG');
-            console.log('Current Address:', address);
-            console.log('OnChain Owner:', onchainOwner);
-            console.log('Listing Seller:', derivedSeller);
-            console.log('Auction Seller:', auction?.seller);
-            console.log('Marketplace Address:', marketplaceAddress);
-            
-            console.log('🔸 Ownership State:', ownershipState);
-            console.log('🔸 Final canViewAsOwner:', derivedIsOwner);
-            
+        
             // Diagnóstico detallado
             if (!ownershipState.isDirectOwner && ownershipState.isAuctionSeller) {
                 console.info('✅ User is auction seller (NFT in escrow) - showing as owner for UX');
@@ -455,7 +488,6 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
             } else if (!ownershipState.canViewAsOwner) {
                 console.warn('❌ User has no ownership rights');
             }
-            console.groupEnd();
         }
 
         const derivedIsForSale = typeof derivedPrice !== 'undefined' && derivedPrice !== null && derivedPrice > BigInt(0);
@@ -470,7 +502,7 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
             tokenExists: derivedTokenExists,
             loading: derivedLoading,
         };
-    }, [onchainListing, ownershipState, validInputs, tokenIdBig, subgraphLoading, meta, address, onchainOwner, auction, marketplaceAddress]);
+    }, [onchainListing, ownershipState, validInputs, tokenIdBig, subgraphLoading, meta, address]);
 
     // ✅ VALIDACIONES DE ACCIONES USANDO NUEVA LÓGICA
     const auctionActionValidity: AuctionActionValidity = useMemo(() => {
@@ -544,8 +576,6 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         onStatus: (s) => showNotification(s, 'info'),
     });
     
-    const nowSec = Math.floor(Date.now() / 1000);
-    const canEnd = !!auction && Number(auction.end) <= nowSec;
     const { busyEnd, endAuction } = useEndAuction({
         nft: contractAddress,
         tokenId,
@@ -590,18 +620,14 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
             canBidAuction: auctionActionValidity.canBid,
             canEndAuction: auctionActionValidity.canEnd,
             canCancelAuction: auctionActionValidity.canCancel,
+            // ✅ Add loading states for buttons
+            busyCreate: createAuctionHook.isProcessing,
+            busyBid: bidAuctionHook.isProcessing,
+            busyEnd: busyEnd,
+            busyCancel: busyCancel,
             onCreateAuction: () => createAuctionHook.openModal(),
             onBidAuction: () => bidAuctionHook.openModal(),
             onEndAuction: () => {
-                console.debug('🔚 EndAuction button clicked:', { 
-                    auction: !!auction, 
-                    timeLeftMs, 
-                    canEnd,
-                    auctionEnd: auction?.end ? Number(auction.end) : 'N/A',
-                    now: Math.floor(Date.now() / 1000),
-                    ownershipState,
-                    auctionActionValidity
-                });
                 endAuction();
             },
             onCancelAuction: () => cancelAuction(),
@@ -614,7 +640,6 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
             timeLeftMs,
             ownershipState,
             auctionActionValidity,
-            canEnd,
             createAuctionHook,
             bidAuctionHook,
             endAuction,
@@ -624,30 +649,6 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         ],
     );
 
-    // Debug auction props for troubleshooting
-
-    // Enhanced debug for new ownership system
-    useEffect(() => {
-        if (auction || onchainOwner) {
-            console.group('🔍 ENHANCED OWNERSHIP DEBUG');
-            console.log('👤 User Address:', address);
-            console.log('� OnChain Owner:', onchainOwner);
-            console.log('🏪 Marketplace:', marketplaceAddress);
-            console.log('🎯 Auction:', auction);
-            
-            console.log('🎛️ Ownership State:', ownershipState);
-            console.log('✅ Action Validity:', auctionActionValidity);
-            
-            if (auction) {
-                console.log('🎪 Auction Details:');
-                console.log('  - Live:', auctionLive);
-                console.log('  - Has Bids:', auctionHasBid);
-                console.log('  - Time Left:', timeLeftMs);
-            }
-            
-            console.groupEnd();
-        }
-    }, [auction, auctionLive, auctionHasBid, timeLeftMs, ownershipState, auctionActionValidity, address, onchainOwner, marketplaceAddress]);
 
     if (loading) return <LoadingSkeleton />;
     if (!tokenExists) return <NotFoundError onGoBack={handleGoBack} />;

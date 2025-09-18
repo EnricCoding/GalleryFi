@@ -3,7 +3,7 @@
  * Uses the new UX analysis for better user experience
  */
 
-import { memo } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { type AuctionData } from '@/types/auction';
 import { formatBidAmount, type analyzeAuctionForUX } from '@/lib/ui/auction-ux';
 
@@ -32,6 +32,102 @@ export const EnhancedAuctionSection = memo(({
 }: EnhancedAuctionSectionProps) => {
     const { status, ownership, timeDisplay, primaryAction, secondaryActions, recommendations } = uxAnalysis;
     const ZERO = '0x0000000000000000000000000000000000000000' as const;
+
+    // ✅ NEW: Real-time auction timer state
+    const [liveTimeDisplay, setLiveTimeDisplay] = useState(timeDisplay);
+
+    // ✅ NEW: Update local state when uxAnalysis changes
+    useEffect(() => {
+        setLiveTimeDisplay(timeDisplay);
+    }, [timeDisplay]);
+
+    // ✅ NEW: Real-time timer effect for live auctions
+    useEffect(() => {
+        // Only run timer for live auctions that haven't ended
+        if (!auction || 
+            status.message.title !== 'Live Auction' || 
+            liveTimeDisplay.urgency === 'critical' ||
+            liveTimeDisplay.formatted === 'Ended') {
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setLiveTimeDisplay(prevDisplay => {
+                // Parse current time from formatted string (e.g., "5m 30s" or "1h 15m 20s")
+                const timeStr = prevDisplay.formatted;
+                let totalSeconds = 0;
+
+                // Parse time string to seconds
+                if (timeStr.includes('h')) {
+                    const parts = timeStr.match(/(\d+)h\s*(\d+)m\s*(\d+)s/);
+                    if (parts) {
+                        totalSeconds = parseInt(parts[1]) * 3600 + parseInt(parts[2]) * 60 + parseInt(parts[3]);
+                    }
+                } else if (timeStr.includes('m')) {
+                    const parts = timeStr.match(/(\d+)m\s*(\d+)s/);
+                    if (parts) {
+                        totalSeconds = parseInt(parts[1]) * 60 + parseInt(parts[2]);
+                    }
+                } else if (timeStr.includes('s')) {
+                    const parts = timeStr.match(/(\d+)s/);
+                    if (parts) {
+                        totalSeconds = parseInt(parts[1]);
+                    }
+                }
+
+                // Decrease by 1 second
+                totalSeconds = Math.max(0, totalSeconds - 1);
+
+                if (totalSeconds <= 0) {
+                    // Auction ended, trigger refresh
+                    setTimeout(() => onRefreshData?.(), 100);
+                    return {
+                        ...prevDisplay,
+                        formatted: 'Ended',
+                        urgency: 'critical' as const,
+                        className: 'font-bold text-red-600 dark:text-red-400',
+                        icon: '🔴'
+                    };
+                }
+
+                // Format back to string
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                let newFormatted: string;
+                let newUrgency: 'normal' | 'urgent' | 'critical';
+                let newClassName: string;
+
+                if (hours > 0) {
+                    newFormatted = `${hours}h ${minutes}m ${seconds}s`;
+                } else {
+                    newFormatted = `${minutes}m ${seconds}s`;
+                }
+
+                // Update urgency based on time left
+                if (totalSeconds <= 0) {
+                    newUrgency = 'critical';
+                    newClassName = 'font-bold text-red-600 dark:text-red-400';
+                } else if (totalSeconds <= 300) { // 5 minutes
+                    newUrgency = 'urgent';
+                    newClassName = 'font-bold text-orange-600 dark:text-orange-400 animate-pulse';
+                } else {
+                    newUrgency = 'normal';
+                    newClassName = 'font-bold text-gray-900 dark:text-white';
+                }
+
+                return {
+                    ...prevDisplay,
+                    formatted: newFormatted,
+                    urgency: newUrgency,
+                    className: newClassName
+                };
+            });
+        }, 1000); // Update every second
+
+        return () => clearInterval(timer);
+    }, [auction, status.message.title, liveTimeDisplay.urgency, liveTimeDisplay.formatted, onRefreshData]);
 
     return (
         <div className="mt-6">
@@ -141,15 +237,15 @@ export const EnhancedAuctionSection = memo(({
                                 {/* Time Left */}
                                 <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-200/60 dark:border-gray-700/60">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-2xl">{timeDisplay.icon}</span>
+                                        <span className="text-2xl">{liveTimeDisplay.icon}</span>
                                         <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Time Left</span>
                                     </div>
-                                    <p className={`text-xl ${timeDisplay.className}`}>
-                                        {timeDisplay.formatted}
+                                    <p className={`text-xl ${liveTimeDisplay.className}`}>
+                                        {liveTimeDisplay.formatted}
                                     </p>
-                                    {timeDisplay.urgency !== 'normal' && (
+                                    {liveTimeDisplay.urgency !== 'normal' && (
                                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                            {timeDisplay.urgency === 'critical' ? 'Auction ended!' : 'Ending soon!'}
+                                            {liveTimeDisplay.urgency === 'critical' ? 'Auction ended!' : 'Ending soon!'}
                                         </p>
                                     )}
                                 </div>

@@ -13,6 +13,7 @@ export interface ListParams {
 type ApiResponse = {
   listings?: Listing[];
   totalCount?: number;
+  debug?: unknown;
 };
 
 function buildQuery(params: ListParams): {
@@ -49,18 +50,16 @@ function buildQuery(params: ListParams): {
   return { qs: search.toString(), first, skip, orderBy, orderDirection };
 }
 
-function isPositivePrice(price: unknown): boolean {
-  try {
-    if (typeof price === 'bigint') return price > BigInt(0);
-    if (typeof price === 'number') return Number.isFinite(price) && price > 0;
-    if (typeof price === 'string') {
-      return BigInt(price) > BigInt(0);
-    }
-    return false;
-  } catch {
-    return false;
-  }
-}
+/**
+ * DEPRECATED: Price checking now done server-side
+ */
+// function isPositivePrice(price: unknown): boolean { ... }
+
+/**
+ * DEPRECATED: Filter now done server-side
+ * Check if an NFT can be purchased or bid on right now
+ */
+// function canPurchaseOrBid(listing: Listing): boolean { ... }
 
 export async function fetchListings(
   params: ListParams = {},
@@ -68,7 +67,20 @@ export async function fetchListings(
 ): Promise<ListingsResponse> {
   const { qs, first, skip } = buildQuery(params);
   const { onlyListed } = opts;
-  const url = `/api/listings?${qs}${onlyListed ? '&listed=1' : ''}`;
+  
+  // ✅ NEW: Add onlyListed parameter to URL
+  const urlParams = new URLSearchParams(qs);
+  if (onlyListed) {
+    urlParams.set('onlyListed', 'true');
+  }
+  const url = `/api/listings?${urlParams.toString()}`;
+
+  console.log('🚀 FETCH REQUEST:', {
+    url,
+    params,
+    onlyListed,
+    fullUrl: url
+  });
 
   const res = await fetch(url, {
     method: 'GET',
@@ -84,10 +96,22 @@ export async function fetchListings(
 
   const json = (await res.json()) as ApiResponse;
 
-  let listings = json.listings ?? [];
-  if (onlyListed) {
-    listings = listings.filter((l: Listing) => isPositivePrice(l.price));
-  }
+  console.log('🌐 FETCH LISTINGS RESPONSE:', {
+    url,
+    listingsCount: json.listings?.length || 0,
+    totalCount: json.totalCount,
+    onlyListed,
+    debug: json.debug // ✅ NEW: Log server debug info
+  });
+
+  const listings = json.listings ?? [];
+  
+  // ✅ REMOVED: Client-side filtering now done server-side
+  console.log('✅ SERVER-SIDE FILTERING APPLIED:', {
+    receivedCount: listings.length,
+    totalCount: json.totalCount,
+    serverDebug: json.debug
+  });
 
   const totalCount = json.totalCount;
 

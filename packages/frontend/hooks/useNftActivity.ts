@@ -222,21 +222,6 @@ export function useNftActivity(nft: `0x${string}`, tokenIdBig: bigint | null) {
         const currentEthBlock = 9069669; // Your recent bid block
         const subgraphBlock = result.data?._meta?.block?.number || 0;
         const blockDiff = currentEthBlock - subgraphBlock;
-        
-        console.debug('🔍 Direct Subgraph Test Result:', {
-          status: response.status,
-          totalBidsInSubgraph: result.data?.bids?.length || 0,
-          totalListingsInSubgraph: result.data?.listings?.length || 0,
-          subgraphCurrentBlock: subgraphBlock,
-          yourBidBlock: currentEthBlock,
-          blocksBehind: blockDiff,
-          subgraphMeta: result.data?._meta || null,
-          hasIndexingErrors: result.data?._meta?.hasIndexingErrors || false,
-          hasErrors: !!result.errors,
-          errors: result.errors || null,
-          firstBid: result.data?.bids?.[0] || null,
-          rawResponse: result
-        });
 
         // Alert if subgraph is way behind
         if (blockDiff > 1000) {

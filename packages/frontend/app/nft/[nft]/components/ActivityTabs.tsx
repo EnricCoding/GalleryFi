@@ -109,23 +109,6 @@ export default function ActivityTabs({
 }: ActivityTabsProps) {
     const [activeTab, setActiveTab] = useState<TabId>('activity');
 
-    console.debug('🎯 ActivityTabs received activity:', {
-        totalActivity: activity.length,
-        bids: activity.filter(a => a.activityType === 'BID').length,
-        sales: activity.filter(a => a.activityType === 'SALE').length,
-        listings: activity.filter(a => a.activityType === 'LISTING').length,
-        allActivityTypes: [...new Set(activity.map(a => a.activityType))],
-        activityData: activity.map(a => ({
-            id: a.id,
-            type: a.activityType,
-            price: a.price,
-            timestamp: a.timestamp,
-            from: a.from || null,
-            to: ('to' in a) ? a.to : null
-        })),
-        timestamp: new Date().toISOString()
-    });
-
     /* ─────────── Navegación por teclado ─────────── */
     const handleKeyDown = useCallback((event: React.KeyboardEvent, tabId: TabId) => {
         const tabs: TabId[] = ['activity', 'offers', 'history'];
@@ -560,7 +543,6 @@ export default function ActivityTabs({
                                     {onRefreshData && (
                                         <button
                                             onClick={() => {
-                                                console.log('🔄 Manual refresh triggered for auction bids data');
                                                 onRefreshData();
                                             }}
                                             className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-yellow-700 dark:text-yellow-200 hover:text-yellow-900 dark:hover:text-yellow-100 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 rounded-lg transition-colors duration-200 border border-yellow-300 dark:border-yellow-700"
