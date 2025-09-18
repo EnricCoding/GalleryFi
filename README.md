@@ -1,6 +1,6 @@
-# 🎨 GalleryFi - Professional NFT Marketplace
+# GalleryFi - Professional NFT Marketplace
 
-> **A premium, curated NFT marketplace** built with Next.js 15, Solidity 0.8.28, and The Graph Protocol. Quality over quantity with an exclusive business model that anyone can understand and use.
+> A premium, curated NFT marketplace built with Next.js 15, Solidity 0.8.28, and The Graph Protocol. Quality over quantity with an exclusive business model.
 
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
@@ -9,40 +9,40 @@
 ![Ethereum](https://img.shields.io/badge/Ethereum-3C3C3D?style=for-the-badge&logo=Ethereum&logoColor=white)
 ![The Graph](https://img.shields.io/badge/The%20Graph-663399?style=for-the-badge&logo=thegraph&logoColor=white)
 
-## 🎯 What is GalleryFi?
+## What is GalleryFi?
 
-**GalleryFi** is a **curated NFT marketplace** - think of it as a high-end art gallery for digital art, but on the blockchain. Unlike open marketplaces where anyone can list anything, GalleryFi focuses on **quality and exclusivity**.
+**GalleryFi** is a curated NFT marketplace - think of it as a high-end art gallery for digital art, but on the blockchain. Unlike open marketplaces where anyone can list anything, GalleryFi focuses on quality and exclusivity.
 
-### What makes it special?
-- ✨ **Quality Control**: Only authorized artists can create (mint) NFTs
-- 🎨 **Curated Experience**: Every digital artwork goes through a selection process
-- 💼 **Fair Revenue Model**: Platform fees + automatic royalties for artists
-- 🔐 **Bank-Level Security**: Enterprise-grade security patterns protect your investments
-- ⚡ **Lightning Fast**: Smart filtering and pagination for smooth browsing
+### What makes it different?
+- **Quality Control**: Only authorized artists can create NFTs
+- **Curated Experience**: Every digital artwork goes through a selection process
+- **Fair Revenue Model**: Platform fees + automatic royalties for artists
+- **Enterprise Security**: Bank-level security patterns protect investments
+- **Performance**: Smart filtering and pagination for smooth browsing
 
-### Simple Explanation for Everyone:
+### For non-technical people:
 > Imagine a digital art gallery where you can buy, sell, and auction unique digital artworks (NFTs). Each artwork is verified as authentic and one-of-a-kind, stored securely on the blockchain. Artists earn money every time their work is resold, and the platform ensures fair, transparent transactions.
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🏪 **Marketplace Functionality**
+### Marketplace Functionality
 - **Fixed Price Sales**: Buy art instantly at a set price
 - **Auction System**: Bid on artworks with real-time updates
-- **Automatic Royalties**: Artists earn forever when their work resells (industry standard EIP-2981)
+- **Automatic Royalties**: Artists earn forever when their work resells (EIP-2981 standard)
 - **Secure Escrow**: Platform safely holds payments until transactions complete
-- **Safe Withdrawals**: "Pull payment" system prevents common hacking attempts
+- **Safe Withdrawals**: Pull payment system prevents common hacking attempts
 
-### 🎯 **User Experience**
+### User Experience
 - **Mobile-Friendly Design**: Works perfectly on phones, tablets, and computers
 - **Live Auction Timers**: See countdown timers update in real-time
 - **Smart Filtering**: View all NFTs or just those available for purchase
-- **Fast Loading**: Server-side optimization keeps everything snappy
+- **Fast Loading**: Server-side optimization keeps everything responsive
 - **Favorites System**: Save and track NFTs you love
 - **Clear Ownership Info**: Always know who owns vs. who's selling an NFT
 
-### 🔐 **Security & Standards**
+### Security & Standards
 - **Industry Standard**: Full ERC-721 NFT compatibility (works with all wallets)
 - **Hack Protection**: ReentrancyGuard prevents the most common attack vectors
 - **Emergency Controls**: Admin can pause system if needed for security
@@ -51,7 +51,7 @@
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```
 GalleryFi/
@@ -91,7 +91,7 @@ GalleryFi/
 └── 📄 package.json                # Workspace configuration
 ```
 
-### 🔄 **How Data Flows Through the System**
+### How Data Flows Through the System
 
 ```mermaid
 graph TD
@@ -107,7 +107,7 @@ graph TD
     I --> F
 ```
 
-**Simple Explanation:**
+**How it works:**
 1. **User Interface**: You click "Buy NFT" or place a bid
 2. **Wallet Connection**: Your crypto wallet (like MetaMask) confirms the transaction
 3. **Smart Contracts**: The blockchain verifies and executes the purchase/bid
@@ -116,9 +116,9 @@ graph TD
 
 ---
 
-## 🛠️ Complete Technology Stack
+## Technology Stack
 
-### **Smart Contracts & Blockchain** 🔗
+### Smart Contracts & Blockchain
 - **Solidity 0.8.28** - Latest version with enhanced security features
 - **Hardhat** - Development framework with hot reload and testing
 - **OpenZeppelin** - Battle-tested contract libraries (industry standard)
@@ -126,32 +126,31 @@ graph TD
 - **Typechain** - Automatic TypeScript type generation from contracts
 - **Ethers.js v6** - Blockchain interaction library
 
-### **Frontend & User Interface** 🎨
+### Frontend & User Interface
 - **Next.js 15** - React framework with App Router and server-side rendering
 - **React 19** - UI library with latest concurrent features
 - **TypeScript** - Complete type safety throughout the application
 - **Tailwind CSS** - Utility-first CSS framework for rapid styling
 - **Headless UI** - Accessible components without opinionated styling
-- **Framer Motion** - Smooth animations and transitions (optional)
 
-### **Web3 Integration** 🔌
+### Web3 Integration
 - **Wagmi v2** - React hooks for Ethereum blockchain interaction
 - **Viem** - TypeScript-first Ethereum client (modern alternative to ethers)
 - **RainbowKit** - Premium wallet connection experience
 - **WalletConnect** - Support for mobile wallets and cross-platform connections
 
-### **Data & APIs** 📊
+### Data & APIs
 - **The Graph Protocol** - Decentralized blockchain data indexing
 - **GraphQL** - Efficient query language for APIs
 - **Apollo Client** - GraphQL client with intelligent caching
 - **React Query** - Server-side state management and caching
 
-### **Storage & Media** 💾
+### Storage & Media
 - **IPFS** - Decentralized storage for NFT metadata and images
 - **Pinata** - IPFS gateway with global CDN for fast loading
 - **Next.js Image** - Automatic image optimization and lazy loading
 
-### **Development & Testing** 🧪
+### Development & Testing
 - **Jest** - JavaScript testing framework
 - **React Testing Library** - Component testing utilities
 - **Playwright** - End-to-end testing for real user scenarios
@@ -160,9 +159,9 @@ graph TD
 
 ---
 
-## 📜 Smart Contract Details
+## Smart Contract Details
 
-### **MyNFT.sol** - Collection Contract
+### MyNFT.sol - Collection Contract
 ```solidity
 // Key Features:
 ✅ ERC-721 compliant with URI storage
@@ -179,7 +178,7 @@ graph TD
 - `mintWithRoyalty()` - Minting with custom royalties
 - `setDefaultRoyalty()` - Global royalty configuration
 
-### **NftMarketplace.sol** - The Marketplace Engine
+### NftMarketplace.sol - The Marketplace Engine
 ```solidity
 // Key Features:
 ✅ Fixed-price listings
@@ -201,21 +200,21 @@ graph TD
 
 ---
 
-## 🚀 Complete Project Setup
+## Project Setup
 
-### **System Prerequisites**
+### Prerequisites
 ```bash
 # Minimum required versions
 node >= 18.0.0
 npm >= 9.0.0
 git >= 2.34.0
 
-# Optional but recommended tools
+# Optional but recommended
 yarn >= 1.22.0 (alternative to npm)
 metamask (browser wallet extension)
 ```
 
-### **1. Clone and Install**
+### 1. Clone and Install
 ```bash
 # Clone the repository
 git clone https://github.com/EnricCoding/GalleryFi.git
@@ -228,9 +227,9 @@ npm install
 yarn install
 ```
 
-### **2. Environment Configuration**
+### 2. Environment Configuration
 
-#### **Frontend (.env.local)**
+#### Frontend (.env.local)
 ```bash
 # Copy example file
 cp packages/frontend/.env.example packages/frontend/.env.local
@@ -250,66 +249,35 @@ PINATA_API_KEY=your_pinata_api_key
 PINATA_API_SECRET=your_pinata_api_secret
 ```
 
-#### **Contracts (.env)**
-```bash
-# Copiar archivo de ejemplo
-cp packages/contracts/.env.example packages/contracts/.env
-
-# Editar con tus valores:
-PRIVATE_KEY=your_wallet_private_key_for_deployments
-SEPOLIA_RPC=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
-ETHERSCAN_API_KEY=your_etherscan_api_key_for_verification
-```
-
-### **3. Servicios Externos Requeridos**
-
-#### **Alchemy (RPC Provider)**
-1. Registrarse en [alchemy.com](https://alchemy.com)
-2. Crear nueva app para Ethereum Sepolia
-3. Copiar la URL del API key
-
-#### **WalletConnect (Wallet Integration)**
-1. Registrarse en [walletconnect.com](https://walletconnect.com)
-2. Crear nuevo proyecto
-3. Copiar el Project ID
-
-#### **Pinata (IPFS Gateway)**
-1. Registrarse en [pinata.cloud](https://pinata.cloud)
-2. Crear API keys
-3. Configurar gateway personalizado
-
-```
-
-#### **Smart Contracts (.env)**
+#### Contracts (.env)
 ```bash
 # Copy example file
 cp packages/contracts/.env.example packages/contracts/.env
 
 # Edit with your values:
-PRIVATE_KEY=your_wallet_private_key_here
-ETHERSCAN_API_KEY=your_etherscan_api_key
+PRIVATE_KEY=your_wallet_private_key_for_deployments
 SEPOLIA_RPC=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
-PINATA_JWT=your_pinata_jwt_token
+ETHERSCAN_API_KEY=your_etherscan_api_key_for_verification
 ```
 
-### **3. Setting Up External Services**
+### 3. Required External Services
 
-#### **Alchemy (Blockchain Access)**
+#### Alchemy (RPC Provider)
 1. Sign up at [alchemy.com](https://alchemy.com)
-2. Create a new app for Sepolia testnet
-3. Copy the RPC URL to your environment files
+2. Create new app for Ethereum Sepolia
+3. Copy the API key URL
 
-#### **The Graph Studio (Data Indexing)**
-1. Sign up at [thegraph.com/studio](https://thegraph.com/studio)
-2. Create a new subgraph
-3. Copy the query endpoint URL
+#### WalletConnect (Wallet Integration)
+1. Sign up at [walletconnect.com](https://walletconnect.com)
+2. Create new project
+3. Copy the Project ID
 
-#### **Pinata (IPFS Storage)**
+#### Pinata (IPFS Gateway)
 1. Sign up at [pinata.cloud](https://pinata.cloud)
-2. Generate API keys and JWT token
-3. Set up a dedicated gateway for faster loading
+2. Create API keys
+3. Configure custom gateway
 
-### **4. Smart Contract Deployment**
+### 4. Smart Contract Deployment
 
 ```bash
 # Navigate to contracts directory
@@ -328,7 +296,7 @@ npm run deploy:sepolia
 npm run verify:sepolia
 ```
 
-### **5. Subgraph Configuration and Deployment**
+### 5. Subgraph Configuration and Deployment
 
 ```bash
 # Navigate to subgraph directory
@@ -344,7 +312,7 @@ npm run build
 npm run deploy
 ```
 
-### **6. Start the Frontend**
+### 6. Start the Frontend
 
 ```bash
 # Navigate to frontend directory
@@ -359,9 +327,9 @@ npm run dev
 
 ---
 
-## 🧪 Testing and Quality Assurance
+## Testing and Quality
 
-### **Smart Contract Testing**
+### Smart Contract Testing
 ```bash
 cd packages/contracts
 
@@ -374,7 +342,7 @@ npm run gas
 # Code coverage analysis
 npm run coverage
 
-# Test específico
+# Specific test
 npx hardhat test test/NftMarketplace.test.ts
 ```
 
@@ -384,7 +352,7 @@ npx hardhat test test/NftMarketplace.test.ts
 ✓ Integration Tests (8 tests passed)
 ```
 
-### **Frontend Testing**
+### Frontend Testing
 ```bash
 cd packages/frontend
 
@@ -398,7 +366,7 @@ npm run test:watch
 npm run test:e2e
 ```
 
-### **Code Quality and Formatting**
+### Code Quality and Formatting
 ```bash
 # Code linting
 npm run lint
@@ -412,11 +380,11 @@ npm run lint:fix
 
 ---
 
-## 🌐 Production Deployment
+## Production Deployment
 
-### **Frontend Deployment**
+### Frontend Deployment
 
-#### **Option 1: Vercel (Recommended)**
+#### Option 1: Vercel (Recommended)
 ```bash
 # Install Vercel CLI
 npm i -g vercel
@@ -428,7 +396,7 @@ vercel --prod
 # Or connect directly from GitHub
 ```
 
-#### **Option 2: Netlify**
+#### Option 2: Netlify
 ```bash
 # Build for production
 npm run build
@@ -437,7 +405,7 @@ npm run build
 # Connect repository from Netlify dashboard
 ```
 
-### **Mainnet Configuration**
+### Mainnet Configuration
 
 To use on Ethereum mainnet, update:
 
@@ -452,24 +420,24 @@ npm run deploy:mainnet
 
 ---
 
-## 💼 Business Model Implementation
+## Business Model
 
-### **Business Architecture**
+### Business Architecture
 ```
-🎨 Curated Marketplace
-├── 👨‍🎨 Only authorized creators can mint NFTs
-├── 🔍 Manual approval process for quality control
-├── 🏆 Focus on high-quality digital art
-└── 💎 Premium and exclusive brand positioning
+Curated Marketplace
+├── Only authorized creators can mint NFTs
+├── Manual approval process for quality control
+├── Focus on high-quality digital art
+└── Premium and exclusive brand positioning
 
-💰 Revenue Streams
-├── 📊 Platform commission: 2.5% on all transactions
-├── 🎯 Creator royalties: 5% on secondary sales
-├── ⭐ Premium services: Featured listings, analytics
-└── 🤝 Partnerships and special events
+Revenue Streams
+├── Platform commission: 2.5% on all transactions
+├── Creator royalties: 5% on secondary sales
+├── Premium services: Featured listings, analytics
+└── Partnerships and special events
 ```
 
-### **Competitive Advantages**
+### Competitive Advantages
 - **Exclusivity**: Curated model vs. open marketplaces (like OpenSea)
 - **Quality**: Editorial control and manual curation
 - **Security**: Enterprise-level security patterns
@@ -478,48 +446,48 @@ npm run deploy:mainnet
 
 ---
 
-## 🔒 Security Measures Implemented
+## Security Implementation
 
-### **Smart Contract Security**
-- ✅ **ReentrancyGuard** on all transfer functions
-- ✅ **Pull payment pattern** to prevent force attacks
-- ✅ **Pausable contracts** for emergency situations
-- ✅ **Access controls** with specific roles
-- ✅ **Input validation** on all parameters
-- ✅ **Gas optimizations** to prevent DoS attacks
+### Smart Contract Security
+- **ReentrancyGuard** on all transfer functions
+- **Pull payment pattern** to prevent force attacks
+- **Pausable contracts** for emergency situations
+- **Access controls** with specific roles
+- **Input validation** on all parameters
+- **Gas optimizations** to prevent DoS attacks
 
-### **Frontend Security**
-- ✅ **Complete type safety** with TypeScript
-- ✅ **Input sanitization** on all forms
-- ✅ **CSRF protection** on API routes
-- ✅ **Rate limiting** on critical endpoints
-- ✅ **Error boundaries** for graceful error handling
-- ✅ **Wallet security** with signature validations
+### Frontend Security
+- **Complete type safety** with TypeScript
+- **Input sanitization** on all forms
+- **CSRF protection** on API routes
+- **Rate limiting** on critical endpoints
+- **Error boundaries** for graceful error handling
+- **Wallet security** with signature validations
 
-### **Infrastructure Security**
-- ✅ **Environment variables** for sensitive data
-- ✅ **API key rotation** automática
-- ✅ **HTTPS enforcement** en producción
-- ✅ **Content Security Policy** headers
-- ✅ **Dependency scanning** automático
+### Infrastructure Security
+- **Environment variables** for sensitive data
+- **Automatic API key rotation**
+- **HTTPS enforcement** in production
+- **Content Security Policy** headers
+- **Automatic dependency scanning**
 
-## 📄 Licencia
+## License
 
-Este proyecto está licenciado bajo la **MIT License** 
+This project is licensed under the **MIT License**
 
-## 👨‍💻 Autor
+## Author
 
 **Enric** - *Full Stack Blockchain Developer*
 
-- 🐙 **GitHub**: [@EnricCoding](https://github.com/EnricCoding)
-- 📧 **Email**: enricpaginasweb@gmail.com
+- **GitHub**: [@EnricCoding](https://github.com/EnricCoding)
+- **Email**: enricpaginasweb@gmail.com
 
 ---
 
 <div align="center">
 
-### ⭐ **If you find this project interesting, give it a star!** ⭐
+### If you find this project interesting, give it a star!
 
-**[🚀 Live Demo](https://galleryfi.vercel.app)** | **[🐛 Report Bug](https://github.com/EnricCoding/GalleryFi/issues)**
+**[Live Demo](https://galleryfi.vercel.app)** | **[Report Bug](https://github.com/EnricCoding/GalleryFi/issues)**
 
 </div>
