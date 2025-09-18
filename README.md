@@ -9,6 +9,21 @@
 ![Ethereum](https://img.shields.io/badge/Ethereum-3C3C3D?style=for-the-badge&logo=Ethereum&logoColor=white)
 ![The Graph](https://img.shields.io/badge/The%20Graph-663399?style=for-the-badge&logo=thegraph&logoColor=white)
 
+## Screenshots
+
+<div align="center">
+
+### Explore Marketplace
+![Explore GalleryFi](docs/images/explore-galleryFi.png)
+
+### Create NFT
+![Create NFT](docs/images/create-galleryFi.png)
+
+### NFT Detail Page
+![NFT Detail](docs/images/nft-detail.png)
+
+</div>
+
 ## What is GalleryFi?
 
 **GalleryFi** is a curated NFT marketplace - think of it as a high-end art gallery for digital art, but on the blockchain. Unlike open marketplaces where anyone can list anything, GalleryFi focuses on quality and exclusivity.
