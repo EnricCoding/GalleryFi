@@ -498,8 +498,6 @@ I built GalleryFi because I believe NFTs can be more than just profile pictures 
 
 <div align="center">
 
-**[Check out the live demo](https://galleryfi.vercel.app)** | **[Found a bug? Let me know](https://github.com/EnricCoding/GalleryFi/issues)**
-
 ⭐ If this project helped you learn something, consider giving it a star!
 
 </div>
