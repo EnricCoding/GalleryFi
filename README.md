@@ -3,11 +3,8 @@
 > **Think Shopify for digital art.** GalleryFi is where quality meets blockchain technology. We built this because the NFT space needed a platform that actually cares about the art, not just the hype.
 
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
-![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
 ![Solidity](https://img.shields.io/badge/Solidity-%23363636.svg?style=for-the-badge&logo=solidity&logoColor=white)
-![Ethereum](https://img.shields.io/badge/Ethereum-3C3C3D?style=for-the-badge&logo=Ethereum&logoColor=white)
-![The Graph](https://img.shields.io/badge/The%20Graph-663399?style=for-the-badge&logo=thegraph&logoColor=white)
+![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
 
 ## Screenshots
 
@@ -66,69 +63,30 @@ Think of it like Etsy, but for digital art that you actually own. When you buy s
 - **Gas optimized**: Transactions cost less than you'd expect
 - **Thoroughly tested**: 46 test cases covering everything we could think of
 
----
 
-## System Architecture
-
-```
-GalleryFi/
-├── 📁 packages/
-│   ├── 📁 contracts/              # Smart Contracts (Blockchain Logic)
-│   │   ├── 📁 contracts/
-│   │   │   ├── 📄 MyNFT.sol              # ERC-721 contract with royalties
-│   │   │   └── 📄 NftMarketPlace.sol     # Core marketplace logic
-│   │   ├── 📁 deploy/             # Automated deployment scripts
-│   │   ├── 📁 test/               # Unit and integration tests
-│   │   └── 📁 typechain/          # Generated TypeScript types
-│   │
-│   ├── 📁 frontend/               # Frontend App (Next.js 15 + TypeScript)
-│   │   ├── 📁 app/                # App Router (Next.js 14+)
-│   │   │   ├── 📁 api/            # Server-side API routes
-│   │   │   ├── 📁 explore/        # Main marketplace page
-│   │   │   ├── 📁 create/         # NFT creation page
-│   │   │   └── 📁 nft/[nft]/      # Dynamic NFT detail pages
-│   │   ├── 📁 components/         # Reusable UI components
-│   │   │   ├── 📁 layout/         # Layout components
-│   │   │   ├── 📁 shared/         # Shared components
-│   │   │   └── 📁 ui/             # Base UI components
-│   │   ├── 📁 hooks/              # Custom React hooks
-│   │   ├── 📁 lib/                # Utilities and services
-│   │   │   ├── 📁 services/       # API services
-│   │   │   ├── 📁 types/          # Type definitions
-│   │   │   └── 📁 validations/    # Validation schemas
-│   │   └── 📁 config/             # App configuration
-│   │
-│   └── 📁 subgraph/               # Blockchain Data Indexing
-│       ├── 📁 mappings/           # Smart contract event handlers
-│       ├── 📁 abis/               # Contract ABIs
-│       ├── 📄 schema.graphql      # GraphQL data schema
-│       └── 📄 subgraph.yaml       # Subgraph configuration
-│
-├── 📄 README.md                   # This file
-└── 📄 package.json                # Workspace configuration
-```
 
 ## How It All Works Together
 
-```
-Your Browser
-    ↓
-Next.js Frontend (handles UI, wallet connections)
-    ↓
-Smart Contracts on Ethereum (handle money and ownership)
-    ↓
-The Graph (indexes all the blockchain events)
-    ↓
-IPFS (stores the actual images and metadata)
+```mermaid
+graph TD
+    A[User Interface] --> B[Next.js Frontend]
+    B --> C[Wallet Connection]
+    B --> D[GraphQL Client]
+    C --> E[Smart Contracts]
+    D --> F[The Graph Subgraph]
+    E --> G[Ethereum Blockchain]
+    F --> G
+    E --> H[IPFS Storage]
+    B --> I[API Routes]
+    I --> F
 ```
 
-When you buy an NFT:
-1. You click "Buy" in the browser
-2. MetaMask pops up asking you to confirm
-3. Your transaction goes to Ethereum
-4. Smart contract transfers ownership and money
-5. The Graph picks up the event and updates our database
-6. Frontend shows you now own the NFT
+**How it works:**
+1. **User Interface**: You click "Buy NFT" or place a bid
+2. **Wallet Connection**: Your crypto wallet (like MetaMask) confirms the transaction
+3. **Smart Contracts**: The blockchain verifies and executes the purchase/bid
+4. **Data Indexing**: The Graph indexes all blockchain events for fast querying
+5. **Frontend Updates**: The UI immediately shows your new NFT or updated bid status
 
 ### The Smart Contracts
 
@@ -144,32 +102,13 @@ When you buy an NFT:
 - Automatically pays royalties to original creators
 - Uses "pull payments" so no one can hack the money flow
 
-## The Tech Stack (For the Curious)
+## Tech Stack
 
-We picked these technologies because they actually work well together, not because they're trendy:
-
-### Smart Contracts
-- **Solidity 0.8.28**: Latest version with all the security improvements
-- **Hardhat**: Makes development way less painful than Truffle
-- **OpenZeppelin**: Why reinvent the wheel? These contracts are battle-tested
-- **Typechain**: Generates TypeScript types from contracts (huge time saver)
-
-### Frontend
-- **Next.js 15**: Server-side rendering + static generation = fast websites
-- **React 19**: UI library that just makes sense
-- **TypeScript**: Catches bugs before they happen
-- **Tailwind CSS**: Write CSS faster without the mess
-- **Wagmi + Viem**: Modern Web3 tools that don't make you cry
-
-### Data & Storage
-- **The Graph**: Think GraphQL for blockchain data
-- **IPFS**: Decentralized storage (your images don't disappear if we do)
-- **Pinata**: Makes IPFS actually reliable
-
-### Development Tools
-- **Jest**: Testing that doesn't suck
-- **ESLint + Prettier**: Automatic code formatting
-- **Husky**: Git hooks that keep code clean
+**Smart Contracts:** Solidity 0.8.28, Hardhat, OpenZeppelin  
+**Frontend:** Next.js 15, React 19, TypeScript, Tailwind CSS  
+**Web3:** Wagmi, Viem, RainbowKit  
+**Data:** The Graph Protocol, GraphQL  
+**Storage:** IPFS, Pinata
 
 ---
 
@@ -335,9 +274,12 @@ You'll need Sepolia testnet ETH to deploy contracts and test the app:
    - Currency: `ETH`
 
 2. Get free test ETH from a faucet:
+   - [Google Cloud Web3 Faucet](https://cloud.google.com/application/web3/faucet/ethereum/sepolia) (Recommended - most reliable)
    - [Alchemy Sepolia Faucet](https://sepoliafaucet.com/)
    - [Chainlink Faucet](https://faucets.chain.link/)
    - You'll need about 0.1 ETH to deploy and test
+   
+   **Pro tip**: The Google Cloud faucet gives you 0.05 ETH per day and rarely runs out, unlike the others that sometimes go offline.
 
 ### Step 5: Deploy the Smart Contracts
 
@@ -511,24 +453,11 @@ npm run deploy:mainnet
 
 **Warning**: Mainnet costs real money! Each deployment costs around $50-100 in gas fees.
 
-## Why We Built It This Way
+## Key Details
 
-### The Business Model
-We're tired of marketplaces that are just digital yard sales. Here's our approach:
-
-- **Curation over quantity**: Only approved artists can mint
-- **Quality control**: Every piece is reviewed before going live  
-- **Fair economics**: 2.5% platform fee, 5% artist royalties forever
-- **Premium positioning**: Think gallery, not flea market
-
-### Security First
-We use patterns that have been tested in production:
-- **No reentrancy attacks**: All external calls are protected
-- **Pull payments**: Money sits in escrow until you withdraw it
-- **Emergency stops**: Can pause everything if something goes wrong
-- **Input validation**: Every function checks its parameters
-
-The contracts have been tested with 46 different scenarios, including edge cases where people try to break things.
+**Business Model:** Curated marketplace (2.5% platform fee, 5% artist royalties)  
+**Security:** ReentrancyGuard, pull payments, emergency pause, 46 test cases  
+**License:** MIT
 - **Pull payment pattern** to prevent force attacks
 - **Pausable contracts** for emergency situations
 - **Access controls** with specific roles
