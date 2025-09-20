@@ -1,9 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * Simple script to check environment variables
- */
-
 require('dotenv').config({ path: '.env.local' });
 
 

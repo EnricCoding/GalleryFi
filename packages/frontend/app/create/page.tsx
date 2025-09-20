@@ -2,7 +2,6 @@
 
 import MintListForm from "./components/MintListForm";
 
-
 const NFT = process.env.NEXT_PUBLIC_NFT_ADDRESS as `0x${string}`;
 const MARKET = process.env.NEXT_PUBLIC_MARKET_ADDRESS as `0x${string}`;
 const CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 11155111);

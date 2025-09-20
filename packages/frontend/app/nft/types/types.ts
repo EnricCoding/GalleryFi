@@ -22,9 +22,9 @@ export interface NftInfoProps {
   isForSale: boolean;
   activity:
     | {
-        flat: UiActivityItem[]; // o arrays separados si los pintas por tipo
+        flat: UiActivityItem[];
       }
-    | { [key: string]: UiActivityItem[] }; // mantén compat si ya usas otro shape
+    | { [key: string]: UiActivityItem[] };
   onBuyClick: () => void;
   isBuying: boolean;
 }

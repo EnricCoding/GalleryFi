@@ -6,7 +6,6 @@ import { ERC721 } from '../generated/MyNFT/ERC721';
 const ZERO = Address.fromString('0x0000000000000000000000000000000000000000');
 
 export function handleTransfer(event: Transfer): void {
-  // Solo tratamos como mint cuando el emisor es la zero address
   if (event.params.from != ZERO) return;
 
   const id = event.params.tokenId.toHex();

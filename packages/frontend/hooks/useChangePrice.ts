@@ -15,8 +15,8 @@ type ChangePriceParams = {
   tokenId: string;
   isOwner: boolean;
   isForSale: boolean;
-  onChanged?: () => void; // callback tras éxito
-  onStatus?: (s: string) => void; // mensajes para banner/toast
+  onChanged?: () => void; 
+  onStatus?: (s: string) => void; 
 };
 
 export function useChangePrice({
@@ -35,9 +35,8 @@ export function useChangePrice({
   const { openConnectModal } = useConnectModal();
 
   const MARKET = process.env.NEXT_PUBLIC_MARKET_ADDRESS as `0x${string}`;
-  const EXPECTED_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? '11155111'); // Sepolia
+  const EXPECTED_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? '11155111'); 
 
-  // UI state
   const [open, setOpen] = useState(false);
   const [priceInput, setPriceInput] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +75,6 @@ export function useChangePrice({
       if (!MARKET) throw new Error('Missing MARKET address');
       if (!tokenId || isNaN(Number(tokenId))) throw new Error('Invalid tokenId');
 
-      // Validar precio
       const trimmed = priceInput.trim();
       if (!trimmed) throw new Error('Enter a price in ETH');
       const eth = Number(trimmed);
@@ -89,7 +87,6 @@ export function useChangePrice({
         throw new Error('Invalid ETH format');
       }
 
-      // Red
       if (chainId !== EXPECTED_CHAIN_ID) {
         onStatus?.('Switching network…');
         await switchChainAsync?.({ chainId: EXPECTED_CHAIN_ID });
@@ -98,12 +95,11 @@ export function useChangePrice({
       setBusyChange(true);
       onStatus?.('Changing price…');
 
-      // --- Camino 1: setPrice directo ---
       try {
         const tx = await writeContractAsync({
           address: MARKET,
           abi: MarketAbi,
-          functionName: 'setPrice', // tu contrato lo tiene
+          functionName: 'setPrice', 
           args: [nft, BigInt(tokenId), priceWei],
         });
         await publicClient.waitForTransactionReceipt({ hash: tx });
@@ -113,14 +109,11 @@ export function useChangePrice({
         return;
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
-        // Si falla por ABI o método inexistente → fallback
         const notFound =
           /Function "setPrice" not found on ABI|Encoded function | function selector/i.test(msg);
         if (!notFound) throw e;
       }
 
-      // --- Camino 2 (fallback): delistItem → listItem ---
-      // 1) delist
       onStatus?.('delisting…');
       const txDelist = await writeContractAsync({
         address: MARKET,
@@ -130,7 +123,6 @@ export function useChangePrice({
       });
       await publicClient.waitForTransactionReceipt({ hash: txDelist });
 
-      // 2) comprobar aprobación (por si el usuario no tenía approval permanente)
       const approved = (await publicClient.readContract({
         address: nft,
         abi: NftAbi,
@@ -149,7 +141,6 @@ export function useChangePrice({
         await publicClient.waitForTransactionReceipt({ hash: txApprove });
       }
 
-      // 3) list de nuevo con el nuevo precio
       onStatus?.('Relisting with new price…');
       const txList = await writeContractAsync({
         address: MARKET,
@@ -188,14 +179,12 @@ export function useChangePrice({
   ]);
 
   return {
-    // state
     open,
     priceInput,
     setPriceInput,
     error,
     busyChange,
     canChange,
-    // actions
     openModal,
     closeModal,
     confirmChange,

@@ -30,7 +30,7 @@ export function useCancelListing({
   const { writeContractAsync } = useWriteContract();
 
   const MARKET = process.env.NEXT_PUBLIC_MARKET_ADDRESS as `0x${string}`;
-  const EXPECTED_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? '11155111'); // Sepolia
+  const EXPECTED_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? '11155111'); 
 
   const [busyCancel, setBusyCancel] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,20 +48,18 @@ export function useCancelListing({
       if (!isConnected) throw new Error('Connect your wallet');
       if (!publicClient) throw new Error('RPC client not available');
 
-      // Red
       if (chainId !== EXPECTED_CHAIN_ID) {
         onStatus?.('Switching network…');
         await switchChainAsync?.({ chainId: EXPECTED_CHAIN_ID });
       }
 
-      // Ejecuta delistItem(nft, id)
       setBusyCancel(true);
       onStatus?.('Cancelling listing…');
 
       const txHash = await writeContractAsync({
         address: MARKET,
         abi: MarketAbi,
-        functionName: 'delistItem', // ← NOMBRE CORRECTO EN TU CONTRATO
+        functionName: 'delistItem', 
         args: [nft, BigInt(tokenId)],
       });
 
@@ -96,11 +94,9 @@ export function useCancelListing({
   ]);
 
   return {
-    // estado
     busyCancel,
     error,
     canCancel,
-    // acción
     cancel,
   };
 }

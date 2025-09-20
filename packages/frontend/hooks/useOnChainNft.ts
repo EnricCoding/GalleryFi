@@ -1,4 +1,3 @@
-// hooks/useOnchainNft.ts
 'use client';
 
 import { useMemo } from 'react';
@@ -11,13 +10,12 @@ const MarketAbi = MarketJson.abi;
 const NftAbi = NftJson.abi;
 const ZERO: `0x${string}` = '0x0000000000000000000000000000000000000000';
 
-type ListingTuple = readonly [`0x${string}`, bigint]; // (seller, price)
-type AuctionTuple = readonly [`0x${string}`, bigint, bigint, `0x${string}`]; // (seller, end, bid, bidder)
+type ListingTuple = readonly [`0x${string}`, bigint]; 
+type AuctionTuple = readonly [`0x${string}`, bigint, bigint, `0x${string}`]; 
 
 export function useOnchainNft(nft: `0x${string}`, tokenId: string) {
   const MARKET = process.env.NEXT_PUBLIC_MARKET_ADDRESS as `0x${string}`;
 
-  // Parse tokenId -> bigint
   const tokenIdBig = useMemo<bigint | null>(() => {
     const t = tokenId?.trim?.() ?? '';
     if (!/^\d+$/.test(t)) return null;
@@ -30,36 +28,30 @@ export function useOnchainNft(nft: `0x${string}`, tokenId: string) {
 
   const validInputs = isAddress(nft) && !!tokenIdBig && isAddress(MARKET);
 
-  /* ---------- Reads on-chain (RAW) ---------- */
-
-  // listings(nft, id) -> tuple
   const { data: rawListing, refetch: refetchListing } = useReadContract({
     address: MARKET,
     abi: MarketAbi,
     functionName: 'listings',
     args: [nft, tokenIdBig ?? BigInt(0)],
-    query: { enabled: validInputs, refetchInterval: 10_000 }, // refresca cada 10s
+    query: { enabled: validInputs, refetchInterval: 10_000 }, 
   }) as { data: ListingTuple | undefined; refetch: () => void };
 
-  // auctions(nft, id) -> tuple (seller, end, bid, bidder)
   const { data: rawAuction, refetch: refetchAuction } = useReadContract({
     address: MARKET,
     abi: MarketAbi,
     functionName: 'auctions',
     args: [nft, tokenIdBig ?? BigInt(0)],
-    query: { enabled: validInputs, refetchInterval: 10_000 }, // refresca cada 10s
+    query: { enabled: validInputs, refetchInterval: 10_000 }, 
   }) as { data: AuctionTuple | undefined; refetch: () => void };
 
-  // tokenURI(id)
   const { data: onchainTokenURI, refetch: refetchTokenURI } = useReadContract({
     address: nft,
     abi: NftAbi,
     functionName: 'tokenURI',
     args: [tokenIdBig ?? BigInt(0)],
-    query: { enabled: validInputs }, // normalmente no cambia
+    query: { enabled: validInputs },
   }) as { data: string | undefined; refetch: () => void };
 
-  // ownerOf(id)
   const { data: onchainOwner, refetch: refetchOwner } = useReadContract({
     address: nft,
     abi: NftAbi,
@@ -67,14 +59,11 @@ export function useOnchainNft(nft: `0x${string}`, tokenId: string) {
     args: [tokenIdBig ?? BigInt(0)],
     query: { 
       enabled: validInputs, 
-      refetchInterval: 5_000, // Reduced from 15s to 5s for faster owner updates
-      staleTime: 1_000, // Data becomes stale after 1 second
+      refetchInterval: 5_000, 
+      staleTime: 1_000,
     }, 
   }) as { data: `0x${string}` | undefined; refetch: () => void };
 
-  /* ---------- Normalización ---------- */
-
-  // Siempre devuelve objetos con props nombradas
   const onchainListing = useMemo(
     () => (rawListing ? { seller: rawListing[0], price: rawListing[1] } : undefined),
     [rawListing],
@@ -88,26 +77,22 @@ export function useOnchainNft(nft: `0x${string}`, tokenId: string) {
     [rawAuction],
   );
 
-  /* ---------- Estado derivado ---------- */
-
   const listedNow = !!onchainListing && onchainListing.seller !== ZERO && onchainListing.price > BigInt(0);
 
   const auctionNow =
     !!onchainAuction &&
     onchainAuction.seller !== ZERO &&
-    Number(onchainAuction.end) > Math.floor(Date.now() / 1000); // end es bigint (uint40), seguro convertir a number
-
+    Number(onchainAuction.end) > Math.floor(Date.now() / 1000);
   return {
     MARKET,
     tokenIdBig,
     validInputs,
-    onchainListing, // { seller, price }
-    onchainAuction, // { seller, end, bid, bidder }
-    onchainTokenURI, // string | undefined
-    onchainOwner, // `0x...` | undefined
+    onchainListing, 
+    onchainAuction,
+    onchainTokenURI,
+    onchainOwner,
     listedNow,
     auctionNow,
-    // Refetch functions for manual data refresh
     refetchOnchainData: async () => {
       await Promise.all([
         refetchListing(),

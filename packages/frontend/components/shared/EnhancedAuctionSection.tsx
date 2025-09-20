@@ -1,8 +1,3 @@
-/**
- * Enhanced Auction Section Component
- * Uses the new UX analysis for better user experience
- */
-
 import { memo, useState, useEffect } from 'react';
 import { type AuctionData } from '@/types/auction';
 import { formatBidAmount, type analyzeAuctionForUX } from '@/lib/ui/auction-ux';
@@ -33,17 +28,13 @@ export const EnhancedAuctionSection = memo(({
     const { status, ownership, timeDisplay, primaryAction, secondaryActions, recommendations } = uxAnalysis;
     const ZERO = '0x0000000000000000000000000000000000000000' as const;
 
-    // ✅ NEW: Real-time auction timer state
     const [liveTimeDisplay, setLiveTimeDisplay] = useState(timeDisplay);
 
-    // ✅ NEW: Update local state when uxAnalysis changes
     useEffect(() => {
         setLiveTimeDisplay(timeDisplay);
     }, [timeDisplay]);
 
-    // ✅ NEW: Real-time timer effect for live auctions
     useEffect(() => {
-        // Only run timer for live auctions that haven't ended
         if (!auction || 
             status.message.title !== 'Live Auction' || 
             liveTimeDisplay.urgency === 'critical' ||
@@ -53,11 +44,9 @@ export const EnhancedAuctionSection = memo(({
 
         const timer = setInterval(() => {
             setLiveTimeDisplay(prevDisplay => {
-                // Parse current time from formatted string (e.g., "5m 30s" or "1h 15m 20s")
                 const timeStr = prevDisplay.formatted;
                 let totalSeconds = 0;
 
-                // Parse time string to seconds
                 if (timeStr.includes('h')) {
                     const parts = timeStr.match(/(\d+)h\s*(\d+)m\s*(\d+)s/);
                     if (parts) {
@@ -75,11 +64,9 @@ export const EnhancedAuctionSection = memo(({
                     }
                 }
 
-                // Decrease by 1 second
                 totalSeconds = Math.max(0, totalSeconds - 1);
 
                 if (totalSeconds <= 0) {
-                    // Auction ended, trigger refresh
                     setTimeout(() => onRefreshData?.(), 100);
                     return {
                         ...prevDisplay,
@@ -90,7 +77,6 @@ export const EnhancedAuctionSection = memo(({
                     };
                 }
 
-                // Format back to string
                 const hours = Math.floor(totalSeconds / 3600);
                 const minutes = Math.floor((totalSeconds % 3600) / 60);
                 const seconds = totalSeconds % 60;
@@ -105,11 +91,10 @@ export const EnhancedAuctionSection = memo(({
                     newFormatted = `${minutes}m ${seconds}s`;
                 }
 
-                // Update urgency based on time left
                 if (totalSeconds <= 0) {
                     newUrgency = 'critical';
                     newClassName = 'font-bold text-red-600 dark:text-red-400';
-                } else if (totalSeconds <= 300) { // 5 minutes
+                } else if (totalSeconds <= 300) {
                     newUrgency = 'urgent';
                     newClassName = 'font-bold text-orange-600 dark:text-orange-400 animate-pulse';
                 } else {
@@ -124,37 +109,14 @@ export const EnhancedAuctionSection = memo(({
                     className: newClassName
                 };
             });
-        }, 1000); // Update every second
+        }, 1000); 
 
         return () => clearInterval(timer);
     }, [auction, status.message.title, liveTimeDisplay.urgency, liveTimeDisplay.formatted, onRefreshData]);
 
     return (
         <div className="mt-6">
-            {/* 🚨 DEBUGGING PANEL - Remove in production */}
-            {/*
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
-          <h4 className="text-sm font-bold text-red-800 dark:text-red-200 mb-2">🔍 ENHANCED UX DEBUG</h4>
-          <div className="text-xs text-red-700 dark:text-red-300 space-y-1">
-            <div><strong>Your Address:</strong> {userAddress}</div>
-            <div><strong>Status:</strong> {status.message.title}</div>
-            <div><strong>Ownership:</strong> {ownership.title}</div>
-            <div><strong>Primary Action:</strong> {primaryAction?.type || 'None'}</div>
-            <div><strong>Time Display:</strong> {timeDisplay.formatted} ({timeDisplay.urgency})</div>
-          </div>
-          <button
-            onClick={() => onRefreshData?.()}
-            className="mt-2 px-3 py-1 bg-red-600 text-white text-xs rounded"
-          >
-            Force Refresh Data
-          </button>
-        </div>
-      )}
-        */}
-
             <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 overflow-hidden">
-                {/* ✨ Enhanced Header with better status display */}
                 <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6">
                     <div className="flex items-center justify-between">
                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -168,14 +130,12 @@ export const EnhancedAuctionSection = memo(({
                         </div>
                     </div>
 
-                    {/* Status description */}
                     <div className="mt-3 text-white/90 text-sm">
                         {status.message.description}
                     </div>
                 </div>
 
                 <div className="p-6">
-                    {/* ✨ Enhanced ownership information */}
                     <div className={`rounded-xl p-4 mb-6 ${ownership.className}`}>
                         <div className="flex items-start gap-3">
                             <span className="text-2xl">{ownership.icon}</span>
@@ -190,7 +150,6 @@ export const EnhancedAuctionSection = memo(({
                         </div>
                     </div>
 
-                    {/* ✨ Contextual recommendations */}
                     {recommendations.length > 0 && (
                         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
                             <div className="flex items-start gap-3">
@@ -213,9 +172,7 @@ export const EnhancedAuctionSection = memo(({
 
                     {auction ? (
                         <div className="space-y-6">
-                            {/* ✨ Enhanced Auction Info Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {/* Current Bid */}
                                 <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-200/60 dark:border-gray-700/60">
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className="text-2xl">💰</span>
@@ -234,7 +191,6 @@ export const EnhancedAuctionSection = memo(({
                                     </div>
                                 </div>
 
-                                {/* Time Left */}
                                 <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-200/60 dark:border-gray-700/60">
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className="text-2xl">{liveTimeDisplay.icon}</span>
@@ -250,7 +206,6 @@ export const EnhancedAuctionSection = memo(({
                                     )}
                                 </div>
 
-                                {/* Seller Info */}
                                 <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-200/60 dark:border-gray-700/60">
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className="text-2xl">👤</span>
@@ -269,19 +224,15 @@ export const EnhancedAuctionSection = memo(({
                                 </div>
                             </div>
 
-                            {/* ✨ SMART ACTION BUTTONS - Better UX for expired auctions */}
                             <div className="flex flex-wrap gap-3">
                                 {(() => {
-                                    // 🔥 FIXED: Use the actual status from UX analysis, not urgency
                                     const isAuctionEnded = status.message.title === 'Auction Ended';
                                     const isAuctionLive = status.message.title === 'Live Auction';
                                     const hasBids = auction && auction.bid > BigInt(0);
                                     const isSellerViewing = ownership.title === 'Your NFT is in Auction Escrow';
 
                                     if (isAuctionEnded) {
-                                        // 🔥 AUCTION ENDED - Show only relevant action
                                         if (hasBids) {
-                                            // Has winner - Anyone can finalize
                                             return (
                                                 <div className="w-full">
                                                     <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 mb-4">
@@ -316,7 +267,6 @@ export const EnhancedAuctionSection = memo(({
                                                 </div>
                                             );
                                         } else {
-                                            // No bids - Only seller can reclaim
                                             return (
                                                 <div className="w-full">
                                                     <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4">
@@ -357,7 +307,6 @@ export const EnhancedAuctionSection = memo(({
                                             );
                                         }
                                     } else if (isAuctionLive) {
-                                        // 🔄 AUCTION STILL ACTIVE - Show normal actions
                                         return (
                                             <>
                                                 {primaryAction && (
@@ -385,12 +334,11 @@ export const EnhancedAuctionSection = memo(({
                                                     </button>
                                                 )}
 
-                                                {/* Only show cancel for active auctions without bids */}
                                                 {secondaryActions.filter(action => {
                                                     if (action?.type === 'cancel') {
-                                                        return !hasBids; // Only show cancel if no bids
+                                                        return !hasBids; 
                                                     }
-                                                    return action?.type !== 'end'; // Hide end button for active auctions
+                                                    return action?.type !== 'end'; 
                                                 }).map((action, index: number) => (
                                                     <button
                                                         key={index}
@@ -409,7 +357,6 @@ export const EnhancedAuctionSection = memo(({
                                             </>
                                         );
                                     } else {
-                                        // 📂 NO AUCTION or other states - Show normal actions from UX analysis
                                         return (
                                             <>
                                                 {primaryAction && (
@@ -458,7 +405,6 @@ export const EnhancedAuctionSection = memo(({
                             </div>
                         </div>
                     ) : (
-                        // ✨ Enhanced No Auction State
                         <div className="text-center py-8">
                             <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
                                 <span className="text-3xl">📦</span>

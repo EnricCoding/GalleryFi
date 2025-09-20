@@ -14,8 +14,8 @@ type ListForSaleParams = {
   nft: `0x${string}`;
   tokenId: string;
   isOwner: boolean;
-  onListed?: () => void; // callback opcional tras listar
-  onStatus?: (s: string) => void; // para pintar banners/toasts fuera
+  onListed?: () => void;
+  onStatus?: (s: string) => void; 
 };
 
 export function useListForSale({ nft, tokenId, isOwner, onListed, onStatus }: ListForSaleParams) {
@@ -66,7 +66,6 @@ export function useListForSale({ nft, tokenId, isOwner, onListed, onStatus }: Li
       if (!MARKET) throw new Error('Missing MARKET address');
       if (!tokenId || isNaN(Number(tokenId))) throw new Error('Invalid tokenId');
 
-      // Validar precio
       const trimmed = priceInput.trim();
       if (!trimmed) throw new Error('Enter a price in ETH');
       const eth = Number(trimmed);
@@ -79,13 +78,11 @@ export function useListForSale({ nft, tokenId, isOwner, onListed, onStatus }: Li
         throw new Error('Invalid ETH format');
       }
 
-      // Red
       if (chainId !== EXPECTED_CHAIN_ID) {
         onStatus?.('Switching network…');
         await switchChainAsync?.({ chainId: EXPECTED_CHAIN_ID });
       }
 
-      // Approval
       setBusyApprove(true);
       onStatus?.('Checking approval…');
 
@@ -108,7 +105,6 @@ export function useListForSale({ nft, tokenId, isOwner, onListed, onStatus }: Li
       }
       setBusyApprove(false);
 
-      // Listar
       setBusyList(true);
       onStatus?.('Listing NFT…');
       const txList = await writeContractAsync({

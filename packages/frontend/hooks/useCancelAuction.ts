@@ -4,7 +4,6 @@ import { useCallback, useMemo, useState } from 'react';
 import { useAccount, useChainId, usePublicClient, useSwitchChain, useWriteContract } from 'wagmi';
 import { useConnectModal } from '@rainbow-me/rainbowkit';
 
-// Enhanced types
 type UseCancelAuctionParams = {
   nft: `0x${string}`;
   tokenId: string | number | bigint;
@@ -53,7 +52,6 @@ export function useCancelAuction({
   const MARKET = process.env.NEXT_PUBLIC_MARKET_ADDRESS as `0x${string}` | undefined;
   const EXPECTED_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? '11155111');
 
-  // Validation warnings
   if (!MARKET) {
     console.warn('[useCancelAuction] Missing NEXT_PUBLIC_MARKET_ADDRESS');
   }
@@ -65,7 +63,6 @@ export function useCancelAuction({
   const { writeContractAsync } = useWriteContract();
   const { openConnectModal } = useConnectModal();
 
-  // Normalize tokenId
   const tokenIdBig = useMemo(() => {
     try {
       return BigInt(tokenId);
@@ -75,18 +72,14 @@ export function useCancelAuction({
     }
   }, [tokenId]);
 
-  // Enhanced UI state
   const [currentStep, setCurrentStep] = useState<CancelAuctionStep>('idle');
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
   const [cancelReason, setCancelReason] = useState<CancelAuctionReason | null>(null);
 
-  // Computed properties
   const isNetworkCorrect = chainId === EXPECTED_CHAIN_ID;
   const canCancelComputed = useMemo(() => {
-    // If explicitly provided, use that
     if (canCancel !== undefined) return canCancel;
-    // Otherwise compute based on conditions
     return isOwner && !hasBids && isLive;
   }, [canCancel, isOwner, hasBids, isLive]);
 
@@ -96,12 +89,10 @@ export function useCancelAuction({
 
   const cancelAuction = useCallback(async () => {
     try {
-      // Reset state
       setError(null);
       setTxHash(null);
       setCancelReason(null);
 
-      // Connection validation
       if (!isConnected) {
         setCurrentStep('connect');
         setCancelReason('not_connected');
@@ -117,7 +108,6 @@ export function useCancelAuction({
       setCurrentStep('validating');
       onStatus?.('Validating auction conditions...');
 
-      // Detailed validation
       if (isOwner === false) {
         setCurrentStep('error');
         setError('Only auction owner can cancel');
@@ -148,7 +138,6 @@ export function useCancelAuction({
       setCurrentStep('preparing');
       onStatus?.('Preparing to cancel auction...');
 
-      // Network validation
       if (!isNetworkCorrect) {
         setCurrentStep('switching_network');
         onStatus?.('Switching network...');
@@ -188,7 +177,6 @@ export function useCancelAuction({
       setCurrentStep('pending');
       onStatus?.('Transaction submitted...');
 
-      // Wait for confirmation
       if (!publicClient) throw new Error('Public client not available');
 
       const receipt = await publicClient.waitForTransactionReceipt({
@@ -250,22 +238,15 @@ export function useCancelAuction({
   ]);
 
   return {
-    // Core functionality
     cancelAuction,
-
-    // State
     currentStep,
     error,
     txHash,
     cancelReason,
-
-    // Computed properties
     canCancel: canCancelComputed,
     isReady,
     isNetworkCorrect,
     isConnected,
-
-    // Status helpers
     isIdle: currentStep === 'idle',
     isValidating: currentStep === 'validating',
     isPreparing: currentStep === 'preparing',
@@ -275,13 +256,11 @@ export function useCancelAuction({
     isSuccess: currentStep === 'success',
     isError: currentStep === 'error',
     isConnecting: currentStep === 'connect',
-
-    // Busy states
     isBusy: ['validating', 'preparing', 'switching_network', 'confirming', 'pending'].includes(
       currentStep,
     ),
     busyCancel: ['validating', 'preparing', 'switching_network', 'confirming', 'pending'].includes(
       currentStep,
-    ), // Legacy compatibility
+    ), 
   };
 }

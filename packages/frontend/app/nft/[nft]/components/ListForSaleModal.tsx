@@ -122,12 +122,11 @@ const ListForSaleModal = memo(function ListForSaleModal({
         if (open && inputRef.current) {
             const timer = setTimeout(() => {
                 inputRef.current?.focus();
-            }, 100); // Small delay for animation
+            }, 100); 
             return () => clearTimeout(timer);
         }
     }, [open]);
 
-    // Enhanced keyboard handling
     useEffect(() => {
         if (!open) return;
 
@@ -135,7 +134,6 @@ const ListForSaleModal = memo(function ListForSaleModal({
             if (e.key === 'Escape' && !busy) {
                 onClose();
             } else if (e.key === 'Enter' && e.metaKey && !isConfirmDisabled) {
-                // Cmd/Ctrl + Enter to quick confirm
                 onConfirm();
             }
         };
@@ -144,25 +142,21 @@ const ListForSaleModal = memo(function ListForSaleModal({
         return () => document.removeEventListener('keydown', handleKeydown);
     }, [open, busy, isConfirmDisabled, onClose, onConfirm]);
 
-    // Handle preset selection
     const handlePresetSelect = useCallback((presetValue: string) => {
         setValue(presetValue);
         setSelectedPreset(presetValue);
         setShowPresets(false);
     }, [setValue]);
 
-    // Handle input change
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
         setValue(newValue);
 
-        // Clear selected preset if user types manually
         if (selectedPreset && newValue !== selectedPreset) {
             setSelectedPreset(null);
         }
     }, [setValue, selectedPreset]);
 
-    // Prevent form submission on enter
     const handleFormSubmit = useCallback((e: React.FormEvent) => {
         e.preventDefault();
         if (!isConfirmDisabled) {
@@ -170,9 +164,8 @@ const ListForSaleModal = memo(function ListForSaleModal({
         }
     }, [isConfirmDisabled, onConfirm]);
 
-    // USD conversion (mock - in real app would use price feed)
     const estimatedUSD = useMemo(() => {
-        const ethPrice = 2400; // Mock ETH price
+        const ethPrice = 2400; 
         const numValue = Number(value);
         if (!Number.isFinite(numValue) || numValue <= 0) return null;
         return (numValue * ethPrice).toLocaleString('en-US', {
@@ -193,7 +186,6 @@ const ListForSaleModal = memo(function ListForSaleModal({
             aria-labelledby="list-modal-title"
             aria-describedby="list-modal-desc"
         >
-            {/* Enhanced backdrop with blur */}
             <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={() => {
@@ -201,9 +193,7 @@ const ListForSaleModal = memo(function ListForSaleModal({
                 }}
             />
 
-            {/* Enhanced modal container */}
             <div className="relative bg-white dark:bg-gray-800 rounded-3xl w-full max-w-lg shadow-2xl border border-gray-200/60 dark:border-gray-700/60 animate-in zoom-in-95 duration-200">
-                {/* Header with gradient */}
                 <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 p-6 border-b border-gray-200/60 dark:border-gray-700/60 rounded-t-3xl">
                     <div className="flex items-center justify-between">
                         <div>
@@ -232,9 +222,7 @@ const ListForSaleModal = memo(function ListForSaleModal({
                     </div>
                 </div>
 
-                {/* Content */}
                 <form onSubmit={handleFormSubmit} className="p-6 space-y-6">
-                    {/* Current price display */}
                     {currentPrice && (
                         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 border border-blue-200/50 dark:border-blue-800/50">
                             <p className="text-sm text-blue-600 dark:text-blue-400 mb-1">
@@ -246,7 +234,6 @@ const ListForSaleModal = memo(function ListForSaleModal({
                         </div>
                     )}
 
-                    {/* Price input section */}
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <label
@@ -264,7 +251,6 @@ const ListForSaleModal = memo(function ListForSaleModal({
                             </button>
                         </div>
 
-                        {/* Quick presets */}
                         {showPresets && (
                             <div className="grid grid-cols-3 gap-2 mb-4">
                                 {PRICE_PRESETS.map((preset) => (
@@ -284,7 +270,6 @@ const ListForSaleModal = memo(function ListForSaleModal({
                             </div>
                         )}
 
-                        {/* Price input with enhanced styling */}
                         <div className="relative">
                             <input
                                 id="price-input"
@@ -307,13 +292,11 @@ const ListForSaleModal = memo(function ListForSaleModal({
                                 aria-describedby="price-help price-error"
                             />
 
-                            {/* ETH label */}
                             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">
                                 ETH
                             </div>
                         </div>
 
-                        {/* USD estimate */}
                         {estimatedUSD && validation.isValid && (
                             <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
                                 <span className="text-gray-400">≈</span>
@@ -322,7 +305,6 @@ const ListForSaleModal = memo(function ListForSaleModal({
                             </p>
                         )}
 
-                        {/* Help text */}
                         <p
                             id="price-help"
                             className="text-xs text-gray-500 dark:text-gray-400"
@@ -330,7 +312,6 @@ const ListForSaleModal = memo(function ListForSaleModal({
                             Set your desired listing price in ETH. You can change this later.
                         </p>
 
-                        {/* Validation messages */}
                         {(error || !validation.isValid || validation.warning) && (
                             <div className="space-y-2">
                                 {error && (

@@ -25,7 +25,6 @@ export function useMintList(
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
 
-  // Normaliza direcciones
   const safe: SafeAddresses = useMemo(() => {
     try {
       return {
@@ -37,7 +36,6 @@ export function useMintList(
     }
   }, [nftAddress, marketAddress]);
 
-  // owner() on-chain
   const { data: owner } = useReadContract({
     address: safe?.nft,
     abi: MyNFTAbi,
@@ -74,7 +72,6 @@ export function useMintList(
 
     try {
       setBusy(true);
-      // 1) IPFS
       pushToast({ kind: 'info', msg: 'Uploading to IPFS…' });
       const form = new FormData();
       form.append('file', file!);
@@ -86,7 +83,6 @@ export function useMintList(
       if (!res.ok || !data.metadataCid) throw new Error(data?.error || 'Failed to upload to IPFS');
       const tokenURI = `ipfs://${data.metadataCid}`;
 
-      // 2) Mint
       pushToast({ kind: 'info', msg: 'Signing mint…' });
       const mintHash = await writeContractAsync({
         address: safe.nft,
@@ -100,7 +96,6 @@ export function useMintList(
       const tokenId = extractTokenIdFromLogs(safe.nft, logs);
       if (tokenId == null) throw new Error('Could not determine tokenId from mint logs.');
 
-      // 3) Approval (if needed)
       const approved = (await publicClient.readContract({
         address: safe.nft,
         abi: MyNFTAbi,
@@ -119,7 +114,6 @@ export function useMintList(
         await publicClient.waitForTransactionReceipt({ hash: approveHash });
       }
 
-      // 4) List
       pushToast({ kind: 'info', msg: 'Listing NFT…' });
       const priceWei = parseEther(priceEth);
       const listHash = await writeContractAsync({
@@ -138,17 +132,12 @@ export function useMintList(
   }
 
   return {
-    // state
     busy,
     canMint,
     owner,
-
-    // env
     expectedChainId,
     chainId,
     isConnected,
-
-    // actions
     submit,
   };
 }

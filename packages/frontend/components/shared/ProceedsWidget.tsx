@@ -41,11 +41,10 @@ const ProceedsWidget = memo(function ProceedsWidget({
 
     useEffect(() => {
         if (!localMsg) return;
-        const t = setTimeout(() => setLocalMsg(null), 4000); // Aumentado a 4 segundos
+        const t = setTimeout(() => setLocalMsg(null), 4000); 
         return () => clearTimeout(t);
     }, [localMsg]);
 
-    // Formatear balance con más precisión
     const formatBalance = (balance: string) => {
         const num = parseFloat(balance);
         if (num === 0) return '0.0000';
@@ -55,7 +54,6 @@ const ProceedsWidget = memo(function ProceedsWidget({
 
     const formattedBalance = formatBalance(balanceEth);
     
-    // Tooltip content
     const getTooltipText = () => {
         if (!hasProceeds) return 'No proceeds available to withdraw';
         if (busyWithdraw) return 'Withdrawal in progress...';
@@ -63,12 +61,10 @@ const ProceedsWidget = memo(function ProceedsWidget({
         return `Click to withdraw ${formattedBalance} ETH`;
     };
 
-    // Loading skeleton component
     const LoadingSkeleton = () => (
         <div className="animate-pulse bg-neutral-200 dark:bg-neutral-700 rounded h-4 w-16" />
     );
 
-    // Status indicator
     const StatusIndicator = ({ show }: { show: boolean }) => (
         show ? (
             <div className="flex items-center gap-1">
@@ -153,7 +149,6 @@ const ProceedsWidget = memo(function ProceedsWidget({
         );
     }
 
-    // pill (ideal navbar)
     return (
         <div 
             className="inline-flex items-center gap-2 rounded-full border border-neutral-300 dark:border-neutral-700 
@@ -204,7 +199,6 @@ const ProceedsWidget = memo(function ProceedsWidget({
                 )}
             </button>
             
-            {/* Tooltip for mobile */}
             {isHovered && showTooltip && (
                 <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 
                                px-3 py-2 bg-neutral-900 text-white text-xs rounded-md 

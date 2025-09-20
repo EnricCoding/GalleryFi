@@ -14,8 +14,6 @@ import { useBookmarks } from '@/hooks/useBookmarks';
 import NftInfoActionBar from './NftInfoActionBar';
 import ListForSaleModal from './ListForSaleModal';
 
-
-
 export type BannerType = 'info' | 'success' | 'error' | 'warning';
 export interface BannerMessage {
     kind: BannerType;
@@ -40,30 +38,8 @@ export interface NftInfoProps {
     ownerAddress?: string;
     sellerAddress?: string;
     onRefreshData?: () => Promise<void>;
-    // ✅ COMMENTED: Auction functionality moved to specialized component
-    // auctionProps?: AuctionProps;
-    // ✅ NEW: Critical security check - prevent listing when auction is active
     hasActiveAuction?: boolean;
 }
-
-/* ───────────────────── Enhanced Time Formatting ───────────────────── */
-/* 
-// ✅ COMMENTED: Auction functionality moved to specialized component
-function fmtTimeLeft(ms?: number): { display: string; isUrgent: boolean; isEnded: boolean } {
-    if (ms == null) return { display: '--:--', isUrgent: false, isEnded: false };
-    if (ms <= 0) return { display: 'Ended', isUrgent: false, isEnded: true };
-
-    const s = Math.floor(ms / 1000);
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
-
-    const display = h > 0 ? `${h}h ${m}m ${sec}s` : `${m}m ${sec}s`;
-    const isUrgent = ms < 300000; // Less than 5 minutes
-
-    return { display, isUrgent, isEnded: false };
-}
-*/
 
 /* ───────────────────── Enhanced Banner Component ───────────────────── */
 const EnhancedBanner = memo(({
@@ -104,233 +80,6 @@ const EnhancedBanner = memo(({
 });
 EnhancedBanner.displayName = 'EnhancedBanner';
 
-/* ───────────────────── Enhanced Auction Action Bar ───────────────────── */
-/* 
-// ✅ COMMENTED: Auction functionality moved to specialized component
-const AuctionActionBar = memo(({
-    auction,
-    auctionLive,
-    auctionHasBid,
-    timeLeftMs,
-    isSellerOfAuction,
-    openCreate,
-    openBid,
-    onEndAuction,
-    onCancelAuction,
-    busyCreate,
-    busyBid,
-    busyEnd,
-    busyCancel,
-    isOwner,
-    isForSale,
-}: AuctionProps & { isOwner: boolean; isForSale: boolean }) => {
-    const timeInfo = fmtTimeLeft(timeLeftMs);
-
-    // ✅ CRITICAL FIX: Use auctionLive directly from props (now correctly calculated from parent)
-    const isActuallyLive = !!auctionLive;
-
-    if (auction) {
-        const hasBid = (auction.bid ?? BigInt(0)) > BigInt(0);
-
-        return (
-            <div className="space-y-6">
-                // Auction Status Header - FIXED
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                            {isActuallyLive ? 'Live Auction' : 'Auction Ended'}
-                        </h3>
-                    </div>
-                    <div className={`px-4 py-2 rounded-full text-sm font-bold ${isActuallyLive
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
-                        }`}>
-                        {isActuallyLive ? '🟢 Active' : '🔴 Ended'}
-                    </div>
-                </div>
-
-                // Auction Info Grid
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-6 border border-blue-200/50 dark:border-blue-800/50">
-                        <div className="flex items-center gap-3 mb-3">
-                            <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                                {hasBid ? 'Winning Bid' : 'Current Bid'}
-                            </h4>
-                        </div>
-                        <p className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                            {hasBid ? formatEther(auction.bid) : '0'} ETH
-                        </p>
-                        {hasBid && auction.bidder ? (
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                by {auction.bidder.slice(0, 6)}...{auction.bidder.slice(-4)}
-                            </p>
-                        ) : (
-                            <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">
-                                No bids received
-                            </p>
-                        )}
-                    </div>
-
-                    <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-2xl p-6 border border-orange-200/50 dark:border-orange-800/50">
-                        <div className="flex items-center gap-3 mb-3">
-                            <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                                Statuss
-                            </h4>
-                        </div>
-                        <p className={`text-3xl font-bold mb-2 ${timeInfo.isUrgent && isActuallyLive
-                                ? 'text-red-600 dark:text-red-400 animate-pulse'
-                                : isActuallyLive
-                                    ? 'text-gray-900 dark:text-white'
-                                    : 'text-gray-600 dark:text-gray-400'
-                            }`}>
-                            {isActuallyLive ? timeInfo.display : 'Ended'}
-                        </p>
-                        {!isActuallyLive && (
-                            <p className={`text-sm font-medium ${hasBid
-                                    ? 'text-green-600 dark:text-green-400'
-                                    : 'text-orange-600 dark:text-orange-400'
-                                }`}>
-                                {hasBid ? '✅ Ready to finalize' : '🔄 Needs retrieval'}
-                            </p>
-                        )}
-                        {timeInfo.isUrgent && isActuallyLive && (
-                            <p className="text-sm text-red-600 dark:text-red-400 font-medium">
-                                ⚡ Ending soon!
-                            </p>
-                        )}
-                    </div>
-                </div>
-
-                // Action Buttons - FIXED logic
-                <div className="flex flex-wrap gap-4">
-                    {isActuallyLive && !isSellerOfAuction && (
-                        <button
-                            type="button"
-                            onClick={openBid}
-                            disabled={!!busyBid}
-                            className="flex-1 min-w-[140px] px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-blue-400 disabled:to-purple-400 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed"
-                            aria-label="Place bid on auction"
-                        >
-                            {busyBid ? (
-                                <div className="flex items-center justify-center gap-3">
-                                    <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
-                                    <span className="font-semibold">Placing Bid...</span>
-                                </div>
-                            ) : (
-                                <span className="flex items-center justify-center gap-2">
-                                    🎯 Place Bid
-                                </span>
-                            )}
-                        </button>
-                    )}
-
-                    {isActuallyLive && isSellerOfAuction && !auctionHasBid && (
-                        <button
-                            type="button"
-                            onClick={onCancelAuction}
-                            disabled={!!busyCancel}
-                            className="px-6 py-4 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] disabled:scale-100"
-                            aria-label="Cancel auction"
-                        >
-                            {busyCancel ? (
-                                <div className="flex items-center justify-center gap-2">
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    <span>Cancelling...</span>
-                                </div>
-                            ) : (
-                                '❌ Cancel Auction'
-                            )}
-                        </button>
-                    )}
-
-                    // End Auction Button - Only for auction seller when ended
-                    {!isActuallyLive && isSellerOfAuction && (
-                        <button
-                            type="button"
-                            onClick={onEndAuction}
-                            disabled={!!busyEnd}
-                            className="flex-1 min-w-[140px] px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-green-400 disabled:to-emerald-400 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] disabled:scale-100"
-                            aria-label="End auction and finalize"
-                        >
-                            {busyEnd ? (
-                                <div className="flex items-center justify-center gap-3">
-                                    <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
-                                    <span className="font-semibold">
-                                        {hasBid ? 'Finalizing Sale...' : 'Retrieving NFT...'}
-                                    </span>
-                                </div>
-                            ) : (
-                                <span className="flex items-center justify-center gap-2">
-                                    {hasBid ? '🏁 Finalize Sale' : '🔄 Retrieve NFT'}
-                                </span>
-                            )}
-                        </button>
-                    )}
-
-                    // Information for non-sellers when auction ended
-                    {!isActuallyLive && !isSellerOfAuction && (
-                        <div className="flex-1 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
-                            <div className="text-center">
-                                <div className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                    ⏰ Auction Ended
-                                </div>
-                                {hasBid ? (
-                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                        Waiting for seller to finalize the sale...
-                                    </div>
-                                ) : (
-                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                        No bids received. Seller can retrieve their NFT.
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    }
-
-    // No auction exists - creation interface
-    if (isOwner && !isForSale) {
-        return (
-            <div className="text-center py-12">
-                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 rounded-full flex items-center justify-center">
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                    Create an Auction
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto leading-relaxed">
-                    Set up a timed auction to let others bid competitively on your NFT. Great for discovering true market value.
-                </p>
-                <button
-                    type="button"
-                    onClick={openCreate}
-                    disabled={!!busyCreate}
-                    className="px-10 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-purple-400 disabled:to-blue-400 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] disabled:scale-100"
-                    aria-label="Create new auction"
-                >
-                    {busyCreate ? (
-                        <div className="flex items-center justify-center gap-3">
-                            <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
-                            <span className="font-semibold">Creating Auction...</span>
-                        </div>
-                    ) : (
-                        <span className="flex items-center gap-2">
-                            🚀 Create Auction
-                        </span>
-                    )}
-                </button>
-            </div>
-        );
-    }
-
-    return null;
-});
-AuctionActionBar.displayName = 'AuctionActionBar';
-*/
-
-/* ───────────────────── Enhanced Share & Bookmark Components ───────────────────── */
 const ShareButton = memo(({ onShare, disabled }: { onShare: () => void; disabled?: boolean }) => (
     <button
         type="button"
@@ -447,39 +196,12 @@ export default function NftInfo(props: NftInfoProps) {
         ownerAddress,
         sellerAddress,
         onRefreshData,
-        // ✅ COMMENTED: Auction functionality moved to specialized component
-        // auctionProps, // ← NEW
-        // ✅ NEW: Critical security check - prevent listing when auction is active
         hasActiveAuction = false,
     } = props;
 
     const router = useRouter();
     const { address: userAddress } = useAccount();
     const [banner, setBanner] = useState<BannerMessage | null>(null);
-    // useEffect(() => {
-    //     // Update local state when props change
-    //     setLiveTimeLeft(auctionProps?.timeLeftMs);
-    // }, [auctionProps?.timeLeftMs]);
-
-    // useEffect(() => {
-    //     // Only run timer for active auctions with time left
-    //     if (!auctionProps?.auctionLive || !auctionProps?.auction || (liveTimeLeft ?? 0) <= 0) {
-    //         return;
-    //     }
-
-    //     const timer = setInterval(() => {
-    //         setLiveTimeLeft(prevTime => {
-    //             if (!prevTime || prevTime <= 1000) {
-    //                 // Auction ended, trigger refresh if possible
-    //                 setTimeout(() => onRefreshData?.(), 100); // Small delay to avoid concurrent updates
-    //                 return 0;
-    //             }
-    //             return prevTime - 1000; // Decrease by 1 second (1000ms)
-    //         });
-    //     }, 1000); // Update every second
-
-    //     return () => clearInterval(timer);
-    // }, [auctionProps?.auctionLive, auctionProps?.auction, liveTimeLeft, onRefreshData]);
 
     /* Enhanced Banner with auto-dismiss */
     const bannerTimerRef = useRef<number | null>(null);
@@ -523,45 +245,20 @@ export default function NftInfo(props: NftInfoProps) {
         return { lastPrice: lastPriceValue, formattedPrice: currentPrice };
     }, [activity, price]);
 
-    /* Enhanced status and computed properties with FIXED auction logic */
-    // ✅ COMMENTED: Auction state calculations moved to specialized component
-    /*
-    const { thereIsAuction, isAuctionActive, isAuctionEnded } = useMemo(() => {
-        // ✅ FIXED: Proper auction state calculation using real-time timer
-        const hasAuction = !!auctionProps?.auction;
-        const isLive = !!auctionProps?.auctionLive;
-        const timeLeft = liveTimeLeft ?? 0; // ✅ Use real-time state instead of props
-
-        // 🔥 CRITICAL: Determine if auction is actually active
-        const isActive = hasAuction && isLive && timeLeft > 0;
-        const isEnded = hasAuction && (!isLive || timeLeft <= 0);
-
-        return {
-            thereIsAuction: hasAuction,
-            isAuctionActive: isActive,
-            isAuctionEnded: isEnded
-        };
-    }, [auctionProps, liveTimeLeft]); // ✅ Added liveTimeLeft dependency
-    */
-
-    // ✅ SIMPLIFIED: Only basic NFT states (no auction logic)
-    const thereIsAuction = false; // Always false since auctions are handled by specialized component
+    const thereIsAuction = false;
     const isAuctionActive = false;
     const isAuctionEnded = false;
 
     const statusLabel = useMemo(() => {
         
-        // ✅ FIXED: Use actual ownership state instead of derived isOwner
         if (isAuctionActive) return 'Live Auction';
         if (isAuctionEnded) return 'Auction Ended';
         if (isForSale) return 'For Sale';
         
-        // Check if marketplace owns the NFT
         if (ownerAddress?.toLowerCase() === process.env.NEXT_PUBLIC_MARKET_ADDRESS?.toLowerCase()) {
             return 'In Marketplace Escrow';
         }
         
-        // Check if user is the direct owner
         if (ownerAddress?.toLowerCase() === userAddress?.toLowerCase()) {
             return 'Owned by You';
         }
@@ -583,7 +280,6 @@ export default function NftInfo(props: NftInfoProps) {
         []
     );
 
-    /* LISTAR */
     const {
         open,
         priceInput,
@@ -607,7 +303,6 @@ export default function NftInfo(props: NftInfoProps) {
         onStatus: (text) => showBanner('info', text, 2500),
     });
 
-    /* CANCELAR LISTING */
     const { busyCancel, canCancel, cancel } = useCancelListing({
         nft: contractAddress,
         tokenId,
@@ -621,7 +316,6 @@ export default function NftInfo(props: NftInfoProps) {
         onStatus: (s) => showBanner('info', s, 2500),
     });
 
-    /* CAMBIAR PRECIO */
     const {
         open: openChange,
         priceInput: changePriceInput,
@@ -655,10 +349,8 @@ export default function NftInfo(props: NftInfoProps) {
         if (prefill) setChangePriceInput(prefill);
     }, [canChange, formattedPrice, openChangeModal, setChangePriceInput, showBanner]);
 
-    /* BOOKMARKS */
     const { isBookmarked, toggleBookmark } = useBookmarks(contractAddress, tokenId);
 
-    /* Enhanced Share functionality with better UX */
     const handleShare = useCallback(async () => {
         try {
             const url = window.location.href;
@@ -671,7 +363,6 @@ export default function NftInfo(props: NftInfoProps) {
             } else {
                 await navigator.clipboard.writeText(url);
 
-                // Optional: Open Twitter share
                 const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}&hashtags=NFT,GalleryFi,Ethereum`;
                 const shouldOpenTwitter = window.confirm('Link copied! Would you like to share on Twitter?');
 
@@ -689,7 +380,6 @@ export default function NftInfo(props: NftInfoProps) {
         }
     }, [meta?.name, tokenId, onShare, showBanner]);
 
-    /* Enhanced bookmark functionality with better feedback */
     const handleBookmark = useCallback(() => {
         const bookmarkData = {
             nft: contractAddress,
@@ -710,18 +400,12 @@ export default function NftInfo(props: NftInfoProps) {
         onSaveToBookmarks?.();
     }, [toggleBookmark, contractAddress, tokenId, meta, isBookmarked, onSaveToBookmarks, showBanner]);
 
-    /* Enhanced button visibility with FIXED auction logic */
     const buttonVisibility = useMemo(() => {
         const visibility = {
-            // ✅ FIXED: Only show buy button if NOT in any auction state and properly for sale
             showBuy: !thereIsAuction && !hasActiveAuction && isForSale && !isOwner && !!price && (price ?? BigInt(0)) > BigInt(0),
-            // ✅ CRITICAL: Only show list button if NO auction exists AND no active auction
             showList: !thereIsAuction && !hasActiveAuction && isOwner && !isForSale && canList,
-            // ✅ FIXED: Only show cancel if NO auction and owner has active listing
             showCancel: !thereIsAuction && !hasActiveAuction && isOwner && isForSale && canCancel,
-            // ✅ FIXED: Only show edit if NO auction and owner has active listing
             showEdit: !thereIsAuction && !hasActiveAuction && isOwner && isForSale && canChange,
-            // ✅ FIXED: Show offer disabled when not owner and not for sale and no auction
             showOfferDisabled: !thereIsAuction && !hasActiveAuction && !isOwner && !isForSale,
         };
 
@@ -734,38 +418,6 @@ export default function NftInfo(props: NftInfoProps) {
             {banner && (
                 <EnhancedBanner banner={banner} onClose={closeBanner} />
             )}
-
-            {/* Critical Action Required Banner for stuck NFTs - FIXED */}
-            {/* ✅ COMMENTED: Auction-related banners moved to specialized component
-            {ownerAddress?.toLowerCase() === process.env.NEXT_PUBLIC_MARKET_ADDRESS?.toLowerCase() &&
-                isAuctionEnded &&
-                auctionProps?.isSellerOfAuction && (
-                    <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-2 border-red-200 dark:border-red-800 rounded-2xl p-6 shadow-lg">
-                        <div className="flex items-start gap-4">
-                            <div className="flex-shrink-0">
-                                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                                    <span className="text-2xl">⚠️</span>
-                                </div>
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="text-lg font-bold text-red-800 dark:text-red-200 mb-2">
-                                    Action Required: Your NFT Needs Retrieval
-                                </h3>
-                                <p className="text-red-700 dark:text-red-300 mb-4">
-                                    {auctionProps?.auctionHasBid
-                                        ? "Your auction ended successfully! Click the button below to finalize the sale and transfer the NFT to the winning bidder."
-                                        : "Your auction ended without any bids. Click the button below to retrieve your NFT back to your wallet."
-                                    }
-                                </p>
-                                <div className="bg-red-100 dark:bg-red-900/30 rounded-lg p-3 text-sm text-red-800 dark:text-red-200">
-                                    <strong>Why is this necessary?</strong> The marketplace holds your NFT in escrow during auctions.
-                                    You must manually complete this final step to {auctionProps?.auctionHasBid ? 'receive payment and transfer ownership' : 'get your NFT back'}.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            */}
 
             {/* Enhanced Main Panel */}
             <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 overflow-hidden transition-all duration-300 hover:shadow-2xl">
@@ -786,16 +438,6 @@ export default function NftInfo(props: NftInfoProps) {
                                 <span className="text-gray-600 dark:text-gray-400 font-mono text-sm">
                                     ID: <span className="font-semibold">#{tokenId}</span>
                                 </span>
-                                {/* ✅ COMMENTED: Auction status indicators moved to specialized component
-                                {(thereIsAuction && auctionProps?.auction) && (
-                                    <div className="flex items-center gap-2">
-                                        <span className={`w-2 h-2 rounded-full ${isAuctionActive ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`} />
-                                        <span className={`text-sm font-semibold ${isAuctionActive ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`}>
-                                            {isAuctionActive ? 'Live Auction' : 'Auction Ended'}
-                                        </span>
-                                    </div>
-                                )}
-                                */}
                             </div>
                         </div>
 
@@ -882,7 +524,6 @@ export default function NftInfo(props: NftInfoProps) {
                                             </div>
                                         </div>
 
-                                        {/* Seller/Original Owner Section - Show when NFT is in marketplace escrow */}
                                         {ownerAddress?.toLowerCase() === process.env.NEXT_PUBLIC_MARKET_ADDRESS?.toLowerCase() && sellerAddress && (
                                             <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
                                                 <div className="flex items-center gap-3 mb-2">
@@ -938,21 +579,7 @@ export default function NftInfo(props: NftInfoProps) {
 
                     {/* Price/Auction Section */}
                     <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
-                        {/* ✅ COMMENTED: Auction functionality moved to specialized component
-                        {thereIsAuction ? (
-                            <AuctionActionBar
-                                {...auctionProps}
-                                // ✅ OVERRIDE: Use locally calculated states and real-time timer
-                                auctionLive={isAuctionActive}
-                                timeLeftMs={liveTimeLeft} // ✅ Use real-time timer
-                                isOwner={isOwner}
-                                isForSale={isForSale}
-                            />
-                        ) : (
-                        */}
-                        {/* ✅ SIMPLIFIED: Only show regular marketplace actions (no auction logic) */}
-                        
-                        {/* ⚠️ SECURITY WARNING: Show warning when listing is blocked by marketplace ownership */}
+                     
                         {hasActiveAuction && isOwner && !isForSale && (
                             <div className="mb-6 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-200">
                                 <div className="flex items-center gap-2">
@@ -1082,7 +709,7 @@ export default function NftInfo(props: NftInfoProps) {
                                             key={`${attr.trait_type}-${index}`}
                                             traitType={attr.trait_type!}
                                             value={String(attr.value!)}
-                                            rarity={Math.floor(Math.random() * 15) + 1} // Mock rarity for demo
+                                            rarity={Math.floor(Math.random() * 15) + 1}
                                         />
                                     ))}
                             </div>
@@ -1091,7 +718,6 @@ export default function NftInfo(props: NftInfoProps) {
                 </div>
             </div>
 
-            {/* Enhanced Modal Components with improved UX */}
             <ListForSaleModal
                 open={open}
                 onClose={closeModal}

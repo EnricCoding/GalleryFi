@@ -24,7 +24,6 @@ function save(list: BookmarkItem[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   } catch {
-    /* noop */
   }
 }
 

@@ -28,7 +28,6 @@ interface StatsSummary {
     lastSalePrice: string | null;
 }
 
-/* ───────────────── Activity type config (ampliado con subastas) ───────────────── */
 const ACTIVITY_CONFIG = {
     SALE: {
         label: 'Sale',
@@ -136,7 +135,6 @@ export default function ActivityTabs({
         }
     }, []);
 
-    /* ─────────── Helpers con mejora de rendimiento ─────────── */
     const formatAddress = useCallback((address: string) => {
         if (!address) return 'Unknown';
         return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -177,7 +175,6 @@ export default function ActivityTabs({
         }
     }, []);
 
-    // Etherscan base (Sepolia por defecto si NEXT_PUBLIC_CHAIN_ID = 11155111)
     const explorerBase = useMemo(() => {
         const cid = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 11155111);
         return cid === 11155111 ? 'https://sepolia.etherscan.io' : 'https://etherscan.io';
@@ -188,8 +185,6 @@ export default function ActivityTabs({
         [explorerBase],
     );
 
-    /* ─────────── Datos derivados: ordenar y filtrar ─────────── */
-    // Orden: más reciente primero
     const sortedActivity = useMemo(
         () =>
             [...activity].sort(
@@ -208,7 +203,6 @@ export default function ActivityTabs({
         [sortedActivity],
     );
 
-    /* ─────────── Estadísticas calculadas ─────────── */
     const stats = useMemo((): StatsSummary => {
         const sales = salesHistory;
         const totalSales = sales.length;
@@ -327,7 +321,6 @@ export default function ActivityTabs({
         </div>
     ), [stats]);
 
-    /* ─────────── Reusable components ─────────── */
     const EmptyState = useCallback(
         ({
             icon,
@@ -401,14 +394,12 @@ export default function ActivityTabs({
         [formatAddress, formatTime, getActivityIcon, getActivityLabel, getPrimaryLine, txUrl],
     );
 
-    /* ─────────── Render con mejoras de accesibilidad ─────────── */
     return (
         <div
             className={`bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 ${className}`}
             role="region"
             aria-label="NFT Activity Information"
         >
-            {/* Tabs header con mejores controles */}
             <div
                 className="flex border-b border-gray-200 dark:border-gray-700"
                 role="tablist"
@@ -442,9 +433,7 @@ export default function ActivityTabs({
                 ))}
             </div>
 
-            {/* Tabs content con mejor navegación */}
             <div className="p-6">
-                {/* Stats summary si está habilitado */}
                 {showStatsSummary && stats.totalSales > 0 && <StatsCard />}
 
                 {activeTab === 'activity' && (

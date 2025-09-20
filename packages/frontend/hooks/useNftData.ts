@@ -1,4 +1,3 @@
-// hooks/useNftData.ts
 'use client';
 
 import { useMemo, useCallback } from 'react';
@@ -7,19 +6,13 @@ import { useNftMetadata } from './useNftMetadata';
 import { useEthUsd } from './useEthUsd';
 import { useOnchainNft } from './useOnChainNft';
 
-/**
- * Parameters for useNftData hook
- */
+
 type Params = {
-  /** Contract address of the NFT */
   nft: `0x${string}`;
-  /** Token ID as string */
   tokenId: string;
 };
 
-/**
- * NFT status enumeration for better type safety
- */
+
 export enum NFTStatus {
   LOADING = 'loading',
   NOT_FOUND = 'not_found',
@@ -30,9 +23,7 @@ export enum NFTStatus {
   ERROR = 'error',
 }
 
-/**
- * NFT Metadata structure
- */
+
 export interface NFTMetadata {
   name?: string;
   description?: string;
@@ -44,29 +35,21 @@ export interface NFTMetadata {
   [key: string]: unknown;
 }
 
-/**
- * On-chain listing structure
- */
 export interface OnchainListing {
   seller: `0x${string}`;
   price: bigint;
   active?: boolean;
 }
 
-/**
- * On-chain auction structure
- */
+
 export interface OnchainAuction {
   seller: `0x${string}`;
-  end: bigint; // timestamp in seconds as bigint
+  end: bigint; 
   bid: bigint;
   bidder: `0x${string}`;
   active?: boolean;
 }
 
-/**
- * Subgraph data structure
- */
 export interface SubgraphData {
   listings?: Array<{
     tokenURI?: string;
@@ -83,9 +66,6 @@ export interface SubgraphData {
   [key: string]: unknown;
 }
 
-/**
- * Activity event structure
- */
 export interface ActivityEvent {
   id: string;
   type: 'listing' | 'sale' | 'auction' | 'bid' | 'transfer';
@@ -96,18 +76,13 @@ export interface ActivityEvent {
   [key: string]: unknown;
 }
 
-/**
- * Market contract structure
- */
 export interface MarketContract {
   address: `0x${string}`;
   abi: unknown[];
   chainId: number;
 }
 
-/**
- * Enhanced NFT data structure with computed properties
- */
+
 export interface NFTData {
   // Core data
   meta: NFTMetadata | null;
@@ -151,10 +126,6 @@ export interface NFTData {
   refreshAllData: () => Promise<void>;
 }
 
-/**
- * Enhanced hook for comprehensive NFT data management
- * Combines on-chain data, subgraph data, metadata, and computed properties
- */
 export function useNftData({ nft, tokenId }: Params): NFTData {
   const expectedChainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 11155111);
 
@@ -285,7 +256,6 @@ export function useNftData({ nft, tokenId }: Params): NFTData {
     try {
       const refreshPromises: Promise<unknown>[] = [refetchOnchainData()];
 
-      // Only add activity refetch if available
       if (refetchActivity) {
         refreshPromises.push(refetchActivity());
       }
@@ -295,9 +265,9 @@ export function useNftData({ nft, tokenId }: Params): NFTData {
 
     } catch (error) {
       console.error('Error refreshing NFT data:', error);
-      throw error; // Re-throw to allow calling components to handle
+      throw error; 
     }
-  }, [nft, tokenId, refetchOnchainData, refetchActivity]);
+  }, [refetchOnchainData, refetchActivity]);
 
   return {
     // Core data

@@ -52,7 +52,6 @@ interface AuctionProps {
     isProcessingAuction: boolean;
 }
 
-/* ---------------- Enhanced Loading Skeleton ---------------- */
 const LoadingSkeleton = memo(() => (
     <div
         className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-8"
@@ -144,7 +143,6 @@ const NotFoundError = memo(({ onGoBack }: { onGoBack: () => void }) => (
 ));
 NotFoundError.displayName = 'NotFoundError';
 
-/* ---------------- Content ---------------- */
 const NftDetailContent = memo(({
     imgUrl,
     meta,
@@ -162,7 +160,6 @@ const NftDetailContent = memo(({
     isNewlyCreated,
     onRefreshData,
     auctionProps,
-    // Debug props
     userAddress,
     auction,
     auctionUXAnalysis,
@@ -184,7 +181,6 @@ const NftDetailContent = memo(({
     isNewlyCreated: boolean;
     onRefreshData?: () => Promise<void>;
     auctionProps?: AuctionProps;
-    // Debug props
     userAddress?: `0x${string}`;
     auction?: AuctionData | null;
     auctionUXAnalysis?: ReturnType<typeof analyzeAuctionForUX>;
@@ -218,34 +214,25 @@ const NftDetailContent = memo(({
                             sellerAddress={seller}
                             onRefreshData={onRefreshData}
                             hasActiveAuction={(() => {
-                                // ✅ FIXED: Properly distinguish between listing block and purchase availability
                                 const marketplaceAddress = CONTRACTS.MARKETPLACE.toLowerCase();
                                 const currentOwner = ownerAddress?.toLowerCase();
-                                
-                                // ✅ FIXED LOGIC: Block new listings if marketplace owns NFT, 
-                                // BUT allow purchase if NFT is already listed for sale
+                       
                                 if (currentOwner === marketplaceAddress) {
-                                    // Case 1: NFT in active auction
                                     if (auctionProps?.auctionLive) {
-                                        return true; // Block listing (auction active)
+                                        return true; 
                                     }
                                     
-                                    // Case 2: NFT listed for sale (marketplace escrow)
                                     if (isForSale && price && price > BigInt(0)) {
                                         return false;
                                     }
                                     
-                                    return true; // Block listing (needs to be claimed first)
+                                    return true; 
                                 }
                                 
-                                // Case 4: User owns NFT directly
-                                return false; // Allow listing
+                                return false; 
                             })()}
                         />
 
-                        {/* ✨ Enhanced Auction Section with improved UX */}
-
-                        
                         {auctionProps && auctionUXAnalysis && (
                             <EnhancedAuctionSection
                                 uxAnalysis={auctionUXAnalysis}
@@ -362,7 +349,6 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
                     });
                 }
 
-                // Check if we should stop
                 if (refreshCount >= maxRefreshes) {
                     clearInterval(autoRefreshInterval);
                     autoRefreshCompleted.current = true;
@@ -373,7 +359,6 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
                             type: 'info'
                         });
 
-                        // Auto-dismiss this final message after 8 seconds
                         setTimeout(() => {
                             if (isActive) setToastMessage(null);
                         }, 8000);
@@ -390,7 +375,7 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
                     });
                 }
             }
-        }, 8000); // Increased from 5000ms to 8000ms (8 seconds between refreshes)
+        }, 8000); 
 
         return () => {
             isActive = false;
@@ -399,7 +384,6 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         };
     }, [isNewlyCreated, refreshAllData]);
 
-    // Success detection for newly created NFTs
     useEffect(() => {
         if (isNewlyCreated && !autoRefreshCompleted.current && activity.length > 0) {
             autoRefreshCompleted.current = true;
@@ -407,25 +391,20 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         }
     }, [isNewlyCreated, activity.length]);
 
-    /* ---------- BUY ---------- */
     const { busy, handleBuyNow } = useBuyNft({
         nft: contractAddress,
         tokenIdBig,
         validInputs,
         listedNow,
-        onchainListing: onchainListing || undefined, // Type compatibility fix
+        onchainListing: onchainListing || undefined, 
         expectedChainId,
-        MARKET: MARKET?.address || ('0x0' as `0x${string}`), // Extract address or fallback
+        MARKET: MARKET?.address || ('0x0' as `0x${string}`), 
         showNotification,
         refreshData: enhancedRefreshData,
     });
 
-    /* ========= SUBASTAS ========= */
-
-    // Usar configuración centralizada
     const marketplaceAddress = CONTRACTS.MARKETPLACE;
 
-    // Lectura on-chain de la subasta + estado con debugging mejorado
     const {
         auction,
         isLive: auctionLive,
@@ -440,10 +419,6 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         tokenId,
     });
 
-
-    
-
-    // ✅ NUEVA LÓGICA DE OWNERSHIP CORREGIDA
     const ownershipState: OwnershipState = useMemo(() => {
         return AuctionUtils.getOwnershipState(
             address,
@@ -453,18 +428,13 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         );
     }, [address, onchainOwner, marketplaceAddress, auction]);
 
-    // Enhanced derived state calculation usando nueva lógica
     const { seller, price, isOwner, isForSale, tokenExists, loading } = useMemo(() => {
         const derivedSeller = onchainListing?.seller;
         const derivedPrice = onchainListing?.price;
 
-        // 🔥 OWNERSHIP CORREGIDO: Usar ownershipState calculado
         const derivedIsOwner = ownershipState.canViewAsOwner;
 
-        // 🚨 CRITICAL DEBUG: Log ownership calculation con nueva lógica
         if (address) {
-        
-            // Diagnóstico detallado
             if (!ownershipState.isDirectOwner && ownershipState.isAuctionSeller) {
 
             } else if (ownershipState.isDirectOwner && !ownershipState.isAuctionSeller) {
@@ -488,7 +458,6 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         };
     }, [onchainListing, ownershipState, validInputs, tokenIdBig, subgraphLoading, meta, address]);
 
-    // ✅ VALIDACIONES DE ACCIONES USANDO NUEVA LÓGICA
     const auctionActionValidity: AuctionActionValidity = useMemo(() => {
         return AuctionUtils.validateAuctionActions(
             address,
@@ -498,7 +467,6 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         );
     }, [address, auction, ownershipState]);
 
-    // ✅ ANÁLISIS UX COMPLETO para auction interface
     const auctionUXAnalysis = useMemo(() => {
         return analyzeAuctionForUX(
             auction,
@@ -512,10 +480,9 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         await enhancedRefreshData();
         await refetchAuction();
         
-        // Multiple refreshes for auction end to detect owner changes
         setTimeout(async () => {
             try {
-                await enhancedRefreshData(); // First additional refresh after 3 seconds
+                await enhancedRefreshData(); 
             } catch (error) {
                 console.warn('First delayed refresh failed:', error);
             }
@@ -523,7 +490,7 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         
         setTimeout(async () => {
             try {
-                await enhancedRefreshData(); // Second additional refresh after 8 seconds
+                await enhancedRefreshData(); 
             } catch (error) {
                 console.warn('Second delayed refresh failed:', error);
             }
@@ -531,7 +498,7 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
         
         setTimeout(async () => {
             try {
-                await enhancedRefreshData(); // Final refresh after 15 seconds
+                await enhancedRefreshData(); 
             } catch (error) {
                 console.warn('Final delayed refresh failed:', error);
             }
@@ -563,7 +530,7 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
     const { busyEnd, endAuction } = useEndAuction({
         nft: contractAddress,
         tokenId,
-        auctionEndTime: auction?.end ? Number(auction.end) * 1000 : undefined, // Convert seconds to milliseconds
+        auctionEndTime: auction?.end ? Number(auction.end) * 1000 : undefined,
         hasWinner: auctionHasBid,
         onEnded: async (txHash, success) => {
             if (success) {
@@ -604,7 +571,6 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
             canBidAuction: auctionActionValidity.canBid,
             canEndAuction: auctionActionValidity.canEnd,
             canCancelAuction: auctionActionValidity.canCancel,
-            // ✅ Add loading states for buttons
             busyCreate: createAuctionHook.isProcessing,
             busyBid: bidAuctionHook.isProcessing,
             busyEnd: busyEnd,
@@ -651,16 +617,15 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
                     ...item,
                     activityType: (item.type?.toUpperCase() || 'TRANSFER') as NftActivity['activityType'],
                     timestamp: item.timestamp ? item.timestamp.toString() : Date.now().toString()
-                })) as NftActivity[]} // Type compatibility fix
+                })) as NftActivity[]} 
                 seller={seller}
-                ownerAddress={onchainOwner || undefined} // Type compatibility fix
+                ownerAddress={onchainOwner || undefined}
                 onBuyClick={handleBuyNow}
                 isBuying={busy}
                 isRefreshing={isRefreshing}
                 isNewlyCreated={isNewlyCreated}
                 onRefreshData={enhancedRefreshData}
                 auctionProps={auctionProps}
-                // Debug props
                 userAddress={address}
                 auction={auction}
                 auctionUXAnalysis={auctionUXAnalysis}

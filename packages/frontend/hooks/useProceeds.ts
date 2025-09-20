@@ -1,4 +1,3 @@
-// hooks/useProceeds.ts
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
@@ -17,7 +16,7 @@ import MarketJson from '@/utils/abi/NftMarketplace.json';
 const MarketAbi = MarketJson.abi;
 
 type Params = {
-  onStatus?: (msg: string) => void; // para toasts/banners externos
+  onStatus?: (msg: string) => void; 
   onSuccess?: (amountWei: bigint) => void;
 };
 
@@ -32,12 +31,10 @@ export function useProceeds({ onStatus, onSuccess }: Params = {}) {
   const MARKET = process.env.NEXT_PUBLIC_MARKET_ADDRESS as `0x${string}` | undefined;
   const EXPECTED_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? '11155111');
 
-  // Validación de configuración
   if (!MARKET) {
     console.error('[useProceeds] Missing NEXT_PUBLIC_MARKET_ADDRESS');
   }
 
-  // Leer saldo del contrato: proceeds(address)
   const {
     data: balanceWeiRaw,
     isFetching: loadingBalance,
@@ -135,15 +132,12 @@ export function useProceeds({ onStatus, onSuccess }: Params = {}) {
   ]);
 
   return {
-    // state
     balanceWei,
     balanceEth,
     loadingBalance,
     busyWithdraw,
-    // computed
     hasProceeds: balanceWei > BigInt(0),
     canWithdraw: balanceWei > BigInt(0) && !busyWithdraw && !!MARKET && isConnected,
-    // actions
     withdraw,
     refetchBalance,
   };

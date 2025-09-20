@@ -17,13 +17,13 @@ type UseAuctionDataParams = {
 };
 
 export function useAuctionData({
-  market = CONTRACTS.MARKETPLACE, // Use centralized configuration as default
+  market = CONTRACTS.MARKETPLACE, 
   nft,
   tokenId,
-  refetchMs = AUCTION_CONFIG.REFETCH_INTERVAL_MS, // Use centralized refresh interval
+  refetchMs = AUCTION_CONFIG.REFETCH_INTERVAL_MS, 
   enabled = true,
 }: UseAuctionDataParams) {
-  // Validate and normalize tokenId
+
   const tokenIdBig = useMemo(() => {
     try {
       return BigInt(tokenId);
@@ -62,7 +62,6 @@ export function useAuctionData({
     error: Error | null;
   };
 
-  // ✅ Parse auction data using centralized utility
   const auction = useMemo<AuctionData | null>(() => {
     if (!data || !Array.isArray(data) || data.length !== 4) {
       return null;
@@ -77,12 +76,10 @@ export function useAuctionData({
       bidder: bidder as `0x${string}`,
     };
     
-    // Validate using centralized utility
     const isValid = AuctionUtils.isValidAuction(auctionData);
     return isValid ? auctionData : null;
   }, [data]);
 
-  // ✅ Enhanced status and timing using centralized utilities
   const auctionStatus: AuctionStatus = useMemo(() => {
     return AuctionUtils.getAuctionStatus(auction);
   }, [auction]);
@@ -91,7 +88,6 @@ export function useAuctionData({
     return AuctionUtils.getAuctionTiming(auction);
   }, [auction]);
 
-  // ✅ Bidding information using centralized utilities
   const hasBid = useMemo(() => AuctionUtils.hasBids(auction), [auction]);
   
   const isLoadingOrFetching = isLoading || isFetching;
@@ -140,5 +136,4 @@ export function useAuctionData({
   };
 }
 
-// Re-export types for backwards compatibility
 export type { AuctionData } from '@/types/auction';

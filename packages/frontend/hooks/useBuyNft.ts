@@ -41,7 +41,7 @@ export function useBuyNft({
   const queryClient = useQueryClient();
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
-  const { switchChainAsync } = useSwitchChain(); // usar versión async para esperar el cambio
+  const { switchChainAsync } = useSwitchChain();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
 

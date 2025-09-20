@@ -16,7 +16,6 @@ type Props = {
     onStatus?: (status: string, type?: 'info' | 'success' | 'error') => void;
 };
 
-// Utility function to format USD
 const formatUsd = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -26,14 +25,12 @@ const formatUsd = (amount: number) => {
     }).format(amount);
 };
 
-// Utility function to convert ETH to USD
 const ethToUsd = (ethAmount: string | number, ethPrice: number | null): string => {
     if (!ethPrice || !ethAmount) return '$0.00';
     const eth = typeof ethAmount === 'string' ? parseFloat(ethAmount) : ethAmount;
     return formatUsd(eth * ethPrice);
 };
 
-// Step configuration for visual feedback
 const STEP_CONFIG = {
     idle: { label: 'Ready to Bid', icon: '🎯', color: 'text-gray-500' },
     bidding: { label: 'Processing Bid', icon: '⚡', color: 'text-blue-500' },
@@ -51,40 +48,28 @@ const PlaceBidModal = memo(function PlaceBidModal({
     onBidded,
     onStatus,
 }: Props) {
-    // Enhanced hook integration
     const {
         // Modal state from hook
         open: hookOpen,
         openModal,
         closeModal,
-
-        // Bid management
         bidInput,
         setBidInput,
         selectedPreset,
         setSelectedPreset,
         usePresetIncrement,
         setUsePresetIncrement,
-
-        // Process state
         currentStep,
         error,
         txHash,
-
-        // Computed properties
         minBidEth,
         suggestedBidWei,
         suggestedBidEth,
-
-        // Balance checking
         userBalance,
         userBalanceEth,
         canBid,
-
-        // Auction state
         timeRemaining,
         isAuctionEnded,
-
         // Actions
         confirmBid,
         fillSuggestedBid,
@@ -97,14 +82,10 @@ const PlaceBidModal = memo(function PlaceBidModal({
         onStatus,
     });
 
-    // USD conversion hook
     const { ethUsd } = useEthUsd();
-    
-    // Local state for USD input mode
     const [inputMode, setInputMode] = useState<'eth' | 'usd'>('eth');
     const [usdCustomAmount, setUsdCustomAmount] = useState<string>('');
 
-    // Handle USD input conversion
     const handleUsdInput = (usdValue: string) => {
         setUsdCustomAmount(usdValue);
         if (!ethUsd || !usdValue) {
@@ -119,7 +100,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
         }
     };
 
-    // Handle ETH input conversion (update USD display)
     const handleEthInput = (ethValue: string) => {
         setBidInput(ethValue);
         if (!ethUsd || !ethValue) {
@@ -134,7 +114,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
         }
     };
 
-    // Sync USD amount when bid input changes
     useEffect(() => {
         if (inputMode === 'eth' && bidInput && ethUsd) {
             const ethNum = parseFloat(bidInput);
@@ -145,7 +124,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
         }
     }, [bidInput, ethUsd, inputMode]);
 
-    // Sync external open state with hook modal state
     useEffect(() => {
         if (open && !hookOpen) {
             openModal();
@@ -154,10 +132,8 @@ const PlaceBidModal = memo(function PlaceBidModal({
         }
     }, [open, hookOpen, openModal, closeModal]);
 
-    // Real-time countdown state
     const [currentTime, setCurrentTime] = useState(Date.now());
 
-    // Update time every second for real-time countdown
     useEffect(() => {
         if (!auctionEndTime || isAuctionEnded) return;
 
@@ -168,15 +144,13 @@ const PlaceBidModal = memo(function PlaceBidModal({
         return () => clearInterval(interval);
     }, [auctionEndTime, isAuctionEnded]);
 
-    // Calculate real-time remaining time
     const realTimeRemaining = useMemo(() => {
         if (!auctionEndTime) return null;
-        const endTimeMs = auctionEndTime * 1000; // Convert to milliseconds
+        const endTimeMs = auctionEndTime * 1000;
         const remaining = Math.max(0, Math.floor((endTimeMs - currentTime) / 1000));
         return remaining;
     }, [auctionEndTime, currentTime]);
 
-    // Calculate bid amount from input
     const bidAmountWei = useMemo(() => {
         try {
             if (!bidInput.trim()) return BigInt(0);
@@ -204,7 +178,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
         confirmBid();
     };
 
-    // Calculate time remaining display
     const timeDisplay = useMemo(() => {
         const timeToUse = realTimeRemaining !== null ? realTimeRemaining : timeRemaining;
         
@@ -230,7 +203,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
 
             <div className="relative bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-gray-200/60 dark:border-gray-700/60 transform transition-all duration-200 scale-100">
 
-                {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                         Place a Bid 🎯
@@ -244,7 +216,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
                     </button>
                 </div>
 
-                {/* Auction Status */}
                 {(realTimeRemaining !== null || timeRemaining !== undefined) && (
                     <div className={`mb-4 p-3 rounded-xl border ${isAuctionEnded || (realTimeRemaining !== null ? realTimeRemaining <= 0 : false)
                             ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
@@ -263,11 +234,7 @@ const PlaceBidModal = memo(function PlaceBidModal({
                         </div>
                     </div>
                 )}
-
-                {/* DEBUG: Check for stray values */}
-                {/* Remove this after debugging */}
                 
-                {/* Progress Indicator */}
                 {currentStep !== 'idle' && (
                     <div className="mb-6">
                         <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 ${stepConfig.color}`}>
@@ -278,7 +245,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
                     </div>
                 )}
 
-                {/* Current Bid Info */}
                 {currentBidWei && currentBidWei > BigInt(0) && (
                     <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                         <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Current Highest Bid</div>
@@ -291,13 +257,11 @@ const PlaceBidModal = memo(function PlaceBidModal({
                     </div>
                 )}
 
-                {/* Bid Input Section */}
                 <div className="space-y-4 mb-6">
                     <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                         💰 Your Bid Amount
                     </h4>
 
-                    {/* Bid Mode Toggle */}
                     <div className="flex gap-2">
                         <button
                             type="button"
@@ -323,7 +287,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
                         </button>
                     </div>
 
-                    {/* Quick Bid Presets */}
                     {usePresetIncrement && (
                         <div className="space-y-3">
                             <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -340,7 +303,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
                                             type="button"
                                             onClick={() => {
                                                 setSelectedPreset(key as BidPreset);
-                                                // Apply the bid immediately when preset is selected
                                                 fillSuggestedBid();
                                             }}
                                             disabled={currentStep === 'bidding'}
@@ -365,7 +327,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
                                 })}
                             </div>
 
-                            {/* Auto-apply suggestion when preset is selected */}
                             {selectedPreset && suggestedBidWei > BigInt(0) && (
                                 <div className="mt-3 p-3 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
                                     <div className="flex items-center justify-between">
@@ -392,10 +353,8 @@ const PlaceBidModal = memo(function PlaceBidModal({
                         </div>
                     )}
 
-                    {/* Custom Bid Input */}
                     {!usePresetIncrement && (
                         <div className="space-y-3">
-                            {/* Currency toggle */}
                             <div className="flex items-center justify-between">
                                 <label className="block text-sm font-medium text-gray-600 dark:text-gray-400">
                                     Bid Amount
@@ -429,7 +388,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
                                 </div>
                             </div>
 
-                            {/* Input field */}
                             <div className="relative">
                                 <input
                                     type="number"
@@ -452,7 +410,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
                                 </div>
                             </div>
 
-                            {/* Live conversion display */}
                             {bidInput && ethUsd && (
                                 <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                                     <div className="text-xs text-gray-600 dark:text-gray-400">
@@ -468,7 +425,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
                     )}
                 </div>
 
-                {/* Bid Summary */}
                 {(bidAmountWei > BigInt(0) || (usePresetIncrement && suggestedBidWei > BigInt(0))) && (
                     <div className="mb-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
                         <div className="flex items-center justify-between mb-2">
@@ -506,7 +462,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
                     </div>
                 )}
 
-                {/* Balance Warning */}
                 {userBalance !== undefined && bidAmountWei > userBalance && (
                     <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
                         <div className="flex items-center gap-2 text-red-800 dark:text-red-200">
@@ -516,7 +471,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
                     </div>
                 )}
 
-                {/* Error Display */}
                 {error && (
                     <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
                         <div className="flex items-center gap-2 text-red-800 dark:text-red-200">
@@ -526,7 +480,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
                     </div>
                 )}
 
-                {/* Success Display */}
                 {currentStep === 'success' && txHash && (
                     <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
                         <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
@@ -539,7 +492,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
                     </div>
                 )}
 
-                {/* Action Buttons */}
                 <div className="flex gap-3 justify-end">
                     <button
                         type="button"
@@ -563,7 +515,6 @@ const PlaceBidModal = memo(function PlaceBidModal({
                     )}
                 </div>
 
-                {/* Additional Info */}
                 <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
                     💡 Your bid will be locked until auction ends
                 </div>

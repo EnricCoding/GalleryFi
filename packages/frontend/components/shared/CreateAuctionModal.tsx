@@ -25,19 +25,13 @@ const CreateAuctionModal = memo(function CreateAuctionModal({
     const {
         durationHours,
         setDurationHours,
-
-        // Process state
         currentStep,
         isProcessing,
         isSuccess,
         hasError,
         error,
         txHash,
-
-        // Actions
         confirmCreate,
-
-        // Computed properties
         canCreate,
     } = useCreateAuction({
         nft,
@@ -47,7 +41,6 @@ const CreateAuctionModal = memo(function CreateAuctionModal({
         onStatus,
     });
 
-    // Updated step config to match actual hook steps
     const stepConfigMap = {
         idle: { label: 'Ready', icon: '⏱️', color: 'text-gray-500' },
         approval: { label: 'Approving NFT', icon: '✅', color: 'text-purple-500' },
@@ -68,7 +61,6 @@ const CreateAuctionModal = memo(function CreateAuctionModal({
         }
     };
 
-    // Calculate duration display
     const durationValue = DURATION_PRESETS[durationHours];
     const durationInDays = durationValue ? Math.round(durationValue.hours / 24 * 10) / 10 : 0;
 
@@ -83,7 +75,6 @@ const CreateAuctionModal = memo(function CreateAuctionModal({
 
             <div className="relative bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-gray-200/60 dark:border-gray-700/60 transform transition-all duration-200 scale-100">
 
-                {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                         Create Auction ⚡
@@ -97,7 +88,6 @@ const CreateAuctionModal = memo(function CreateAuctionModal({
                     </button>
                 </div>
 
-                {/* Progress Indicator */}
                 {currentStep !== 'idle' && (
                     <div className="mb-6">
                         <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 ${currentStepConfig.color}`}>
@@ -108,13 +98,11 @@ const CreateAuctionModal = memo(function CreateAuctionModal({
                     </div>
                 )}
 
-                {/* Duration Selection */}
                 <div className="space-y-4 mb-6">
                     <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                         📅 Auction Duration
                     </h4>
 
-                    {/* Preset Buttons */}
                     <div className="grid grid-cols-3 gap-2">
                         {Object.entries(DURATION_PRESETS).map(([key, preset]) => (
                             <button
@@ -133,7 +121,6 @@ const CreateAuctionModal = memo(function CreateAuctionModal({
                     </div>
                 </div>
 
-                {/* Current Selection Display */}
                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                     <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -150,7 +137,6 @@ const CreateAuctionModal = memo(function CreateAuctionModal({
                     )}
                 </div>
 
-                {/* Error Display */}
                 {hasError && error && (
                     <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
                         <div className="flex items-center gap-2 text-red-800 dark:text-red-200">
@@ -160,7 +146,6 @@ const CreateAuctionModal = memo(function CreateAuctionModal({
                     </div>
                 )}
 
-                {/* Success Display */}
                 {isSuccess && txHash && (
                     <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
                         <div className="flex items-center gap-2 text-green-800 dark:text-green-200">
@@ -173,7 +158,6 @@ const CreateAuctionModal = memo(function CreateAuctionModal({
                     </div>
                 )}
 
-                {/* Action Buttons */}
                 <div className="flex gap-3 justify-end">
                     <button
                         type="button"
@@ -198,7 +182,6 @@ const CreateAuctionModal = memo(function CreateAuctionModal({
                     )}
                 </div>
 
-                {/* Additional Info */}
                 <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
                     💡 Your NFT will be locked during the auction period
                 </div>

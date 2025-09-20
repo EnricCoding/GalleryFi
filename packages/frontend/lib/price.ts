@@ -1,4 +1,3 @@
-// lib/price.ts
 export interface PriceData {
   ethereum: {
     usd: number;
@@ -7,12 +6,11 @@ export interface PriceData {
 
 let cachedPrice: number | null = null;
 let lastFetch = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+const CACHE_DURATION = 5 * 60 * 1000;
 
 export async function getEthToUsdPrice(): Promise<number> {
   const now = Date.now();
   
-  // Si tenemos precio en caché y no ha expirado, lo usamos
   if (cachedPrice && (now - lastFetch) < CACHE_DURATION) {
     return cachedPrice;
   }
@@ -21,7 +19,7 @@ export async function getEthToUsdPrice(): Promise<number> {
     const response = await fetch(
       'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
       {
-        next: { revalidate: 300 }, // Cache por 5 minutos
+        next: { revalidate: 300 }, 
       }
     );
 
@@ -32,7 +30,6 @@ export async function getEthToUsdPrice(): Promise<number> {
     const data: PriceData = await response.json();
     const price = data.ethereum.usd;
     
-    // Actualizamos el caché
     cachedPrice = price;
     lastFetch = now;
     
@@ -40,12 +37,10 @@ export async function getEthToUsdPrice(): Promise<number> {
   } catch (error) {
     console.warn('Failed to fetch ETH price:', error);
     
-    // Si hay error pero tenemos precio en caché, lo usamos aunque esté expirado
     if (cachedPrice) {
       return cachedPrice;
     }
     
-    // Precio de fallback aproximado
     return 2450;
   }
 }
@@ -57,7 +52,6 @@ export function formatUsdPrice(ethAmount: string, ethPriceUsd: number): string {
     
     const usdValue = ethValue * ethPriceUsd;
     
-    // Formateo según el valor
     if (usdValue >= 1000000) {
       return `~$${(usdValue / 1000000).toFixed(1)}M USD`;
     } else if (usdValue >= 1000) {

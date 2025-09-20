@@ -417,7 +417,6 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                     >
                         <span className="relative z-10 flex items-center justify-center gap-2.5">
                             {listing.auction?.isActive ? (
-                                // ✅ NEW: Auction button
                                 <>
                                     <svg className="w-4 h-4 transition-all duration-300 group-hover/btn:scale-110" 
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -430,7 +429,6 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                                     <span className="text-lg">🔥</span>
                                 </>
                             ) : (
-                                // ✅ EXISTING: Buy button
                                 <>
                                     <svg className="w-4 h-4 transition-all duration-300 group-hover/btn:scale-110 group-hover/btn:rotate-12"
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">

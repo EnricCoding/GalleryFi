@@ -81,7 +81,7 @@ export default function MintListForm({ nftAddress, marketAddress, expectedChainI
 
     const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const v = e.target.value;
-        if (!/^[\d.]*$/.test(v)) return; // sólo dígitos y punto
+        if (!/^[\d.]*$/.test(v)) return; 
         setPriceEth(v);
         setErrors((p) => ({ ...p, price: validatePrice(v) }));
     };

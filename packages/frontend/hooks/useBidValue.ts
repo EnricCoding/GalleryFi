@@ -30,7 +30,7 @@ type UseBidAuctionParams = {
   nft?: `0x${string}`;
   tokenId: string | number | bigint;
   currentBidWei?: bigint;
-  auctionEndTime?: number; // timestamp in seconds
+  auctionEndTime?: number; 
   onBidded?: (txHash: `0x${string}`, bidAmount: bigint) => void;
   onStatus?: (status: string, type?: 'info' | 'success' | 'error') => void;
   enabled?: boolean;
@@ -115,10 +115,9 @@ export function useBidAuction({
       nft !== '0x0000000000000000000000000000000000000000' &&
       isConnected &&
       userBalance > minBidWei
-    ); // Has enough balance
+    ); 
   }, [enabled, MARKET, nft, tokenIdBig, isConnected, userBalance, minBidWei]);
 
-  // Calculate suggested bid amount
   const suggestedBidWei = useMemo(() => {
     if (usePresetIncrement) {
       const incrementWei = parseEther(BID_PRESETS[selectedPreset].increment);
@@ -169,7 +168,7 @@ export function useBidAuction({
   }, [canBid, isConnected, isAuctionEnded, openConnectModal, onStatus, resetState]);
 
   const closeModal = useCallback(() => {
-    if (isProcessing) return; // Don't close during processing
+    if (isProcessing) return; 
     setOpen(false);
     resetState();
   }, [isProcessing, resetState]);
@@ -178,7 +177,6 @@ export function useBidAuction({
     try {
       resetState();
 
-      // Validation
       if (!publicClient) {
         throw new Error('RPC client not available');
       }
@@ -215,13 +213,11 @@ export function useBidAuction({
         throw new Error('Insufficient balance for this bid');
       }
 
-      // Network check
       if (chainId !== EXPECTED_CHAIN_ID) {
         onStatus?.('Switching network…', 'info');
         await switchChainAsync?.({ chainId: EXPECTED_CHAIN_ID });
       }
 
-      // Place bid
       setCurrentStep('bidding');
       onStatus?.('Placing bid…', 'info');
 
@@ -240,9 +236,8 @@ export function useBidAuction({
         throw new Error('Bid transaction reverted');
       }
 
-      // Success!
       setCurrentStep('success');
-      onStatus?.('✅ Bid placed successfully!', 'success');
+      onStatus?.('Bid placed successfully!', 'success');
       setOpen(false);
       onBidded?.(tx, valueWei);
     } catch (error: unknown) {
@@ -288,44 +283,29 @@ export function useBidAuction({
   ]);
 
   return {
-    // Modal state
     open,
-
-    // Bid input
     bidInput,
     setBidInput,
-
-    // Preset system
     usePresetIncrement,
     setUsePresetIncrement,
     selectedPreset,
     setSelectedPreset,
     bidPresets: BID_PRESETS,
-
-    // Process state
     currentStep,
     isProcessing,
     isSuccess,
     hasError,
     error,
     txHash,
-
-    // Bid calculations
     minBidWei,
     minBidEth,
     suggestedBidWei,
     suggestedBidEth,
-
-    // User state
     userBalance,
     userBalanceEth,
     canBid,
-
-    // Auction state
     timeRemaining,
     isAuctionEnded,
-
-    // Actions
     openModal,
     closeModal,
     confirmBid,

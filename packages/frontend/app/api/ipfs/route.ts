@@ -23,20 +23,20 @@ export async function POST(req: NextRequest) {
     const name = rawName.trim().slice(0, 80);
     const description = rawDescription.trim().slice(0, 1000);
 
-    if (!file) return NextResponse.json({ error: 'Falta archivo.' }, { status: 400 });
-    if (!name) return NextResponse.json({ error: 'El nombre es obligatorio.' }, { status: 400 });
+    if (!file) return NextResponse.json({ error: 'File is needed' }, { status: 400 });
+    if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
 
     const ALLOWED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
     if (!ALLOWED_TYPES.has(file.type)) {
       return NextResponse.json(
-        { error: `Tipo no permitido (${file.type}). Usa PNG, JPEG, WEBP o GIF.` },
+        { error: `Tipo no permitido (${file.type}). Use PNG, JPEG, WEBP o GIF.` },
         { status: 400 },
       );
     }
     const MAX_MB = 15;
     if (file.size > MAX_MB * 1024 * 1024) {
       return NextResponse.json(
-        { error: `Archivo demasiado grande. Máximo ${MAX_MB}MB.` },
+        { error: `File too large. Maximum ${MAX_MB}MB.` },
         { status: 413 },
       );
     }

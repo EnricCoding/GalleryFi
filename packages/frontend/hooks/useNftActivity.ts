@@ -121,11 +121,10 @@ export function useNftActivity(nft: `0x${string}`, tokenIdBig: bigint | null) {
   const { data: subgraphData, loading: subgraphLoading, refetch } = useQuery(NFT_ACTIVITY, {
     variables: { nft: nft.toLowerCase(), tokenId: tokenIdBig?.toString() },
     skip: !tokenIdBig,
-    fetchPolicy: 'cache-first', // Use cache first for better performance
-    // Reduced polling frequency for better performance
-    pollInterval: 30000, // Reduced from 5s to 30s for normal usage
-    errorPolicy: 'all', // Don't fail on partial data
-    notifyOnNetworkStatusChange: false, // Reduce unnecessary re-renders
+    fetchPolicy: 'cache-first', 
+    pollInterval: 30000, 
+    errorPolicy: 'all', 
+    notifyOnNetworkStatusChange: false, 
   });
 
   const { data: debugBidsData } = useQuery(gql`
@@ -146,14 +145,12 @@ export function useNftActivity(nft: `0x${string}`, tokenIdBig: bigint | null) {
     errorPolicy: 'all',
   });
 
-  // Log debug bids data
   const activity = toActivity({
     listings: subgraphData?.listings,
     sales: subgraphData?.sales,
     bids: subgraphData?.bids,
   });
 
-  // Direct subgraph connectivity test (run once)
   if (typeof window !== 'undefined' && !subgraphLoading && tokenIdBig) {
     const w = window as Window & { galleryfiSubgraphTested?: boolean };
     if (!w.galleryfiSubgraphTested) {
@@ -185,11 +182,10 @@ export function useNftActivity(nft: `0x${string}`, tokenIdBig: bigint | null) {
         
         const result = await response.json();
         
-        const currentEthBlock = 9069669; // Your recent bid block
+        const currentEthBlock = 9069669; 
         const subgraphBlock = result.data?._meta?.block?.number || 0;
         const blockDiff = currentEthBlock - subgraphBlock;
 
-        // Alert if subgraph is way behind
         if (blockDiff > 1000) {
           console.warn(`Subgraph is ${blockDiff} blocks behind! This explains why recent bids don't appear.`);
         } else if (blockDiff > 100) {
@@ -203,23 +199,20 @@ export function useNftActivity(nft: `0x${string}`, tokenIdBig: bigint | null) {
       }
     };
     
-    setTimeout(testSubgraphConnectivity, 3000); // Increased delay from 1s to 3s
+    setTimeout(testSubgraphConnectivity, 3000); 
     }
   }
 
-  // Enhanced refetch with fresh network data and cache invalidation
   const refetchActivity = async () => {
     try {
-      // First try network-only to get fresh data
       const result = await refetch({
-        fetchPolicy: 'network-only', // Force fresh data from network
+        fetchPolicy: 'network-only',
       });
       
       return result;
     } catch (error) {
       console.warn('Network-only refetch failed, trying cache-first fallback:', error);
       try {
-        // Fallback to regular refetch if network-only fails
         return await refetch();
       } catch (fallbackError) {
         console.error('All refetch attempts failed:', fallbackError);

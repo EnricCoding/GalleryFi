@@ -1,4 +1,3 @@
-// lib/validation.ts
 export const ALLOWED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
 export const MAX_MB = 15;
 

@@ -1,7 +1,3 @@
-/**
- * Simple Ownership Display - Clean & Professional
- */
-
 import React from 'react';
 
 interface PerfectOwnershipDisplayProps {

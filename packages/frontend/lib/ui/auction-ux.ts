@@ -1,11 +1,5 @@
-/**
- * UX utilities for auction interface
- * Provides consistent messaging, icons, and styling for all auction states
- */
-
 import { type AuctionData, type OwnershipState, type AuctionActionValidity, AuctionUtils } from '@/types/auction';
 
-// Visual theme configuration for different auction states
 export const AUCTION_THEMES = {
   live: {
     color: 'green',
@@ -37,7 +31,6 @@ export const AUCTION_THEMES = {
   },
 } as const;
 
-// User-friendly status messages with clear, contextual descriptions
 export const AUCTION_STATUS_MESSAGES = {
   live: {
     title: 'Live Auction',
@@ -61,7 +54,6 @@ export const AUCTION_STATUS_MESSAGES = {
   },
 } as const;
 
-// Enhanced time formatting with urgency indicators
 export function formatTimeWithUrgency(timeLeftMs: number): {
   formatted: string;
   urgency: 'critical' | 'urgent' | 'normal';
@@ -79,7 +71,7 @@ export function formatTimeWithUrgency(timeLeftMs: number): {
     };
   }
   
-  if (seconds < 60) { // Less than 1 minute
+  if (seconds < 60) { 
     return {
       formatted: `${seconds}s`,
       urgency: 'critical',
@@ -88,7 +80,7 @@ export function formatTimeWithUrgency(timeLeftMs: number): {
     };
   }
   
-  if (seconds < 300) { // Less than 5 minutes
+  if (seconds < 300) { 
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return {
@@ -99,7 +91,6 @@ export function formatTimeWithUrgency(timeLeftMs: number): {
     };
   }
   
-  // Normal time display
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const remainingSecs = seconds % 60;
@@ -121,7 +112,6 @@ export function formatTimeWithUrgency(timeLeftMs: number): {
   };
 }
 
-// Enhanced ownership messaging
 export function getOwnershipMessage(ownershipState: OwnershipState): {
   title: string;
   description: string;

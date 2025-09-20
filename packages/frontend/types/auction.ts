@@ -1,18 +1,12 @@
-/**
- * Enhanced types and utilities for auction system
- */
-
 import { ZERO_ADDRESS } from '@/config/contracts';
 
-// Core auction data type (from smart contract)
 export type AuctionData = {
   seller: `0x${string}`;
-  end: bigint; // seconds timestamp
-  bid: bigint; // wei
+  end: bigint; 
   bidder: `0x${string}`;
+  bid: bigint;
 };
 
-// Enhanced auction status
 export type AuctionStatus = 
   | 'none'           // No auction exists
   | 'live'           // Active auction
@@ -20,7 +14,6 @@ export type AuctionStatus =
   | 'settled'        // Completed and settled
   | 'cancelled';     // Cancelled by seller
 
-// Auction action validation results
 export type AuctionActionValidity = {
   canCreate: boolean;
   canBid: boolean;
@@ -34,40 +27,27 @@ export type AuctionActionValidity = {
   };
 };
 
-// Ownership state breakdown
 export type OwnershipState = {
-  // Direct blockchain ownership
   isDirectOwner: boolean;
-  
-  // NFT is in marketplace escrow
   isInMarketplaceEscrow: boolean;
-  
-  // User created the auction (seller)
   isAuctionSeller: boolean;
-  
-  // User has the winning bid
   isWinningBidder: boolean;
-  
-  // Computed states for UI
-  hasControlRights: boolean;  // Can manage the NFT
-  canViewAsOwner: boolean;    // Show "owner" UI elements
+  hasControlRights: boolean;  
+  canViewAsOwner: boolean;    
 };
 
-// Time calculations
 export type AuctionTiming = {
   timeLeftMs: number;
   timeLeftSeconds: number;
   hasExpired: boolean;
-  isUrgent: boolean; // Less than 5 minutes
-  isCritical: boolean; // Less than 1 minute
+  isUrgent: boolean; 
+  isCritical: boolean;
   formattedTime: string;
 };
 
 // Utility functions
 export class AuctionUtils {
-  /**
-   * Determines if an auction exists and is valid
-   */
+
   static isValidAuction(auction: AuctionData | null): auction is AuctionData {
     const isValid = !!(
       auction && 
@@ -79,9 +59,7 @@ export class AuctionUtils {
     return isValid;
   }
 
-  /**
-   * Calculates current auction status
-   */
+ 
   static getAuctionStatus(auction: AuctionData | null): AuctionStatus {
     if (!this.isValidAuction(auction)) {
       return 'none';
@@ -97,9 +75,6 @@ export class AuctionUtils {
     }
   }
 
-  /**
-   * Calculates timing information
-   */
   static getAuctionTiming(auction: AuctionData | null): AuctionTiming {
     if (!this.isValidAuction(auction)) {
       return {
@@ -118,8 +93,8 @@ export class AuctionUtils {
     const timeLeftSeconds = Math.floor(timeLeftMs / 1000);
     
     const hasExpired = timeLeftMs === 0;
-    const isUrgent = timeLeftSeconds < 300; // 5 minutes
-    const isCritical = timeLeftSeconds < 60; // 1 minute
+    const isUrgent = timeLeftSeconds < 300; 
+    const isCritical = timeLeftSeconds < 60;
 
     const formattedTime = this.formatTimeRemaining(timeLeftSeconds);
 
@@ -133,9 +108,6 @@ export class AuctionUtils {
     };
   }
 
-  /**
-   * Formats time remaining in human readable format
-   */
   static formatTimeRemaining(seconds: number): string {
     if (seconds <= 0) return 'Ended';
     
@@ -152,9 +124,6 @@ export class AuctionUtils {
     }
   }
 
-  /**
-   * Determines ownership state for a user
-   */
   static getOwnershipState(
     userAddress: `0x${string}` | undefined,
     onchainOwner: `0x${string}` | undefined,
@@ -182,10 +151,8 @@ export class AuctionUtils {
       auction.bid > BigInt(0) &&
       userAddress.toLowerCase() === auction.bidder.toLowerCase();
 
-    // Control rights: direct owner OR seller of active auction
     const hasControlRights = isDirectOwner || (isInMarketplaceEscrow && isAuctionSeller);
     
-    // UI ownership: direct owner OR auction seller (for UX clarity)
     const canViewAsOwner = isDirectOwner || isAuctionSeller;
 
     return {
@@ -198,9 +165,6 @@ export class AuctionUtils {
     };
   }
 
-  /**
-   * Validates what actions a user can take
-   */
   static validateAuctionActions(
     userAddress: `0x${string}` | undefined,
     auction: AuctionData | null,
@@ -234,7 +198,6 @@ export class AuctionUtils {
       return result;
     }
 
-    // Create auction
     if (status === 'none') {
       if (ownershipState.isDirectOwner) {
         result.canCreate = true;
@@ -245,7 +208,6 @@ export class AuctionUtils {
       result.reasons.create = 'Auction already exists';
     }
 
-    // Bid on auction
     if (status === 'live') {
       if (ownershipState.isAuctionSeller) {
         result.reasons.bid = 'Cannot bid on your own auction';
@@ -258,7 +220,6 @@ export class AuctionUtils {
       result.reasons.bid = 'No active auction';
     }
 
-    // End auction
     if (status === 'ended') {
       if (ownershipState.isAuctionSeller) {
         result.canEnd = true;
@@ -275,7 +236,6 @@ export class AuctionUtils {
       result.reasons.end = 'Auction not ready to end';
     }
 
-    // Cancel auction
     if (status === 'live') {
       if (!ownershipState.isAuctionSeller) {
         result.reasons.cancel = 'Only auction seller can cancel';
@@ -291,16 +251,11 @@ export class AuctionUtils {
     return result;
   }
 
-  /**
-   * Calculates minimum required bid
-   */
   static getMinimumBid(currentBid: bigint, minIncrementWei: bigint): bigint {
     return currentBid > BigInt(0) ? currentBid + minIncrementWei : minIncrementWei;
   }
 
-  /**
-   * Determines if auction has bids
-   */
+ 
   static hasBids(auction: AuctionData | null): boolean {
     return this.isValidAuction(auction) && 
            auction.bid > BigInt(0) &&

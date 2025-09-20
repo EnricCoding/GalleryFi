@@ -12,13 +12,10 @@ import { useCancelAuction } from '@/hooks/useCancelAuction';
 type AuctionStatus = 'not_started' | 'live' | 'ended' | 'cancelled';
 
 type AuctionActionBarProps = {
-  // NFT Information
   nft: `0x${string}`;
   tokenId: string | number | bigint;
-  
-  // Auction State
   currentBidWei?: bigint;
-  auctionEndTime?: number; // timestamp in seconds
+  auctionEndTime?: number;
   status: AuctionStatus;
   isOwner?: boolean;
   hasBids?: boolean;
@@ -95,7 +92,7 @@ const AuctionActionBar = memo(function AuctionActionBar({
   const endAuction = useEndAuction({
     nft,
     tokenId,
-    auctionEndTime: auctionEndTime ? auctionEndTime * 1000 : undefined, // Convert to ms
+    auctionEndTime: auctionEndTime ? auctionEndTime * 1000 : undefined,
     isOwner,
     onEnded: onAuctionEnded,
     onStatus,
@@ -126,16 +123,13 @@ const AuctionActionBar = memo(function AuctionActionBar({
     return () => clearInterval(interval);
   }, [status]);
 
-  // Notifications
   useEffect(() => {
     if (!enableNotifications || status !== 'live') return;
     
-    // Urgent notification when less than 5 minutes
     if (timeRemaining > 0 && timeRemaining < 300 && timeRemaining % 60 === 0) {
       onStatus?.(`Auction ending in ${Math.ceil(timeRemaining / 60)} minutes!`, 'info');
     }
     
-    // Final countdown
     if (timeRemaining === 30) {
       onStatus?.('30 seconds left!', 'info');
     }
@@ -265,10 +259,8 @@ const AuctionActionBar = memo(function AuctionActionBar({
         </div>
       )}
 
-      {/* Action Buttons */}
       <div className="flex flex-wrap gap-3 justify-end">
         
-        {/* Create Auction */}
         {canCreate && (
           <button
             onClick={handleCreateAuction}
@@ -289,7 +281,6 @@ const AuctionActionBar = memo(function AuctionActionBar({
           </button>
         )}
 
-        {/* Place Bid */}
         {canBid && (
           <button
             onClick={handlePlaceBid}
@@ -310,7 +301,6 @@ const AuctionActionBar = memo(function AuctionActionBar({
           </button>
         )}
 
-        {/* End Auction */}
         {canEnd && (
           <button
             onClick={handleEndAuction}
@@ -331,7 +321,6 @@ const AuctionActionBar = memo(function AuctionActionBar({
           </button>
         )}
 
-        {/* Cancel Auction */}
         {canCancel && (
           <button
             onClick={handleCancelAuction}
@@ -352,7 +341,6 @@ const AuctionActionBar = memo(function AuctionActionBar({
           </button>
         )}
 
-        {/* Connection Required */}
         {!isConnected && (canBid || canCreate) && (
           <button
             onClick={() => onStatus?.('Please connect your wallet to continue', 'info')}
@@ -366,7 +354,6 @@ const AuctionActionBar = memo(function AuctionActionBar({
         )}
       </div>
 
-      {/* Status Messages */}
       {showAdvancedInfo && (
         <div className="mt-4 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">
           💡 {status === 'live' 

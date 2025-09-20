@@ -9,7 +9,6 @@ import NftJson from '@/utils/abi/MyNFT.json';
 const MarketAbi = MarketJson.abi;
 const NftAbi = NftJson.abi;
 
-// Duration presets for better UX
 export const DURATION_PRESETS = {
   '1': { hours: 1, label: '1 Hour' },
   '3': { hours: 3, label: '3 Hours' },
@@ -42,9 +41,8 @@ export function useCreateAuction({
   enabled = true,
 }: UseCreateAuctionParams) {
   const MARKET = process.env.NEXT_PUBLIC_MARKET_ADDRESS as `0x${string}` | undefined;
-  const EXPECTED_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? '11155111'); // Sepolia
+  const EXPECTED_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? '11155111'); 
 
-  // Validation warnings
   if (!MARKET) {
     console.warn('[useCreateAuction] Missing NEXT_PUBLIC_MARKET_ADDRESS');
   }
@@ -56,16 +54,14 @@ export function useCreateAuction({
   const { writeContractAsync } = useWriteContract();
   const { openConnectModal } = useConnectModal();
 
-  // Enhanced UI state
   const [open, setOpen] = useState(false);
-  const [durationHours, setDurationHours] = useState<DurationPreset>('24'); // Default to 1 day
+  const [durationHours, setDurationHours] = useState<DurationPreset>('24');
   const [customDuration, setCustomDuration] = useState<string>('');
   const [useCustomDuration, setUseCustomDuration] = useState(false);
   const [currentStep, setCurrentStep] = useState<CreateAuctionStep>('idle');
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
 
-  // Normalize tokenId
   const tokenIdBig = useMemo(() => {
     try {
       return BigInt(tokenId);
@@ -75,7 +71,6 @@ export function useCreateAuction({
     }
   }, [tokenId]);
 
-  // Enhanced computed properties
   const canCreate = useMemo(() => {
     return enabled && 
            isOwner && 
@@ -89,13 +84,12 @@ export function useCreateAuction({
   const isSuccess = currentStep === 'success';
   const hasError = currentStep === 'error' || !!error;
 
-  // Get effective duration in seconds
   const durationSeconds = useMemo(() => {
     if (useCustomDuration) {
       const customHours = parseFloat(customDuration);
       return Number.isFinite(customHours) && customHours >= 1 
         ? Math.floor(customHours * 3600) 
-        : 3600; // Default to 1 hour if invalid
+        : 3600; 
     }
     return DURATION_PRESETS[durationHours].hours * 3600;
   }, [useCustomDuration, customDuration, durationHours]);
@@ -113,14 +107,14 @@ export function useCreateAuction({
       return;
     }
     resetState();
-    setDurationHours('24'); // Reset to default
+    setDurationHours('24'); 
     setUseCustomDuration(false);
     setCustomDuration('');
     setOpen(true);
   }, [canCreate, isConnected, openConnectModal, resetState]);
 
   const closeModal = useCallback(() => {
-    if (isProcessing) return; // Don't close during processing
+    if (isProcessing) return;
     setOpen(false);
     resetState();
   }, [isProcessing, resetState]);
@@ -129,7 +123,6 @@ export function useCreateAuction({
     try {
       resetState();
       
-      // Validation
       if (!publicClient) {
         throw new Error('RPC client not available');
       }
@@ -149,13 +142,11 @@ export function useCreateAuction({
         throw new Error('Duration must be at least 1 hour');
       }
 
-      // Network check
       if (chainId !== EXPECTED_CHAIN_ID) {
         onStatus?.('Switching network…', 'info');
         await switchChainAsync?.({ chainId: EXPECTED_CHAIN_ID });
       }
 
-      // Step 1: Check and handle approval
       setCurrentStep('approval');
       onStatus?.('Checking approval…', 'info');
 
@@ -178,7 +169,6 @@ export function useCreateAuction({
         onStatus?.('Approval confirmed', 'info');
       }
 
-      // Step 2: Create auction
       setCurrentStep('creating');
       onStatus?.('Creating auction…', 'info');
       
@@ -196,7 +186,6 @@ export function useCreateAuction({
         throw new Error('Auction transaction reverted');
       }
 
-      // Success!
       setCurrentStep('success');
       onStatus?.('✅ Auction created successfully!', 'success');
       setOpen(false);
@@ -240,10 +229,7 @@ export function useCreateAuction({
   ]);
 
   return {
-    // Modal state
     open,
-    
-    // Duration settings
     durationHours,
     setDurationHours,
     customDuration,
@@ -252,19 +238,13 @@ export function useCreateAuction({
     setUseCustomDuration,
     durationSeconds,
     durationPresets: DURATION_PRESETS,
-    
-    // Process state
     currentStep,
     isProcessing,
     isSuccess,
     hasError,
     error,
     txHash,
-    
-    // Computed properties
     canCreate,
-    
-    // Actions
     openModal,
     closeModal,
     confirmCreate,

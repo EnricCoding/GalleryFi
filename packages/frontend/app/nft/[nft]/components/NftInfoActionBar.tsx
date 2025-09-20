@@ -1,4 +1,3 @@
-// NftInfoActionBar.tsx
 'use client';
 
 import React from 'react';
@@ -10,8 +9,6 @@ type Props = {
     showBuyButton: boolean;
     showListButton: boolean;
     showOfferDisabled: boolean;
-
-    // NUEVO (editar precio + cancelar)
     showCancelButton?: boolean;
     showEditButton?: boolean;
     onCancelClick?: () => void;

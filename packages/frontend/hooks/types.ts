@@ -1,13 +1,10 @@
-// hooks/types.ts
 import type { Address, ChainId } from '@/lib/types/common';
 import type { OnchainListingTuple, OnchainAuctionTuple } from '@/lib/types/onchain';
 import type { SgNftActivityResponse } from '@/lib/types/subgraph';
 import type { NftMetadata } from '@/lib/types/metadata';
 import type { UiActivityItem } from '@/lib/types/activity';
 
-/** Salida del agregador useNftData (la API que consume NftDetail) */
 export interface UseNftDataResult {
-  // Derivados
   meta: NftMetadata | null;
   imgUrl: string | null;
   ethUsd: number | null;
@@ -34,7 +31,6 @@ export interface UseNftDataResult {
   MARKET: Address;
 }
 
-/** Salida de useOnchainNft (hook base on-chain) */
 export interface UseOnchainNftResult {
   MARKET: Address;
   tokenIdBig: bigint | null;

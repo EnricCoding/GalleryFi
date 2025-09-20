@@ -35,21 +35,17 @@ export default function ExplorePage() {
         [page, orderBy, orderDirection],
     );
 
-    // Hook: pasamos el flag onlyListed en opts
     const { data, isLoading, isFetching, error, refetch } = useListings(params, { onlyListed });
     const listings = data?.listings ?? [];
     
     const totalCount = data?.totalCount ?? 0;
     
-    // Calcular total de páginas
     const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-    // Si cambian los filtros (onlyListed o sort), vuelve a página 1
     useEffect(() => {
         setPage(1);
     }, [onlyListed, sort]);
 
-    // Prefetch de la siguiente página con los mismos filtros y orden
     useEffect(() => {
         if (page < totalPages) {
             const nextParams = { ...params, skip: page * PAGE_SIZE };
@@ -60,7 +56,6 @@ export default function ExplorePage() {
         }
     }, [page, totalPages, params, onlyListed, queryClient]);
 
-    // Si la página actual queda vacía, retrocede
     useEffect(() => {
         if (!isLoading && !isFetching && page > 1 && listings.length === 0) {
             setPage((p) => Math.max(1, p - 1));
@@ -127,10 +122,8 @@ export default function ExplorePage() {
                     <>
                         <ListingsGrid listings={listings} />
 
-                        {/* Paginación */}
                         <nav className="mt-8" aria-label="Pagination">
                             <div className="flex items-center justify-between gap-4">
-                                {/* Botón Previous */}
                                 <button
                                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                                     disabled={page === 1 || isFetching}
@@ -144,7 +137,6 @@ export default function ExplorePage() {
                                     Previous
                                 </button>
 
-                                {/* Info central + navegación rápida */}
                                 <div className="flex flex-col items-center gap-2">
                                     <div className="flex flex-col items-center gap-1">
                                         <span className="text-sm text-neutral-600 dark:text-neutral-400">
@@ -156,10 +148,8 @@ export default function ExplorePage() {
                                         </span>
                                     </div>
                                     
-                                    {/* Navegación rápida de páginas (solo si hay más de 3 páginas) */}
                                     {totalPages > 3 && (
                                         <div className="flex items-center gap-1">
-                                            {/* Primera página */}
                                             {page > 2 && (
                                                 <>
                                                     <button
@@ -174,7 +164,6 @@ export default function ExplorePage() {
                                                 </>
                                             )}
                                             
-                                            {/* Página anterior */}
                                             {page > 1 && (
                                                 <button
                                                     onClick={() => setPage(page - 1)}
@@ -186,13 +175,11 @@ export default function ExplorePage() {
                                                 </button>
                                             )}
                                             
-                                            {/* Página actual */}
                                             <span className="w-8 h-8 text-sm rounded border-2 border-accent bg-accent text-white
                                                            flex items-center justify-center font-semibold">
                                                 {page}
                                             </span>
                                             
-                                            {/* Página siguiente */}
                                             {page < totalPages && (
                                                 <button
                                                     onClick={() => setPage(page + 1)}
@@ -204,7 +191,6 @@ export default function ExplorePage() {
                                                 </button>
                                             )}
                                             
-                                            {/* Última página */}
                                             {page < totalPages - 1 && (
                                                 <>
                                                     {page < totalPages - 2 && <span className="text-neutral-400">…</span>}
@@ -222,7 +208,6 @@ export default function ExplorePage() {
                                     )}
                                 </div>
 
-                                {/* Botón Next */}
                                 <button
                                     onClick={() => setPage((p) => p + 1)}
                                     disabled={page >= totalPages || isFetching}
@@ -244,7 +229,6 @@ export default function ExplorePage() {
     );
 }
 
-/** Encabezado con toggle “Only listed”, selector de orden y botón Refresh */
 function Header({
     onlyListed,
     setOnlyListed,
@@ -267,7 +251,6 @@ function Header({
             </h2>
 
             <div className="flex items-center gap-3">
-                {/* Toggle Only listed - Enhanced Design */}
                 <label className="flex items-center gap-3 select-none cursor-pointer group">
                     <span className={`text-sm font-medium transition-colors duration-200 ${
                         onlyListed 
@@ -294,12 +277,10 @@ function Header({
                             }
                         }}
                     >
-                        {/* Background glow effect when active */}
                         {onlyListed && (
                             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-accent-dark to-accent opacity-60 blur animate-pulse" />
                         )}
                         
-                        {/* Toggle thumb */}
                         <span
                             className={`relative inline-block h-5 w-5 transform rounded-full transition-all duration-300 ease-out
                                 ${onlyListed 
@@ -308,7 +289,6 @@ function Header({
                                 }
                                 group-hover:shadow-xl`}
                         >
-                            {/* Inner icon for active state */}
                             {onlyListed && (
                                 <svg 
                                     className="absolute inset-0 w-3 h-3 m-1 text-accent animate-pulse" 
@@ -320,7 +300,6 @@ function Header({
                             )}
                         </span>
                         
-                        {/* Active indicator text */}
                         {onlyListed && (
                             <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-bold text-accent-dark dark:text-accent animate-bounce">
                                 ON
@@ -328,7 +307,6 @@ function Header({
                         )}
                     </div>
                     
-                    {/* Helper text */}
                     <span className={`text-xs transition-all duration-200 ${
                         onlyListed 
                             ? 'text-accent-dark dark:text-accent font-medium animate-pulse' 
@@ -338,10 +316,8 @@ function Header({
                     </span>
                 </label>
 
-                {/* Selector de orden */}
                 <SortSelect value={sort} onChange={setSort} />
 
-                {/* Refresh */}
                 <button
                     onClick={onRefresh}
                     className="inline-flex items-center gap-2 bg-accent text-white font-medium px-4 py-2 rounded hover:bg-accent-dark transition disabled:opacity-60"

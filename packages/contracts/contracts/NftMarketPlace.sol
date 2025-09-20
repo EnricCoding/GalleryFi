@@ -1,4 +1,4 @@
-// SPDX‑License‑Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -10,12 +10,8 @@ import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-/**
- * @title NftMarketplace
- * @notice Listados fijos + subastas, royalties EIP‑2981, fee de plataforma y pull‑payments.
- */
+
 contract NftMarketplace is ReentrancyGuard, Pausable, Ownable, ERC721Holder {
-    /*──────────────────────── Config ───────────────────────*/
     uint96  public platformFeeBps;           // 250 = 2.5 %
     address public feeRecipient;
 
@@ -28,9 +24,9 @@ contract NftMarketplace is ReentrancyGuard, Pausable, Ownable, ERC721Holder {
 
     mapping(address => mapping(uint256 => Listing)) public listings;
     mapping(address => mapping(uint256 => Auction)) public auctions;
-    mapping(address => uint256)                     public proceeds; // pull pattern
+    mapping(address => uint256)                     public proceeds; 
 
-    /*──────────────────────── Eventos ──────────────────────*/
+    /*──────────────────────── Events ──────────────────────*/
     event ItemListed   (address indexed nft, uint256 id, address seller, uint256 price);
     event ItemPriceSet (address indexed nft, uint256 id, uint256 newPrice);
     event ItemDelisted (address indexed nft, uint256 id);
@@ -53,7 +49,6 @@ contract NftMarketplace is ReentrancyGuard, Pausable, Ownable, ERC721Holder {
         emit PlatformFeeUpdated(recipient, bps);
     }
 
-    /*──────────── Listados fijos ───────*/
     function listItem(address nft, uint256 id, uint96 price)
         external nonReentrant whenNotPaused
     {
@@ -97,7 +92,7 @@ contract NftMarketplace is ReentrancyGuard, Pausable, Ownable, ERC721Holder {
         emit ItemSold(nft, id, msg.value, msg.sender);
     }
 
-    /*──────────── Subastas ─────────────*/
+    /*──────────── Auctions ─────────────*/
     function createAuction(address nft, uint256 id, uint40 duration)
         external nonReentrant whenNotPaused
     {
@@ -126,7 +121,7 @@ contract NftMarketplace is ReentrancyGuard, Pausable, Ownable, ERC721Holder {
         require(block.timestamp < a.end, "ended");
         require(msg.value > a.bid, "low bid");
 
-        if (a.bid > 0) proceeds[a.bidder] += a.bid; // pull refund
+        if (a.bid > 0) proceeds[a.bidder] += a.bid; 
         a.bid    = uint96(msg.value);
         a.bidder = msg.sender;
         emit BidPlaced(nft, id, msg.sender, msg.value);
@@ -147,26 +142,21 @@ contract NftMarketplace is ReentrancyGuard, Pausable, Ownable, ERC721Holder {
         emit AuctionEnded(nft, id, a.bidder, a.bid);
     }
 
-    /*───────── Split royalties + fee ───*/
     function _splitAndStore(address nft, uint256 id, address seller, uint256 gross) private {
         uint256 amount = gross;
 
-        // 1) Royalties
         if (IERC165(nft).supportsInterface(type(IERC2981).interfaceId)) {
             (address recv, uint256 royalty) = IERC2981(nft).royaltyInfo(id, gross);
             if (royalty > 0) { amount -= royalty; proceeds[recv] += royalty; }
         }
-        // 2) Fee plataforma
         if (platformFeeBps > 0) {
             uint256 fee = (gross * platformFeeBps) / 10_000;
             amount -= fee;
             proceeds[feeRecipient] += fee;
         }
-        // 3) Vendedor
         proceeds[seller] += amount;
     }
 
-    /*───────── Retirada (pull‑payments) ─*/
     function withdrawProceeds() external nonReentrant {
         uint256 bal = proceeds[msg.sender];
         require(bal > 0, "0 balance");
@@ -176,16 +166,13 @@ contract NftMarketplace is ReentrancyGuard, Pausable, Ownable, ERC721Holder {
         emit ProceedsWithdrawn(msg.sender, bal);
     }
 
-    /*───────── Pausable ────────────────*/
     function pause()  external onlyOwner { _pause(); }
     function unpause() external onlyOwner { _unpause(); }
 
-    /*───────── Rescate de NFT ──────────*/
     function rescueNFT(address nft, uint256 id, address to) external onlyOwner {
         IERC721(nft).safeTransferFrom(address(this), to, id);
     }
 
-    /*───────── ETH fallback ────────────*/
     receive() external payable {}
 
 }

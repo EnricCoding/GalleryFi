@@ -7,9 +7,9 @@ import { useConnectModal } from '@rainbow-me/rainbowkit';
 type UseEndAuctionParams = {
   nft: `0x${string}`;
   tokenId: string | number | bigint;
-  auctionEndTime?: number; // timestamp in milliseconds
-  hasWinner?: boolean; // whether auction has bids
-  isOwner?: boolean; // whether user is auction creator
+  auctionEndTime?: number; 
+  hasWinner?: boolean;
+  isOwner?: boolean;
   onEnded?: (txHash: `0x${string}`, success: boolean) => void;
   onStatus?: (status: string) => void;
   enabled?: boolean;
@@ -45,7 +45,6 @@ export function useEndAuction({
   const MARKET = process.env.NEXT_PUBLIC_MARKET_ADDRESS as `0x${string}` | undefined;
   const EXPECTED_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? '11155111');
 
-  // Validation warnings
   if (!MARKET) {
     console.warn('[useEndAuction] Missing NEXT_PUBLIC_MARKET_ADDRESS');
   }
@@ -57,7 +56,6 @@ export function useEndAuction({
   const { writeContractAsync } = useWriteContract();
   const { openConnectModal } = useConnectModal();
 
-  // Normalize tokenId
   const tokenIdBig = useMemo(() => {
     try {
       return BigInt(tokenId);
@@ -67,13 +65,11 @@ export function useEndAuction({
     }
   }, [tokenId]);
 
-  // Enhanced UI state
   const [currentStep, setCurrentStep] = useState<EndAuctionStep>('idle');
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
   const [endReason, setEndReason] = useState<AuctionEndReason | null>(null);
 
-  // Computed properties
   const isNetworkCorrect = chainId === EXPECTED_CHAIN_ID;
   const canEnd = useMemo(() => {
     if (!auctionEndTime) {
@@ -96,25 +92,9 @@ export function useEndAuction({
 
   const endAuction = useCallback(async () => {
     try {
-      // Reset state
       setError(null);
       setTxHash(null);
       setEndReason(null);
-
-
-      console.debug('🔚 EndAuction Debug:', {
-        isConnected,
-        isReady,
-        canEnd,
-        auctionEndTime,
-        currentTime: Date.now(),
-        timeLeft: auctionEndTime ? auctionEndTime - Date.now() : 'N/A',
-        MARKET,
-        tokenIdBig: tokenIdBig.toString(),
-        enabled,
-        chainId,
-        expectedChainId: EXPECTED_CHAIN_ID,
-      });
 
       // Connection validation
       if (!isConnected) {
@@ -180,7 +160,6 @@ export function useEndAuction({
       setCurrentStep('pending');
       onStatus?.('Transaction submitted...');
 
-      // Wait for confirmation
       if (!publicClient) throw new Error('Public client not available');
 
       const receipt = await publicClient.waitForTransactionReceipt({
@@ -243,28 +222,20 @@ export function useEndAuction({
     setTxHash,
     setEndReason,
     auctionEndTime,
-    chainId,
     enabled,
     hasWinner,
   ]);
 
   return {
-    // Core functionality
     endAuction,
-
-    // State
     currentStep,
     error,
     txHash,
     endReason,
-
-    // Computed properties
     canEnd,
     isReady,
     isNetworkCorrect,
     isConnected,
-
-    // Status helpers
     isIdle: currentStep === 'idle',
     isPreparing: currentStep === 'preparing',
     isSwitchingNetwork: currentStep === 'switching_network',
@@ -273,8 +244,6 @@ export function useEndAuction({
     isSuccess: currentStep === 'success',
     isError: currentStep === 'error',
     isConnecting: currentStep === 'connect',
-
-    // Busy states
     isBusy: ['preparing', 'switching_network', 'confirming', 'pending'].includes(currentStep),
     busyEnd: ['preparing', 'switching_network', 'confirming', 'pending'].includes(currentStep), // Legacy compatibility
   };
