@@ -424,9 +424,10 @@ export default function NftDetail({ nft: contractAddress, tokenId }: NftDetailPr
             address,
             onchainOwner || undefined,
             marketplaceAddress,
-            auction
+            auction,
+            onchainListing || null  
         );
-    }, [address, onchainOwner, marketplaceAddress, auction]);
+    }, [address, onchainOwner, marketplaceAddress, auction, onchainListing]);
 
     const { seller, price, isOwner, isForSale, tokenExists, loading } = useMemo(() => {
         const derivedSeller = onchainListing?.seller;

@@ -67,6 +67,14 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         query: { enabled: !!MARKET_ADDRESS && !!nft && !!tokenId, refetchInterval: 30_000 },
     }) as { data: readonly [`0x${string}`, bigint] | undefined };
 
+    const { data: rawAuction } = useReadContract({
+        address: MARKET_ADDRESS,
+        abi: MarketAbi,
+        functionName: 'auctions',
+        args: [nft, BigInt(tokenId)],
+        query: { enabled: !!MARKET_ADDRESS && !!nft && !!tokenId, refetchInterval: 10_000 },
+    }) as { data: readonly [`0x${string}`, bigint, bigint, `0x${string}`] | undefined };
+
     // Normaliza el listing on-chain
     const onchainListing = useMemo(
         () =>
@@ -79,7 +87,30 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         [rawListing],
     );
 
-    // Eres owner on-chain (si hay escrow no lo serás)
+    const onchainAuction = useMemo(
+        () =>
+            rawAuction
+                ? { 
+                    seller: rawAuction[0], 
+                    end: rawAuction[1], 
+                    bid: rawAuction[2], 
+                    bidder: rawAuction[3] 
+                }
+                : undefined,
+        [rawAuction],
+    );
+
+    const isAuctionReallyActive = useMemo(() => {
+        if (!onchainAuction) return false;
+        
+        const auctionExists = onchainAuction.seller !== ZERO && Number(onchainAuction.end) > 0;
+        
+        const nowSeconds = Math.floor(Date.now() / 1000);
+        const isNotExpired = Number(onchainAuction.end) > nowSeconds;
+        
+        return auctionExists && isNotExpired;
+    }, [onchainAuction]);
+
     const isOwner =
         !!address && !!actualOwner && isAddressEqual(address as `0x${string}`, actualOwner);
 
@@ -93,13 +124,6 @@ export default function ListingCard({ listing }: { listing: Listing }) {
     // Disponible si hay listing válido con price>0
     const isAvailable =
         !!onchainListing && onchainListing.price > BigInt(0) && onchainListing.seller !== ZERO;
-
-    // Vendido si no está disponible y el owner ya no es el MARKET (ni el seller del listing)
-    const wasSold =
-        !isAvailable &&
-        !!actualOwner &&
-        !isAddressEqual(actualOwner, MARKET_ADDRESS as `0x${string}`) &&
-        (!onchainListing || !isAddressEqual(actualOwner, onchainListing.seller));
 
     useEffect(() => {
         let cancelled = false;
@@ -191,7 +215,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
 
                 <div className="absolute top-3 left-3 flex flex-col gap-2">
                     {/* ✅ NEW: Auction indicator - highest priority */}
-                    {listing.auction?.isActive && (
+                    {isAuctionReallyActive && (
                         <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold 
                              backdrop-blur-sm border bg-gradient-to-r from-purple-600/95 to-blue-600/95 
                              text-white border-purple-400/30 shadow-lg shadow-purple-500/40">
@@ -201,18 +225,16 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                     )}
 
                     {/* Status badge - only show if not in auction */}
-                    {!listing.auction?.isActive && (
+                    {!isAuctionReallyActive && (
                         <span
                             className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold 
                             backdrop-blur-sm border ${isAvailable
                                     ? 'bg-green-500/90 text-white border-green-400/20 shadow-lg shadow-green-500/25'
-                                    : wasSold
-                                        ? 'bg-blue-500/90 text-white border-blue-400/20 shadow-lg shadow-blue-500/25'
-                                        : 'bg-neutral-500/90 text-white border-neutral-400/20 shadow-lg shadow-neutral-500/25'
+                                    : 'bg-neutral-500/90 text-white border-neutral-400/20 shadow-lg shadow-neutral-500/25'
                                 }`}
                         >
                             <span className="w-1.5 h-1.5 bg-white rounded-full mr-2 animate-pulse" />
-                            {isAvailable ? 'Available' : wasSold ? 'Sold' : 'Unavailable'}
+                            {isAvailable ? 'Available' : 'Unlisted'}
                         </span>
                     )}
 
@@ -262,7 +284,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
 
                 {/* Price / Auction Info */}
                 <div className="flex items-end justify-between">
-                    {listing.auction?.isActive ? (
+                    {isAuctionReallyActive ? (
                         // ✅ NEW: Show auction info when in auction
                         <div className="space-y-1">
                             <p className="text-sm text-purple-600 dark:text-purple-400 font-medium flex items-center gap-1">
@@ -271,17 +293,17 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                             </p>
                             <div className="space-y-0.5">
                                 <p className="text-xl font-bold text-neutral-900 dark:text-neutral-50">
-                                    {listing.auction.currentBid && BigInt(listing.auction.currentBid) > BigInt(0)
-                                        ? `${formatEth(listing.auction.currentBid)} ETH`
+                                    {onchainAuction && onchainAuction.bid > BigInt(0)
+                                        ? `${formatEth(onchainAuction.bid.toString())} ETH`
                                         : 'No bids yet'
                                     }
                                 </p>
                                 <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                    {listing.auction.currentBid && BigInt(listing.auction.currentBid) > BigInt(0) ? (
+                                    {onchainAuction && onchainAuction.bid > BigInt(0) ? (
                                         loadingPrice ? (
                                             <span className="inline-block w-16 h-4 bg-neutral-200 dark:bg-neutral-600 rounded animate-pulse" />
                                         ) : ethPriceUsd ? (
-                                            formatUsdPrice(formatEth(listing.auction.currentBid), ethPriceUsd)
+                                            formatUsdPrice(formatEth(onchainAuction.bid.toString()), ethPriceUsd)
                                         ) : (
                                             '~$-- USD'
                                         )
@@ -311,17 +333,18 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                     )}
                     
                     <div className="text-right">
-                        {listing.auction?.isActive ? (
+                        {isAuctionReallyActive ? (
                             // ✅ NEW: Show time left for auction
                             <>
                                 <p className="text-xs text-purple-600 dark:text-purple-400 font-medium mb-1">Ends in</p>
                                 <span className="text-xs text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/30 px-2 py-1 rounded-md font-medium">
                                     {(() => {
-                                        if (!listing.auction.timeLeft || listing.auction.timeLeft <= 0) {
+                                        if (!onchainAuction || Number(onchainAuction.end) <= Math.floor(Date.now() / 1000)) {
                                             return 'Ended';
                                         }
-                                        const hours = Math.floor(listing.auction.timeLeft / (1000 * 60 * 60));
-                                        const minutes = Math.floor((listing.auction.timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                                        const timeLeftMs = (Number(onchainAuction.end) * 1000) - Date.now();
+                                        const hours = Math.floor(timeLeftMs / (1000 * 60 * 60));
+                                        const minutes = Math.floor((timeLeftMs % (1000 * 60 * 60)) / (1000 * 60));
                                         
                                         if (hours > 24) {
                                             const days = Math.floor(hours / 24);
@@ -368,7 +391,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                     <div className="flex-1">
                         <div className="flex items-center gap-2">
                             <p className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
-                                {wasSold ? 'Current Owner' : isOwner ? 'Owner' : 'Seller'}
+                                {isOwner ? 'Owner' : 'Seller'}
                             </p>
                             {(isOwner || isSeller) && (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-700/50">
@@ -380,13 +403,13 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                             className={`text-sm font-mono ${isOwner ? 'text-amber-700 dark:text-amber-300 font-semibold' : 'text-neutral-700 dark:text-neutral-300'
                                 }`}
                         >
-                            {wasSold && actualOwner ? shortAddr(actualOwner) : shortAddr(seller)}
+                            {shortAddr(seller)}
                         </p>
                     </div>
                 </div>
 
                 {/* Action Button */}
-                {!isOwner && !isSeller && (listing.auction?.isActive || isAvailable) && (
+                {!isOwner && !isSeller && (isAuctionReallyActive || isAvailable) && (
                     <button
                         type="button"
                         onClick={(e) => {
@@ -400,7 +423,7 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                             router.push(`/nft/${nft}/${tokenId}`);
                         }}
                         className={`w-full mt-4 group/btn relative overflow-hidden
-                       ${listing.auction?.isActive
+                       ${isAuctionReallyActive
                                 ? 'bg-gradient-to-r from-purple-600 via-purple-600 to-blue-600 hover:from-purple-700 hover:via-purple-700 hover:to-blue-700 border-purple-500/30 hover:border-purple-500/50 hover:shadow-purple-500/40'
                                 : 'bg-gradient-to-r from-accent via-accent to-accent-dark hover:from-accent-dark hover:via-accent hover:to-accent-light border-accent/30 hover:border-accent/50 hover:shadow-accent/40'
                             }
@@ -409,14 +432,14 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                        hover:shadow-xl
                        hover:scale-[1.02] active:scale-[0.98]
                        border
-                       focus:outline-none focus:ring-4 ${listing.auction?.isActive ? 'focus:ring-purple-500/20' : 'focus:ring-accent/20'}`}
+                       focus:outline-none focus:ring-4 ${isAuctionReallyActive ? 'focus:ring-purple-500/20' : 'focus:ring-accent/20'}`}
                         aria-label={isConnected 
-                            ? (listing.auction?.isActive ? 'Place bid' : 'Buy now')
+                            ? (isAuctionReallyActive ? 'Place bid' : 'Buy now')
                             : 'Connect wallet'
                         }
                     >
                         <span className="relative z-10 flex items-center justify-center gap-2.5">
-                            {listing.auction?.isActive ? (
+                            {isAuctionReallyActive ? (
                                 <>
                                     <svg className="w-4 h-4 transition-all duration-300 group-hover/btn:scale-110" 
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -453,27 +476,21 @@ export default function ListingCard({ listing }: { listing: Listing }) {
                             transition-transform duration-700 ease-out" />
                         <div className={`absolute inset-0 rounded-xl scale-0 group-hover/btn:scale-100 
                             transition-transform duration-300 ease-out animate-pulse
-                            ${listing.auction?.isActive ? 'bg-purple-500/20' : 'bg-accent/20'}`} />
+                            ${isAuctionReallyActive ? 'bg-purple-500/20' : 'bg-accent/20'}`} />
                     </button>
                 )}
 
-                {!isConnected && !isOwner && !isSeller && (listing.auction?.isActive || isAvailable) && (
+                {!isConnected && !isOwner && !isSeller && (isAuctionReallyActive || isAvailable) && (
                     <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-                        {listing.auction?.isActive 
+                        {isAuctionReallyActive 
                             ? 'Connect your wallet to place a bid on this auction.'
                             : 'Connect your wallet to purchase this item.'
                         }
                     </p>
                 )}
 
-                {!isAvailable && !listing.auction?.isActive && wasSold && !isOwner && !isSeller && (
-                    <p className="mt-2 text-xs text-blue-600 dark:text-blue-400 font-medium text-center">
-                        This NFT has been sold and is no longer available.
-                    </p>
-                )}
-
                 {/* ✅ NEW: Special message for ended auctions */}
-                {listing.auction && !listing.auction.isActive && !wasSold && (
+                {listing.auction && !isAuctionReallyActive && onchainAuction && onchainAuction.seller !== ZERO && (
                     <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 font-medium text-center">
                         🔥 Auction has ended. Check details to see the outcome.
                     </p>

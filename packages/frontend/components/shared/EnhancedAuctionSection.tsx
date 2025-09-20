@@ -28,6 +28,24 @@ export const EnhancedAuctionSection = memo(({
     const { status, ownership, timeDisplay, primaryAction, secondaryActions, recommendations } = uxAnalysis;
     const ZERO = '0x0000000000000000000000000000000000000000' as const;
 
+    useEffect(() => {
+        if (userAddress) {
+            console.log('🎭 [EnhancedAuctionSection] Debug Info:', {
+                userAddress,
+                userAddressLower: userAddress.toLowerCase(),
+                ownership,
+                status: status.message.title,
+                primaryActionType: primaryAction?.type,
+                primaryActionLabel: primaryAction?.config?.label,
+                isProcessing,
+                auction,
+                timestamp: new Date().toISOString()
+            });
+        } else {
+            console.log('🎭 [EnhancedAuctionSection] No userAddress connected');
+        }
+    }, [userAddress, ownership, status, primaryAction, isProcessing, auction]);
+
     const [liveTimeDisplay, setLiveTimeDisplay] = useState(timeDisplay);
 
     useEffect(() => {
@@ -121,7 +139,7 @@ export const EnhancedAuctionSection = memo(({
                     <div className="flex items-center justify-between">
                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
                             <span className="text-xl">🎯</span>
-                            Auction Status
+                            Auction Statuss
                         </h3>
                         <div className={`px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wider border ${status.theme.bgClass}`}>
                             <span className="flex items-center gap-2">

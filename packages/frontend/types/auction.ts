@@ -128,7 +128,8 @@ export class AuctionUtils {
     userAddress: `0x${string}` | undefined,
     onchainOwner: `0x${string}` | undefined,
     marketplaceAddress: `0x${string}`,
-    auction: AuctionData | null
+    auction: AuctionData | null,
+    listing?: { seller: `0x${string}`; price: bigint } | null
   ): OwnershipState {
     if (!userAddress || !onchainOwner) {
       return {
@@ -141,19 +142,28 @@ export class AuctionUtils {
       };
     }
 
-    const isDirectOwner = userAddress.toLowerCase() === onchainOwner.toLowerCase();
-    const isInMarketplaceEscrow = onchainOwner.toLowerCase() === marketplaceAddress.toLowerCase();
+    const userAddressLower = userAddress.toLowerCase();
+    const onchainOwnerLower = onchainOwner.toLowerCase();
+    const marketplaceAddressLower = marketplaceAddress.toLowerCase();
+
+    const isDirectOwner = userAddressLower === onchainOwnerLower;
+    const isInMarketplaceEscrow = onchainOwnerLower === marketplaceAddressLower;
     
     const isAuctionSeller = this.isValidAuction(auction) && 
-      userAddress.toLowerCase() === auction.seller.toLowerCase();
+      userAddressLower === auction.seller.toLowerCase();
+    
+    const isListingSeller = listing && listing.seller && 
+      userAddressLower === listing.seller.toLowerCase();
     
     const isWinningBidder = this.isValidAuction(auction) &&
       auction.bid > BigInt(0) &&
-      userAddress.toLowerCase() === auction.bidder.toLowerCase();
+      userAddressLower === auction.bidder.toLowerCase();
 
-    const hasControlRights = isDirectOwner || (isInMarketplaceEscrow && isAuctionSeller);
+    const hasControlRights = isDirectOwner || 
+      (isInMarketplaceEscrow && isAuctionSeller) ||
+      (isInMarketplaceEscrow && !!isListingSeller);
     
-    const canViewAsOwner = isDirectOwner || isAuctionSeller;
+    const canViewAsOwner = isDirectOwner || isAuctionSeller || !!isListingSeller;
 
     return {
       isDirectOwner,

@@ -52,7 +52,7 @@ export function useOnchainNft(nft: `0x${string}`, tokenId: string) {
     query: { enabled: validInputs },
   }) as { data: string | undefined; refetch: () => void };
 
-  const { data: onchainOwner, refetch: refetchOwner } = useReadContract({
+  const { data: onchainOwner, refetch: refetchOwner, isLoading: isOwnerLoading, error: ownerError } = useReadContract({
     address: nft,
     abi: NftAbi,
     functionName: 'ownerOf',
@@ -61,8 +61,13 @@ export function useOnchainNft(nft: `0x${string}`, tokenId: string) {
       enabled: validInputs, 
       refetchInterval: 5_000, 
       staleTime: 1_000,
+      retry: (failureCount, error) => {
+        console.log(`🔄 [useOnChainNft] Retry attempt ${failureCount} for token ${tokenId}`, error)
+        return failureCount < 3
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
     }, 
-  }) as { data: `0x${string}` | undefined; refetch: () => void };
+  }) as { data: `0x${string}` | undefined; refetch: () => void; isLoading: boolean; error: Error | null };
 
   const onchainListing = useMemo(
     () => (rawListing ? { seller: rawListing[0], price: rawListing[1] } : undefined),
@@ -83,6 +88,46 @@ export function useOnchainNft(nft: `0x${string}`, tokenId: string) {
     !!onchainAuction &&
     onchainAuction.seller !== ZERO &&
     Number(onchainAuction.end) > Math.floor(Date.now() / 1000);
+
+  // Enhanced debug logging for ownership detection (moved after variable declarations)
+  if (typeof window !== 'undefined' && validInputs && tokenIdBig) {
+    console.log('🔍 [useOnchainNft] Enhanced Debug Info:', {
+      nft,
+      tokenId: tokenIdBig.toString(),
+      onchainOwner,
+      marketplaceAddress: MARKET,
+      hasValidInputs: validInputs,
+      isOwnerLoading,
+      ownerError: ownerError?.message,
+      ownerErrorDetails: ownerError,
+      // LISTING DATA
+      onchainListing: rawListing,
+      listingSeller: rawListing?.[0],
+      listingPrice: rawListing?.[1]?.toString(),
+      listedNow,
+      // AUCTION DATA  
+      onchainAuction: rawAuction,
+      auctionSeller: rawAuction?.[0],
+      auctionNow,
+      timestamp: new Date().toISOString()
+    });
+
+    // Warning si no hay owner después de cargar
+    if (!isOwnerLoading && !onchainOwner && !ownerError) {
+      console.warn('⚠️ [useOnChainNft] No owner found after loading completed for NFT', {
+        nft,
+        tokenId: tokenIdBig.toString()
+      });
+    }
+
+    // Info sobre listing/auction estado
+    if (rawListing && rawListing[0] !== ZERO) {
+      console.log('📋 [useOnChainNft] NFT is LISTED by:', rawListing[0]);
+    }
+    if (rawAuction && rawAuction[0] !== ZERO) {
+      console.log('🏛️ [useOnChainNft] NFT has AUCTION by:', rawAuction[0]);
+    }
+  }
   return {
     MARKET,
     tokenIdBig,
@@ -91,6 +136,8 @@ export function useOnchainNft(nft: `0x${string}`, tokenId: string) {
     onchainAuction,
     onchainTokenURI,
     onchainOwner,
+    isOwnerLoading,
+    ownerError,
     listedNow,
     auctionNow,
     refetchOnchainData: async () => {
