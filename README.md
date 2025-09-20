@@ -1,6 +1,6 @@
-# GalleryFi - Professional NFT Marketplace
+# GalleryFi - Curated NFT Marketplace
 
-> A premium, curated NFT marketplace built with Next.js 15, Solidity 0.8.28, and The Graph Protocol. Quality over quantity with an exclusive business model.
+> **Think Shopify for digital art.** GalleryFi is where quality meets blockchain technology. We built this because the NFT space needed a platform that actually cares about the art, not just the hype.
 
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
@@ -28,43 +28,43 @@
 
 ## What is GalleryFi?
 
-**GalleryFi** is a curated NFT marketplace - think of it as a high-end art gallery for digital art, but on the blockchain. Unlike open marketplaces where anyone can list anything, GalleryFi focuses on quality and exclusivity.
+**GalleryFi** started as a simple idea: what if NFT marketplaces actually focused on quality instead of quantity? We got tired of scrolling through endless low-effort collections and decided to build something different.
 
-### What makes it different?
-- **Quality Control**: Only authorized artists can create NFTs
-- **Curated Experience**: Every digital artwork goes through a selection process
-- **Fair Revenue Model**: Platform fees + automatic royalties for artists
-- **Enterprise Security**: Bank-level security patterns protect investments
-- **Performance**: Smart filtering and pagination for smooth browsing
+It's basically a digital art gallery that runs on the blockchain. Artists apply to join, we curate what gets in, and collectors know they're buying something special. No more sifting through thousands of random generated avatars to find actual art.
 
-### For non-technical people:
-> Imagine a digital art gallery where you can buy, sell, and auction unique digital artworks (NFTs). Each artwork is verified as authentic and one-of-a-kind, stored securely on the blockchain. Artists earn money every time their work is resold, and the platform ensures fair, transparent transactions.
+### Here's what makes us different:
+- **We actually curate**: Not everyone can just upload whatever they want
+- **Artists get paid forever**: Smart contracts automatically send royalties on every resale
+- **No rug pulls**: Everything is on-chain and transparent
+- **It actually works fast**: We spent months optimizing so it doesn't feel like most dApps
+
+### If you're not into crypto yet:
+Think of it like Etsy, but for digital art that you actually own. When you buy something, you get a certificate of authenticity that nobody can fake or take away. The artist gets paid, you get unique art, and if it becomes popular later, you can sell it and the original artist still gets a cut.
 
 ---
 
 ## Key Features
 
-### Marketplace Functionality
-- **Fixed Price Sales**: Buy art instantly at a set price
-- **Auction System**: Bid on artworks with real-time updates
-- **Automatic Royalties**: Artists earn forever when their work resells (EIP-2981 standard)
-- **Secure Escrow**: Platform safely holds payments until transactions complete
-- **Safe Withdrawals**: Pull payment system prevents common hacking attempts
+### For Collectors
+- **Buy instantly** or **bid in auctions**: Some pieces have fixed prices, others go to the highest bidder
+- **Mobile-friendly**: Works great on your phone (trust me, we tested this extensively)
+- **Live auction updates**: Watch bids roll in real-time without refreshing
+- **Smart filtering**: Toggle between "show me everything" and "show me what I can actually buy"
+- **Favorites**: Save pieces you love for later
+- **Clear ownership**: Never confused about who owns what vs. who's selling
 
-### User Experience
-- **Mobile-Friendly Design**: Works perfectly on phones, tablets, and computers
-- **Live Auction Timers**: See countdown timers update in real-time
-- **Smart Filtering**: View all NFTs or just those available for purchase
-- **Fast Loading**: Server-side optimization keeps everything responsive
-- **Favorites System**: Save and track NFTs you love
-- **Clear Ownership Info**: Always know who owns vs. who's selling an NFT
+### For Artists
+- **Lifetime royalties**: Get paid every single time your work resells (we use the EIP-2981 standard)
+- **Secure payments**: Money goes into escrow until everything's confirmed
+- **No technical headaches**: We handle all the blockchain complexity
+- **Quality audience**: Collectors who actually care about art, not just flipping
 
-### Security & Standards
-- **Industry Standard**: Full ERC-721 NFT compatibility (works with all wallets)
-- **Hack Protection**: ReentrancyGuard prevents the most common attack vectors
-- **Emergency Controls**: Admin can pause system if needed for security
-- **Safe Payments**: Pull payment pattern eliminates payment-related exploits
-- **Thoroughly Tested**: Comprehensive test suite covers edge cases and security scenarios
+### Under the Hood (For Developers)
+- **Rock-solid security**: We use battle-tested patterns like ReentrancyGuard and pull payments
+- **ERC-721 compatible**: Works with every wallet and marketplace
+- **Emergency controls**: Can pause if something goes wrong (safety first)
+- **Gas optimized**: Transactions cost less than you'd expect
+- **Thoroughly tested**: 46 test cases covering everything we could think of
 
 ---
 
@@ -108,71 +108,68 @@ GalleryFi/
 └── 📄 package.json                # Workspace configuration
 ```
 
-### How Data Flows Through the System
+## How It All Works Together
 
-```mermaid
-graph TD
-    A[User Interface] --> B[Next.js Frontend]
-    B --> C[Wallet Connection]
-    B --> D[GraphQL Client]
-    C --> E[Smart Contracts]
-    D --> F[The Graph Subgraph]
-    E --> G[Ethereum Blockchain]
-    F --> G
-    E --> H[IPFS Storage]
-    B --> I[API Routes]
-    I --> F
+```
+Your Browser
+    ↓
+Next.js Frontend (handles UI, wallet connections)
+    ↓
+Smart Contracts on Ethereum (handle money and ownership)
+    ↓
+The Graph (indexes all the blockchain events)
+    ↓
+IPFS (stores the actual images and metadata)
 ```
 
-**How it works:**
-1. **User Interface**: You click "Buy NFT" or place a bid
-2. **Wallet Connection**: Your crypto wallet (like MetaMask) confirms the transaction
-3. **Smart Contracts**: The blockchain verifies and executes the purchase/bid
-4. **Data Indexing**: The Graph indexes all blockchain events for fast querying
-5. **Frontend Updates**: The UI immediately shows your new NFT or updated bid status
+When you buy an NFT:
+1. You click "Buy" in the browser
+2. MetaMask pops up asking you to confirm
+3. Your transaction goes to Ethereum
+4. Smart contract transfers ownership and money
+5. The Graph picks up the event and updates our database
+6. Frontend shows you now own the NFT
 
----
+### The Smart Contracts
 
-## Technology Stack
+**MyNFT.sol** - This is the actual NFT collection
+- Mints new NFTs (only owner can do this - that's the curation part)
+- Handles royalties automatically (5% to creator by default)
+- Stores metadata on IPFS
 
-### Smart Contracts & Blockchain
-- **Solidity 0.8.28** - Latest version with enhanced security features
-- **Hardhat** - Development framework with hot reload and testing
-- **OpenZeppelin** - Battle-tested contract libraries (industry standard)
-- **Hardhat Deploy** - Deterministic and upgradeable deployments
-- **Typechain** - Automatic TypeScript type generation from contracts
-- **Ethers.js v6** - Blockchain interaction library
+**NftMarketplace.sol** - This handles all the buying/selling
+- Fixed price listings (buy it now)
+- Auction system (highest bidder wins)
+- Takes 2.5% platform fee
+- Automatically pays royalties to original creators
+- Uses "pull payments" so no one can hack the money flow
 
-### Frontend & User Interface
-- **Next.js 15** - React framework with App Router and server-side rendering
-- **React 19** - UI library with latest concurrent features
-- **TypeScript** - Complete type safety throughout the application
-- **Tailwind CSS** - Utility-first CSS framework for rapid styling
-- **Headless UI** - Accessible components without opinionated styling
+## The Tech Stack (For the Curious)
 
-### Web3 Integration
-- **Wagmi v2** - React hooks for Ethereum blockchain interaction
-- **Viem** - TypeScript-first Ethereum client (modern alternative to ethers)
-- **RainbowKit** - Premium wallet connection experience
-- **WalletConnect** - Support for mobile wallets and cross-platform connections
+We picked these technologies because they actually work well together, not because they're trendy:
 
-### Data & APIs
-- **The Graph Protocol** - Decentralized blockchain data indexing
-- **GraphQL** - Efficient query language for APIs
-- **Apollo Client** - GraphQL client with intelligent caching
-- **React Query** - Server-side state management and caching
+### Smart Contracts
+- **Solidity 0.8.28**: Latest version with all the security improvements
+- **Hardhat**: Makes development way less painful than Truffle
+- **OpenZeppelin**: Why reinvent the wheel? These contracts are battle-tested
+- **Typechain**: Generates TypeScript types from contracts (huge time saver)
 
-### Storage & Media
-- **IPFS** - Decentralized storage for NFT metadata and images
-- **Pinata** - IPFS gateway with global CDN for fast loading
-- **Next.js Image** - Automatic image optimization and lazy loading
+### Frontend
+- **Next.js 15**: Server-side rendering + static generation = fast websites
+- **React 19**: UI library that just makes sense
+- **TypeScript**: Catches bugs before they happen
+- **Tailwind CSS**: Write CSS faster without the mess
+- **Wagmi + Viem**: Modern Web3 tools that don't make you cry
 
-### Development & Testing
-- **Jest** - JavaScript testing framework
-- **React Testing Library** - Component testing utilities
-- **Playwright** - End-to-end testing for real user scenarios
-- **ESLint + Prettier** - Code linting and formatting
-- **Husky** - Git hooks for code quality
+### Data & Storage
+- **The Graph**: Think GraphQL for blockchain data
+- **IPFS**: Decentralized storage (your images don't disappear if we do)
+- **Pinata**: Makes IPFS actually reliable
+
+### Development Tools
+- **Jest**: Testing that doesn't suck
+- **ESLint + Prettier**: Automatic code formatting
+- **Husky**: Git hooks that keep code clean
 
 ---
 
@@ -217,109 +214,167 @@ graph TD
 
 ---
 
-## Project Setup
+## How to Get This Running on Your Machine
 
-### Prerequisites
+Let's be honest - setting up a Web3 project can be frustrating. I've tried to make this as painless as possible, but you'll still need to get a few services set up. I'll walk you through everything.
+
+### What You'll Need First
+
+Make sure you have these installed:
 ```bash
-# Minimum required versions
-node >= 18.0.0
-npm >= 9.0.0
-git >= 2.34.0
+# Check if you have these (run these commands):
+node --version    # Should be 18.0.0 or higher
+npm --version     # Should be 9.0.0 or higher
+git --version     # Any recent version is fine
 
-# Optional but recommended
-yarn >= 1.22.0 (alternative to npm)
-metamask (browser wallet extension)
+# If you don't have them:
+# 1. Install Node.js from nodejs.org (get the LTS version)
+# 2. npm comes with Node.js automatically
+# 3. Git from git-scm.com
 ```
 
-### 1. Clone and Install
+You'll also want MetaMask or another Web3 wallet installed in your browser.
+
+### Step 1: Get the Code and Install Dependencies
+
 ```bash
-# Clone the repository
+# Get the code
 git clone https://github.com/EnricCoding/GalleryFi.git
 cd GalleryFi
 
-# Install all workspace dependencies
+# Install everything (this takes a minute or two)
 npm install
-
-# Or if you prefer yarn
-yarn install
 ```
 
-### 2. Environment Configuration
+### Step 2: Set Up External Services
 
-#### Frontend (.env.local)
-```bash
-# Copy example file
-cp packages/frontend/.env.example packages/frontend/.env.local
+Before we can run anything, you need accounts with a few services. Don't worry, they're all free for development:
 
-# Edit with your values:
-NEXT_PUBLIC_SEPOLIA_RPC=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
-NEXT_PUBLIC_NFT_ADDRESS=0xYOUR_NFT_CONTRACT_ADDRESS
-NEXT_PUBLIC_MARKET_ADDRESS=0xYOUR_MARKETPLACE_CONTRACT_ADDRESS
-NEXT_PUBLIC_SUBGRAPH_URL=https://api.studio.thegraph.com/query/YOUR_SUBGRAPH
-NEXT_PUBLIC_WC_PROJECT_ID=YOUR_WALLETCONNECT_PROJECT_ID
-NEXT_PUBLIC_PINATA_GATEWAY=your-gateway.mypinata.cloud
-NEXT_PUBLIC_CHAIN_ID=11155111
+#### Alchemy (For talking to the blockchain)
+1. Go to [alchemy.com](https://alchemy.com) and sign up
+2. Create a new app, choose "Ethereum" and "Sepolia" (testnet)
+3. Copy the API URL - you'll need it in a minute
 
-# For IPFS uploads
-PINATA_JWT=your_pinata_jwt_token
-PINATA_API_KEY=your_pinata_api_key
-PINATA_API_SECRET=your_pinata_api_secret
-```
-
-#### Contracts (.env)
-```bash
-# Copy example file
-cp packages/contracts/.env.example packages/contracts/.env
-
-# Edit with your values:
-PRIVATE_KEY=your_wallet_private_key_for_deployments
-SEPOLIA_RPC=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
-ETHERSCAN_API_KEY=your_etherscan_api_key_for_verification
-```
-
-### 3. Required External Services
-
-#### Alchemy (RPC Provider)
-1. Sign up at [alchemy.com](https://alchemy.com)
-2. Create new app for Ethereum Sepolia
-3. Copy the API key URL
-
-#### WalletConnect (Wallet Integration)
-1. Sign up at [walletconnect.com](https://walletconnect.com)
-2. Create new project
+#### WalletConnect (For connecting wallets)
+1. Head to [walletconnect.com](https://walletconnect.com) and create account
+2. Create a new project
 3. Copy the Project ID
 
-#### Pinata (IPFS Gateway)
+#### Pinata (For storing NFT images and metadata)
 1. Sign up at [pinata.cloud](https://pinata.cloud)
-2. Create API keys
-3. Configure custom gateway
+2. Go to API Keys and create a new key
+3. Choose "Admin" permissions (we need upload and delete)
+4. Save the JWT, API Key, and Secret somewhere safe
+5. In your dashboard, go to Gateways and note your gateway URL
 
-### 4. Smart Contract Deployment
+#### The Graph (For indexing blockchain data)
+1. Go to [thegraph.com/studio](https://thegraph.com/studio)
+2. Connect your wallet and create a new subgraph
+3. We'll deploy to this later, but grab the URL for now
+
+### Step 3: Configure Your Environment Files
+
+This is where most people get stuck, so I'll show you exactly what goes where.
+
+#### Frontend Configuration
+Create `packages/frontend/.env.local` with these values:
 
 ```bash
-# Navigate to contracts directory
+# Blockchain connection
+NEXT_PUBLIC_SEPOLIA_RPC=https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY_HERE
+NEXT_PUBLIC_CHAIN_ID=11155111
+
+# Smart contract addresses (we'll deploy these in step 5)
+NEXT_PUBLIC_NFT_ADDRESS=0xfd6580707778bE0d6Fc1447Ff42237e29a7cb047
+NEXT_PUBLIC_MARKET_ADDRESS=0x5e3ef51F0a662dF65dea3e115C689E0cDE2A0F37
+
+# Data indexing
+NEXT_PUBLIC_SUBGRAPH_URL=https://api.studio.thegraph.com/query/YOUR_SUBGRAPH_ID/gallery-fi/v0.0.1
+
+# Wallet connections
+NEXT_PUBLIC_WC_PROJECT_ID=YOUR_WALLETCONNECT_PROJECT_ID
+
+# IPFS storage
+NEXT_PUBLIC_PINATA_GATEWAY=your-gateway-name.mypinata.cloud
+PINATA_JWT=your_pinata_jwt_here
+PINATA_API_KEY=your_pinata_api_key
+PINATA_API_SECRET=your_pinata_secret
+PINATA_GATEWAY=your-gateway-name.mypinata.cloud
+```
+
+#### Smart Contract Configuration
+Create `packages/contracts/.env` with these values:
+
+```bash
+# Your wallet private key (NEVER share this!)
+# Get it from MetaMask: Settings > Advanced > Export Private Key
+PRIVATE_KEY=your_private_key_here
+
+# Same Alchemy URL as before
+SEPOLIA_RPC=https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY_HERE
+
+# For contract verification (optional but recommended)
+# Get free API key from etherscan.io
+ETHERSCAN_API_KEY=your_etherscan_api_key
+
+# For gas cost reporting (optional)
+COINMARKETCAP_API_KEY=your_coinmarketcap_key
+REPORT_GAS=true
+```
+
+**Security note**: Never commit these .env files to git. They're already in .gitignore, but double-check!
+
+### Step 4: Get Some Test ETH
+
+You'll need Sepolia testnet ETH to deploy contracts and test the app:
+
+1. Add Sepolia network to MetaMask:
+   - Network Name: `Sepolia`
+   - RPC URL: `https://sepolia.infura.io/v3/` (or use your Alchemy URL)
+   - Chain ID: `11155111`
+   - Currency: `ETH`
+
+2. Get free test ETH from a faucet:
+   - [Alchemy Sepolia Faucet](https://sepoliafaucet.com/)
+   - [Chainlink Faucet](https://faucets.chain.link/)
+   - You'll need about 0.1 ETH to deploy and test
+
+### Step 5: Deploy the Smart Contracts
+
+```bash
+# Go to the contracts folder
 cd packages/contracts
 
-# Compile contracts
+# Compile the contracts (make sure everything builds)
 npm run compile
 
-# Run tests (recommended before deployment)
+# Run tests to make sure everything works
 npm run test
 
 # Deploy to Sepolia testnet
 npm run deploy:sepolia
 
-# Verify contracts on Etherscan
+# Verify contracts on Etherscan (optional but cool)
 npm run verify:sepolia
 ```
 
-### 5. Subgraph Configuration and Deployment
+After deployment, you'll see the contract addresses in the terminal. Copy these and update your frontend `.env.local` file with the real addresses.
+
+### Step 6: Set Up The Graph Subgraph
+
+The Graph indexes all the blockchain events so we can query them quickly:
 
 ```bash
-# Navigate to subgraph directory
+# Go to the subgraph folder
 cd packages/subgraph
 
-# Generate TypeScript code
+# Install Graph CLI globally if you haven't
+npm install -g @graphprotocol/graph-cli
+
+# Authenticate with The Graph
+graph auth --studio YOUR_DEPLOY_KEY
+
+# Generate code from the schema
 npm run codegen
 
 # Build the subgraph
@@ -329,144 +384,151 @@ npm run build
 npm run deploy
 ```
 
-### 6. Start the Frontend
+Update your frontend `.env.local` with the new subgraph URL.
+
+### Step 7: Start the Frontend
 
 ```bash
-# Navigate to frontend directory
+# Go to the frontend folder
 cd packages/frontend
 
-# Start in development mode
+# Start the development server
 npm run dev
-
-# The application will be available at:
-# http://localhost:3000
 ```
+
+Open [http://localhost:3000](http://localhost:3000) and you should see GalleryFi running!
+
+### Step 8: Test Everything Works
+
+1. **Connect your wallet**: Click the connect button and approve MetaMask
+2. **Create an NFT**: Go to /create and upload an image (this tests Pinata integration)
+3. **List it for sale**: Set a price and create a listing (this tests the marketplace contract)
+4. **Try buying it**: Use a different wallet address to test the purchase flow
+
+### Common Issues and Fixes
+
+**"Transaction failed"** - Make sure you have enough Sepolia ETH and the contracts are deployed
+
+**"Subgraph not found"** - The Graph takes 5-10 minutes to sync after deployment
+
+**"IPFS upload failed"** - Double-check your Pinata credentials and make sure you have upload permissions
+
+**"RPC error"** - Your Alchemy quota might be exceeded (free tier is 300M requests/month)
+
+**TypeScript errors** - Run `npm run codegen` in the contracts folder to regenerate types
+
+### What's Next?
+
+Once you have everything running locally:
+- Deploy to mainnet by changing the chain ID and using mainnet RPC URLs
+- Deploy the frontend to Vercel or Netlify
+- Set up monitoring for the subgraph
+- Add your own artists and start curating!
 
 ---
 
-## Testing and Quality
+## Making Sure Everything Works
 
-### Smart Contract Testing
+### Testing the Smart Contracts
+I wrote a bunch of tests to make sure the contracts don't break when people try weird stuff:
+
 ```bash
 cd packages/contracts
 
-# Run all tests
+# Run all the tests (takes about 30 seconds)
 npm run test
 
-# Tests with gas reporting
+# See how much gas each function uses
 npm run gas
 
-# Code coverage analysis
+# Check test coverage
 npm run coverage
-
-# Specific test
-npx hardhat test test/NftMarketplace.test.ts
 ```
 
-# Sample test output
+You should see something like:
+```
 ✓ NFT Contract Tests (15 tests passed)
-✓ Marketplace Tests (23 tests passed)
+✓ Marketplace Tests (23 tests passed) 
 ✓ Integration Tests (8 tests passed)
 ```
 
-### Frontend Testing
+If any tests fail, something's wrong with your setup.
+
+### Testing the Frontend
+
 ```bash
 cd packages/frontend
 
-# Unit tests
+# Test the React components
 npm run test
 
-# Tests in watch mode
+# Run tests and re-run when files change
 npm run test:watch
-
-# End-to-end integration tests
-npm run test:e2e
 ```
 
-### Code Quality and Formatting
+### Keeping the Code Clean
+
 ```bash
-# Code linting
-npm run lint
-
-# Automatic formatting
-npm run format
-
-# Automatic problem fixing
+# Fix formatting issues automatically
 npm run lint:fix
+
+# Just check for problems without fixing
+npm run lint
 ```
 
 ---
 
-## Production Deployment
+## Going Live (Production Deployment)
 
-### Frontend Deployment
+### Deploying the Frontend
 
-#### Option 1: Vercel (Recommended)
+**Vercel (Easiest option):**
 ```bash
 # Install Vercel CLI
 npm i -g vercel
 
-# Login and deploy
-vercel login
+# Deploy with one command
 vercel --prod
-
-# Or connect directly from GitHub
 ```
 
-#### Option 2: Netlify
+**Netlify (Also easy):**
+Just connect your GitHub repo in the Netlify dashboard and it deploys automatically on every push.
+
+### Moving to Mainnet
+
+When you're ready for real money:
+
+1. Change your `.env.local` file:
 ```bash
-# Build for production
-npm run build
-
-# Static deploy to Netlify
-# Connect repository from Netlify dashboard
-```
-
-### Mainnet Configuration
-
-To use on Ethereum mainnet, update:
-
-```bash
-# In .env.local
 NEXT_PUBLIC_CHAIN_ID=1
 NEXT_PUBLIC_SEPOLIA_RPC=https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY
+```
 
-# Re-deploy contracts to mainnet
+2. Deploy contracts to mainnet:
+```bash
 npm run deploy:mainnet
 ```
 
----
+**Warning**: Mainnet costs real money! Each deployment costs around $50-100 in gas fees.
 
-## Business Model
+## Why We Built It This Way
 
-### Business Architecture
-```
-Curated Marketplace
-├── Only authorized creators can mint NFTs
-├── Manual approval process for quality control
-├── Focus on high-quality digital art
-└── Premium and exclusive brand positioning
+### The Business Model
+We're tired of marketplaces that are just digital yard sales. Here's our approach:
 
-Revenue Streams
-├── Platform commission: 2.5% on all transactions
-├── Creator royalties: 5% on secondary sales
-├── Premium services: Featured listings, analytics
-└── Partnerships and special events
-```
+- **Curation over quantity**: Only approved artists can mint
+- **Quality control**: Every piece is reviewed before going live  
+- **Fair economics**: 2.5% platform fee, 5% artist royalties forever
+- **Premium positioning**: Think gallery, not flea market
 
-### Competitive Advantages
-- **Exclusivity**: Curated model vs. open marketplaces (like OpenSea)
-- **Quality**: Editorial control and manual curation
-- **Security**: Enterprise-level security patterns
-- **Performance**: Advanced server-side optimizations
-- **Premium UX**: Superior user experience and design
+### Security First
+We use patterns that have been tested in production:
+- **No reentrancy attacks**: All external calls are protected
+- **Pull payments**: Money sits in escrow until you withdraw it
+- **Emergency stops**: Can pause everything if something goes wrong
+- **Input validation**: Every function checks its parameters
 
----
-
-## Security Implementation
-
-### Smart Contract Security
-- **ReentrancyGuard** on all transfer functions
+The contracts have been tested with 46 different scenarios, including edge cases where people try to break things.
 - **Pull payment pattern** to prevent force attacks
 - **Pausable contracts** for emergency situations
 - **Access controls** with specific roles
@@ -488,13 +550,11 @@ Revenue Streams
 - **Content Security Policy** headers
 - **Automatic dependency scanning**
 
-## License
+## Who Built This
 
-This project is licensed under the **MIT License**
+**Enric** - Full Stack Blockchain Developer
 
-## Author
-
-**Enric** - *Full Stack Blockchain Developer*
+I built GalleryFi because I believe NFTs can be more than just profile pictures and get-rich-quick schemes. There's real potential for digital art when you focus on quality and sustainability.
 
 - **GitHub**: [@EnricCoding](https://github.com/EnricCoding)
 - **Email**: enricpaginasweb@gmail.com
@@ -503,8 +563,8 @@ This project is licensed under the **MIT License**
 
 <div align="center">
 
-### If you find this project interesting, give it a star!
+**[Check out the live demo](https://galleryfi.vercel.app)** | **[Found a bug? Let me know](https://github.com/EnricCoding/GalleryFi/issues)**
 
-**[Live Demo](https://galleryfi.vercel.app)** | **[Report Bug](https://github.com/EnricCoding/GalleryFi/issues)**
+⭐ If this project helped you learn something, consider giving it a star!
 
 </div>
