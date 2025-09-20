@@ -24,9 +24,6 @@
 
 </div>
 
-### NFT Detail Page
-![NFT Detail](docs/images/nft-detail.png)
-
 </div>
 
 ## What is GalleryFi?
