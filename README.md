@@ -14,10 +14,15 @@
 <div align="center">
 
 ### Explore Marketplace
-![Explore GalleryFi](docs/images/explore-galleryFi.png)
+![Explore GalleryFi](assets/explore-galleryFi.png)
 
 ### Create NFT
-![Create NFT](docs/images/create-galleryFi.png)
+![Create NFT](assets/create-galleryFi.png)
+
+### NFT Detail Page
+![NFT Detail](assets/nft-detail.png)
+
+</div>
 
 ### NFT Detail Page
 ![NFT Detail](docs/images/nft-detail.png)
