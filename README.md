@@ -2,6 +2,12 @@
 
 > **Think Shopify for digital art.** GalleryFi is where quality meets blockchain technology. We built this because the NFT space needed a platform that actually cares about the art, not just the hype.
 
+## 🎬 Video Demo
+
+[![GalleryFi Demo](https://img.shields.io/badge/▶️_Watch_Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/ZvzXC-PFaew)
+
+**See the full project in action** - Complete walkthrough of minting, trading, and auction features.
+
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 ![Solidity](https://img.shields.io/badge/Solidity-%23363636.svg?style=for-the-badge&logo=solidity&logoColor=white)
 ![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
