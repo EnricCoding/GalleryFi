@@ -4,7 +4,7 @@ export const runtime = 'edge';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Types
-interface AuctionData {
+export interface AuctionData {
   id: string;
   nft: string;
   tokenId: string;
